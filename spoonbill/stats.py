@@ -18,8 +18,13 @@ class DataPreprocessor:
         self.spec = TablesDefinition.from_schema(self.schema, root)
         self.root = root
 
+    def set_column(self, header):
+        if header not in self.table:
+            self.table.add_column(header)
+            self.table.additional_rows[header] = 0
+        self.table.inc_column(header)
+
     def process_file(self, filename, with_preview=True):
-        ''''''
         root = self.spec.root_table
         preview_counts = defaultdict(int)
 
@@ -29,9 +34,9 @@ class DataPreprocessor:
             scopes = deque()
             while rows:
                 path, table_name, record = rows.pop()
-                table = self.spec.factory(table_name)
+                self.table = self.spec.factory(table_name)
                 if not path or path == table_name:
-                    table.inc()
+                    self.table.inc()
         
                 for key, item in record.items():
                     if isinstance(item, dict):
@@ -44,12 +49,12 @@ class DataPreprocessor:
                                 header = f'{path}/{key}/{index}'
                                 if with_preview and preview_counts[table_name] < _PREVIEW_ROWS:
                                     preview_rows[table_name][header] = value
-                                table.add_column(header)
+                                self.set_column(header)
                     else:
                         header = f'{path}/{key}'
                         if with_preview and preview_counts[table_name] < _PREVIEW_ROWS:
                             preview_rows[table_name][header] = item
-                        table.add_column(header)
+                        self.set_column(header)
             for name, row in preview_rows.items():
                 self.spec[name].preview_rows.append(row)
                 preview_counts[table_name] += 1

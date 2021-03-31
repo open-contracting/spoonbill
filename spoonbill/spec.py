@@ -13,7 +13,11 @@ class Table:
     total_rows: int = 0
     arrays: dict[str, int]  = field(default_factory=dict)
     titles: dict[str, str]  = field(default_factory=dict)
+    additional_rows: dict[str, str]  = field(default_factory=dict)
     preview_rows: list[dict] = field(default_factory=list)
+
+    def __contains__(self, key):
+        return key in self.data
 
     def add_array(self, path):
         self.arrays[path] = 0
@@ -24,13 +28,14 @@ class Table:
 
     def inc_column(self, header):
         self.data[header] += 1
+        if header in self.additional_rows:
+            self.additional_rows[header] += 1
 
     def inc_array(self, header):
         self.array[header] += 1
 
     def inc(self):
         self.total_rows += 1
-
 
 
 @dataclass    
