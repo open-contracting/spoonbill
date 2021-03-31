@@ -10,7 +10,9 @@ class CSVWriter:
         self.sheets = {}
         self.fds = []
         for name in spec.tables:
-            headers = spec[name]['data'].keys()
+            if spec[name]['total_rows'] == 0:
+                continue
+            headers = [k for k, c in spec[name]['data'].items() if c > 0]
             sheet_path = pathlib.Path(workdir) / f'{name}.csv'
             fd = open(sheet_path, 'w')
             writer = csv.DictWriter(fd, headers)
@@ -33,8 +35,10 @@ class XlsxWriter:
         self.counters = {}
         self.headers = collections.defaultdict(dict)
         for name in spec.tables:
+            if spec[name]['total_rows'] == 0:
+                continue
             sheet = self.workbook.add_worksheet(name)
-            headers = spec[name]['data'].keys()
+            headers = [k for k, c in spec[name]['data'].items() if c > 0]
             for col_index, col_name in enumerate(headers):
                 self.headers[name][col_name] = col_index
                 sheet.write(0, col_index, col_name)
