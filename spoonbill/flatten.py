@@ -41,7 +41,6 @@ class Flattener:
         
                 for key, item in record.items():
                     if isinstance(item, dict):
-                        rows[table_name] = [defaultdict(str)]
                         to_parse.append((f'{path}/{key}', table_name, item))
                     elif isinstance(item, list):
                         for index, value in enumerate(item):
