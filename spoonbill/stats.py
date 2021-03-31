@@ -62,6 +62,6 @@ class DataPreprocessor:
 
     def save_to_file(self, filename):
         with open(filename, 'w') as fd:
-            json.dump(asdict(self.spec), fd)
+            json.dump(asdict(self.spec), fd, default=str)
 
 
