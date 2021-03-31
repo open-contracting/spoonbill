@@ -15,6 +15,9 @@ setup(
     long_description=long_description,
     install_requires=[
         'ijson>=2.5',
+        'jsonref',
+        'xlsxwriter',
+        'click',        
     ],
     extras_require={
         'test': [
