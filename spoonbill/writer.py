@@ -5,7 +5,7 @@ import collections
 
 
 class CSVWriter:
-    def __init__(self, spec, workdir ):
+    def __init__(self, spec, workdir):
         self.spec = spec
         self.sheets = {}
         self.fds = []
@@ -13,6 +13,7 @@ class CSVWriter:
             if spec[name]['total_rows'] == 0:
                 continue
             headers = [k for k, c in spec[name]['data'].items() if c > 0]
+                
             sheet_path = pathlib.Path(workdir) / f'{name}.csv'
             fd = open(sheet_path, 'w')
             writer = csv.DictWriter(fd, headers)
