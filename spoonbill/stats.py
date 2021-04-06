@@ -29,7 +29,7 @@ class DataPreprocessor:
     schema_dict: dict
     root_tables: dict[str, list]
     combined_tables: dict[str, list] = field(default_factory=dict)
-    populate_cols: list[str] = field(default_factory=list)
+    propagate_cols: list[str] = field(default_factory=list)
 
     # better to keep '/' to be more like jsonpointers
     header_separator: str = '/'
@@ -38,7 +38,6 @@ class DataPreprocessor:
     tables: dict[str, Table] = field(default_factory=dict, init=False)
     _lookup_cache: dict[str, Table] = field(default_factory=dict, init=False)
     _table_by_path: dict[str, Table] = field(default_factory=dict, init=False)
-    types: dict[str, str] = field(default_factory=dict, init=False)
 
     def __getitem__(self, table):
         return self.tables[table]
@@ -69,9 +68,9 @@ class DataPreprocessor:
             self._init_tables(self.combined_tables, is_combined=True, is_root=True)            
 
         separator = self.header_separator
-        todo = deque([('', ('', {}), self.schema_dict, [])])
-        while todo:
-            path, (parent_key, parent), prop, populate_cols = todo.pop()
+        to_analyze = deque([('', ('', {}), self.schema_dict, [])])
+        while to_analyze:
+            path, (parent_key, parent), prop, propagate_cols = to_analyze.pop()
             if prop.get('deprecated'):
                 continue
             # TODO: handle oneOf anyOf allOf
@@ -83,65 +82,68 @@ class DataPreprocessor:
                         continue
 
                     type_ = extract_type(item)
-                    curr_path = separator.join([path, key])
-                    self.curr_table = self.get_table(curr_path)
+                    pointer = separator.join([path, key])
+                    self.curr_table = self.get_table(pointer)
                     
-                    if curr_path in self.populate_cols:
-                        populate_cols.append((curr_path, item))
+                    if pointer in self.propagate_cols:
+                        propagate_cols.append((pointer, item))
                         for table in self.tables.values():
                             table.add_column(
-                                curr_path,
+                                pointer,
                                 item,
                                 type_,
-                                parent=prop
+                                parent=prop,
+                                propagated=True
                             )
-                            table.path.append(curr_path)
+                            table.path.append(pointer)
                     if not self.curr_table:
                         continue
 
-                    self.types[curr_path] = type_
+                    self.curr_table.types[pointer] = type_
                     if 'object' in type_:
-                        todo.append((curr_path, (key, properties), item, populate_cols))
+                        to_analyze.append((pointer, (key, properties), item, propagate_cols))
                     elif 'array' in type_:
-                        if curr_path not in self.curr_table.path:
+                        if pointer not in self.curr_table.path:
                             if self.curr_table.name.endswith(parent_key):
-                                table_name = f'{self.curr_table.name}_{key}'
+                                table_name = f'{self.curr_table.name}_{key[:5]}'
                             else:
-                                table_name = f'{self.curr_table.name}_{parent_key}_{key}'
-                            child_table = Table(table_name, [curr_path], parent=self.curr_table)
-                            if populate_cols:
-                                for c_path, c_item in populate_cols:
+                                table_name = f'{self.curr_table.name}_{parent_key[:5]}_{key[:5]}'
+
+                            child_table = Table(table_name, [pointer], parent=self.curr_table)
+                            if propagate_cols:
+                                for c_path, c_item in propagate_cols:
                                     child_table.add_column(
                                         c_path,
                                         c_item,
                                         extract_type(c_item),
-                                        parent={'title': ''}
+                                        parent={'title': ''},
+                                        propagated=True
                                     )
                             self.curr_table.child_tables.append(table_name)
                             self.tables[table_name] = child_table
                             self._lookup_cache = dict()
-                            get_root(self.curr_table).arrays[curr_path] = 0
+                            get_root(self.curr_table).arrays[pointer] = 0
                             self.curr_table = child_table
                         items = item['items']
                         item_type = extract_type(items)
                         if set(item_type) & set(('array', 'object')):
-                            todo.append((curr_path, (key, properties), items, populate_cols))
+                            to_analyze.append((pointer, (key, properties), items, propagate_cols))
                         else:
                             self.curr_table.add_column(
-                                curr_path,
+                                pointer,
                                 item,
                                 type_,
                                 parent=prop
                             )
                     else:
                         self.curr_table.add_column(
-                            curr_path,
+                            pointer,
                             item,
                             type_,
                             parent=prop
                         )
             else:
-                # TODO: not sure what to do here
+                # TO_ANALYZE: not sure what to do here
                 continue
 
     def get_table(self, path):
@@ -165,50 +167,50 @@ class DataPreprocessor:
 
         for count, item in enumerate(items):
 
-            todo = deque([('', '', {}, item)])
-            populate_cols = defaultdict(dict)
+            to_analyze = deque([('', '', {}, item)])
+            propagate_cols = defaultdict(dict)
             scopes = deque()
-            while todo:
-                abs_path, path, parent, record = todo.pop()
+            while to_analyze:
+                abs_path, path, parent, record = to_analyze.pop()
                 if table := self._table_by_path.get(path):
                     table.inc()
-                    for col_name, col_val in populate_cols.items():
+                    for col_name, col_val in propagate_cols.items():
                         table.inc_column(col_name)
                 for key, item in record.items():
-                    curr_path = separator.join([path, key])
-                    self.curr_table = self.get_table(curr_path)
+                    pointer = separator.join([path, key])
+                    self.curr_table = self.get_table(pointer)
                     if not self.curr_table:
                         continue
-                    type_ = self.types.get(curr_path)
+                    type_ = self.curr_table.types.get(pointer)
 
-                    if curr_path not in self.populate_cols\
-                       and curr_path in self.curr_table.path:
+                    if pointer not in self.propagate_cols\
+                       and pointer in self.curr_table.path:
                         if count < PREVIEW_ROWS:
-                            self.add_preview_row(populate_cols)
+                            self.add_preview_row(propagate_cols)
                     if type_ and not validate_type(type_, item):
                         LOGGER.debug(
-                            f'Mismatched type on {curr_path} expected {type_}'
+                            f'Mismatched type on {pointer} expected {type_}'
                         )
                         continue
                     if isinstance(item, dict):
-                        todo.append((separator.join([abs_path, key]),
-                                     curr_path,
+                        to_analyze.append((separator.join([abs_path, key]),
+                                     pointer,
                                      record,
                                      item))
                     elif isinstance(item, list):
                         if self.curr_table.is_root:
                             a_path = separator.join([abs_path, key])
                             for value in item:
-                                todo.append((
+                                to_analyze.append((
                                     a_path,
-                                    curr_path,
+                                    pointer,
                                     record,
                                     value,
                                 ))
                         else:
                             root = get_root(self.curr_table)
-                            prev_len = root.arrays[curr_path]
-                            if root.set_array(curr_path, item):
+                            prev_len = root.arrays[pointer]
+                            if root.set_array(pointer, item):
                                 new_cols = []
                                 for col_i, _ in enumerate(item, prev_len):
                                     prev_col_p = separator.join((abs_path, key, str(col_i)))
@@ -223,41 +225,41 @@ class DataPreprocessor:
                             for i, value in enumerate(item):
                                 if isinstance(value, (list, dict)):
                                     p = separator.join([abs_path, key, str(i)])
-                                    todo.append((
+                                    to_analyze.append((
                                         p,
-                                        curr_path,
+                                        pointer,
                                         record,
                                         value,
                                     ))
 
                                 else:
-                                    p = separator.join((curr_path, str(i)))
+                                    p = separator.join((pointer, str(i)))
                                     if self.preview and count < PREVIEW_ROWS:
-                                        self.curr_table.preview_rows[-1][curr_path] = value
-                                        p = separator.join((curr_path, str(i)))
+                                        self.curr_table.preview_rows[-1][pointer] = value
+                                        p = separator.join((pointer, str(i)))
                                         root.preview_rows_combined[-1][p] = value
                     else:
-                        if curr_path in self.populate_cols:
-                            populate_cols[curr_path] = item
+                        if pointer in self.propagate_cols:
+                            propagate_cols[pointer] = item
                             continue
                         root = get_root(self.curr_table)
-                        if curr_path not in self.curr_table.columns:
+                        if pointer not in self.curr_table.columns:
                             self.curr_table.add_column(
-                                curr_path,
+                                pointer,
                                 {'title': key},
                                 'na',
                                 parent=record,
                                 additional=True
                             )
 
-                        self.curr_table.inc_column(curr_path)
+                        self.curr_table.inc_column(pointer)
                         if self.preview and count < PREVIEW_ROWS:
                             table = self.curr_table
                             if not self.curr_table.is_root:
                                 table = get_root(self.curr_table)
                             p = separator.join((abs_path, key))
                             table.preview_rows_combined[-1][p] = item
-                            self.curr_table.preview_rows[-1][curr_path] = item
+                            self.curr_table.preview_rows[-1][pointer] = item
 
     def dump(self):
         return {

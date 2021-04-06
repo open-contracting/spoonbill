@@ -34,22 +34,39 @@ class Table:
     is_combined: bool = False
     columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     combined_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    propagated_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     additional_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     # max length not count
     arrays: dict[str, int]  = field(default_factory=dict)
     # for headers
     titles: dict[str, str]  = field(default_factory=dict)
-    preview_rows: list[dict] = field(default_factory=list)
-    preview_rows_combined: list[dict] = field(default_factory=list)
+    child_tables: list[str] = field(default_factory=list)
+    types: dict[str, str] = field(default_factory=dict)
 
-    child_tables: list[str] = field(default_factory=list, init=False)
+    preview_rows: list[dict] = field(default_factory=list, init=False)
+    preview_rows_combined: list[dict] = field(default_factory=list, init=False)
 
-    @property
-    def missing_rows(self):
+    def __post_init__(self):
+        ''''''
+        for attr in ('columns', 'propagated_columns',
+                     'combined_columns', 'additional_columns'):
+            if obj := getattr(self, attr, {}):
+                init = {name: Column(**col) for name, col in obj.items()}
+                setattr(self, attr, init)
+
+    def _counter(self, split, cond):
+        ''''''
+        cols = self.columns if split else self.combined_columns
         return [
-            header for header, count in self.columns.items()
-            if count == 0
+            header for header, col in cols.items()
+            if cond
         ]
+
+    def missing_rows(self, split=True):
+        return self._counter(split, lambda c: c.hits == 0)
+
+    def available_rows(self, split=True):
+        return self._counter(split, lambda c: c.hits > 0)
 
     def __iter__(self):
         for col in self.columns:
@@ -65,7 +82,8 @@ class Table:
                    type_,
                    parent,
                    combined_only=False,
-                   additional=False):
+                   additional=False,
+                   propagated=False):
         title = prepare_title(item, parent)
         column = Column(title, type_, path)
         root = get_root(self)
@@ -83,7 +101,9 @@ class Table:
                 combined_only=True
             )
         if additional:
-            self.additional_columns[path] = column            
+            self.additional_columns[path] = column
+        if propagated:
+            self.propagated_columns[path] = column
 
     def inc_column(self, header):
         self.columns[header].hits += 1
