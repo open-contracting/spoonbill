@@ -59,7 +59,7 @@ class Table:
         cols = self.columns if split else self.combined_columns
         return [
             header for header, col in cols.items()
-            if cond
+            if cond(col)
         ]
 
     def missing_rows(self, split=True):
@@ -89,6 +89,10 @@ class Table:
         root = get_root(self)
         combined_path = combine_path(root, path)
         self.combined_columns[combined_path] = Column(title, type_, combined_path)
+
+        for p in (path, combined_path):
+            self.titles[p] = title
+
         if not combined_only:
             self.columns[path] = column
         if not self.is_root:
@@ -107,6 +111,8 @@ class Table:
 
     def inc_column(self, header):
         self.columns[header].hits += 1
+        if header in self.combined_columns:
+            self.combined_columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
 
