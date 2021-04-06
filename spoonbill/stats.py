@@ -92,10 +92,10 @@ class DataPreprocessor:
                                 pointer,
                                 item,
                                 type_,
-                                parent=prop,
+                                parent={},
                                 propagated=True
                             )
-                            table.path.append(pointer)
+                            # table.path.append(pointer)
                     if not self.curr_table:
                         continue
 
