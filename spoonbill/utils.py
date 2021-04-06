@@ -16,13 +16,39 @@ def iter_file(filename, root):
 
 
 def extract_type(item):
-    type_ = 'type' in item and item['type']
+    """Exrtact item possible types from jsonschema definition.
+    >>> extract_type({'type': 'string'})
+    ['string']
+    >>> extract_type(None)
+    []
+    >>> extract_type({})
+    []
+    >>> extract_type({'type': ['string', 'null']})
+    ['string', 'null']
+    """
+    if not item or 'type' not in item:
+        return []
+    type_ = item['type']
     if not isinstance(type_, list):
         type_ = [type_]
     return type_
 
 
 def validate_type(type_, item):
+    """ Validate if python object corresponds to provided type
+    >>> validate_type(['string'], 'test_string')
+    True
+    >>> validate_type(['number'], 11)
+    True
+    >>> validate_type(['array'], [])
+    True
+    >>> validate_type(['array'], {})
+    False
+    >>> validate_type(['object'], [])
+    False
+    >>> validate_type(['object'], {})
+    True
+    """
     name = type(item).__name__
     if expected := _PYTHON_TO_JSON_TYPE.get(name):
         return expected in type_
