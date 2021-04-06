@@ -1,88 +1,234 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass, field
+from collections.abc import Iterable, Mapping, Sequence
 from collections import defaultdict, deque
-from collections.abc import Iterable
-
-from spoonbill.spec import TablesDefinition
+from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writer import XlsxWriter, CSVWriter
+from typing import List
+from pathlib import Path
 
 import codecs
 import json
-import pathlib
+import collections
+import logging
+
+
+LOGGER = logging.getLogger('spoonbill')
+
+# we can try to infer tables from  schema
+# but it may require some heuristics or handling exceptional cases
+# like "tenders" which is not array and called "tender"
+# so this way seems like middle ground between flexibility and simlpicity
+ROOT_TABLES = {
+    'tenders': ['/tender'],
+    'awards': ['/awards'],
+    'contracts': ['/contracts'],
+    'planning': ['/planning'],
+    'parties': ['/parties']
+}
+COMBINED_TABLES = {
+    'documents': [
+        '/planning/documents',
+        '/tender/documents',
+        '/awards/documents',
+        '/contracts/documents',
+    ],
+    'milestones': [
+        '/planning/milestones',
+        '/tender/milestones',
+        '/contracts/milestones',
+        '/contracts/implementation/milestones'
+    ],
+    'amendments': [
+        "/planning/milestones",
+        "/tender/milestones",
+        "/contracts/milestones",
+        "/contracts/implementation/milestones"
+    ]
+}
+
+
+@dataclass
+class TableFlattenConfig:
+    split: bool
 
 
 @dataclass
 class FlattenOptions:
-    selection: list[str]
-    workdir: str
-    root: str
+    selection: Mapping[str, TableFlattenConfig]
+    pretty_headers: bool = False
+    separator: bool = '/'
+    # combine: bool = True
+
+    def __post_init__(self):
+        for name, table in self.selection.items():
+            if not is_dataclass(table):
+                self.selection[name] =  TableFlattenConfig(**table)
 
 
 @dataclass
 class Flattener:
     ''''''
-    tables: TablesDefinition
-    records: Iterable[dict]
+    options: FlattenOptions
+    tables: Mapping[str, Table]
 
-    def __iter__(self):
-        root = self.tables.root_table
+    _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
+    _types_cache: Mapping[str, Sequence[str]] = field(default_factory=dict, init=False)
+    _path_cache: dict[str, Table] = field(default_factory=dict, init=False)
+    _propagate_cols: Sequence[str] = field(default_factory=set, init=False)
 
-        for item in self.records:
-            scopes = deque()
-            contiainers = []
-            rows = {root: [defaultdict(str)]}
+    def __post_init__(self):
+        self.options = FlattenOptions(**self.options)
+        tables = {}
+        for name, table in self.tables.items():
+            if name not in self.options.selection:
+                continue
+            if not is_dataclass(table):
+                table.pop('preview_rows', '')
+                table.pop('preview_rows_combined', '')
+                table = Table(**table)
+                tables[name] =  table
 
-            to_parse = deque([('', root, item)])
+            split = self.options.selection[name].split
+            for p in table.path:
+                self._path_cache[p] = table
+            for path in table.types:
+                self._types_cache[path] = table
+            cols = table if split else table.combined_columns
+            for path in cols:
+                if path not in table.propagated_columns:
+                    self._lookup_cache[path] = table
+            for col in table.propagated_columns:
+                self._propagate_cols.add(col)
 
-            while to_parse:
-                path, table_name, record = to_parse.pop()
-                table = self.tables.factory(table_name)
-        
+            if split:
+                for c_name in table.child_tables:
+                    data = self.tables[c_name]
+                    data.pop('preview_rows', '')
+                    data.pop('preview_rows_combined', '')
+                    c_table = Table(**data)
+                    tables[c_name] = c_table
+                    self.options.selection[c_name] = TableFlattenConfig(split=True)
+                    for p in c_table.path:
+                        self._path_cache[p] = c_table
+                    for path in c_table.types:
+                        self._types_cache[path] = c_table
+                    for col in c_table.propagated_columns:
+                        self._propagate_cols.add(col)
+        if tables:
+            self.tables = tables
+
+    def flatten(self, records):
+
+        for item in records:
+            rows = defaultdict(list)
+            to_flatten = deque([('', '', {}, item, {})])
+            separator = self.options.separator
+
+            while to_flatten:
+                abs_path, path, parent, record, propagate = to_flatten.pop()
+
+                if table := self._path_cache.get(path):
+                    rows[table.name].append({})
+
                 for key, item in record.items():
+                    pointer = separator.join((path, key))
+                    if pointer in self._propagate_cols:
+                        propagate[pointer] = item
+                    table = self._lookup_cache.get(pointer)
+                    if not table:
+                        table = self._types_cache.get(pointer)
+                    if not table:
+                        continue
+
                     if isinstance(item, dict):
-                        to_parse.append((f'{path}/{key}', table_name, item))
+                        a_p = separator.join((abs_path, key))
+                        to_flatten.append((a_p, pointer, record, item, propagate))
                     elif isinstance(item, list):
-                        for index, value in enumerate(item):
-                            if isinstance(value, (dict, list)):
-                                if key not in rows:
-                                    rows[key] = []
-                                rows[key].append(defaultdict(str))
-                                to_parse.append((key, key, value))
-                            else:
-                                header = f'{path}/{key}/{index}'
-                                rows[table_name][-1][header] = value
+                            for index, value in enumerate(item):
+                                if isinstance(value, dict):
+                                    if table.is_root:
+                                        a_p = separator.join((abs_path, key))
+                                    else:
+                                        a_p = separator.join((abs_path, key, str(index)))
+                                    to_flatten.append((a_p, pointer, record, value, propagate))
+                                else:
+                                    if self.options.selection[table.name].split:
+                                        a_p = separator.join((abs_path, key))
+                                    else:
+                                        a_p = separator.join((abs_path, key, str(index)))
+                                    if not table.is_root:
+                                        rows[table.name].append({})
+                                    rows[table.name][-1][a_p] = value
                     else:
-                        header = f'{path}/{key}'
-                        rows[table_name][-1][header] = item
+                        a_pointer = separator.join((abs_path, key))
+                        try:
+                            if a_pointer in self._lookup_cache:
+                                rows[table.name][-1][a_pointer] = item
+                            else:
+                                rows[table.name][-1][pointer] = item
+                        except:
+                            import pdb; pdb.set_trace()
+                            pass
+            if propagate:
+                for data in rows.values():
+                    for row in data:
+                        row.update(propagate)
             yield rows
 
 
+class FileAnalyzer:
 
-class SpoonbillTool:
+    def __init__(self,
+                 workdir,
+                 schema,
+                 root_tables=ROOT_TABLES,
+                 combined_tables=COMBINED_TABLES,
+                 propagate_cols=['/ocid'],
+                 root_key='releases',
+                 preview=True
+                 ):
+        self.workdir = Path(options.workdir)
+        self.spec = DataPreprocessor(
+            json.load(schema_fd),
+            root_tables,
+            combined_tables=combined_tables,
+            propagate_cols=propagate_cols,
+            preview=preview
+        )
+        self.root_key = root_key
 
-    def __init__(self, options, schema=None, datafile=None,):
-        ''''''
-        self.options = options
-        self.workdir = pathlib.Path(options.workdir)
-        self.root = options.root
-        if datafile:
-            path = self.workdir / datafile
-            self.spec = TablesDefinition.from_file(path)
-        elif schema:
-            path = self.workdir / schema
-            with codecs.open(path) as fd:
-                schema = json.load(fd)
-                self.dp = DataPreprocessor(schema, options.root)
-                self.spec = self.dp.spec
-        else:
-            raise Exception("No source for tables provided")
+        def analyze_file(self, filename):
+            path = self.workdir / filename
+            spec.process_items(
+                iter_file(path, self.root_key)
+            )
 
-    def analyze_file(self, filename, with_preview=True):
-        full_path = self.workdir / filename
-        out_path = f'{full_path}.analyzed.json'
-        self.dp.process_file(full_path, with_preview)
-        self.dp.save_to_file(out_path)
+        def dump_to_file(self, filename):
+            path = self.workdir / filename
+            with open(path, 'w') as fd:
+                json.dump(self.spec.dump(), fd, default=str)
+
+
+class FileFlattener:
+
+    def __init__(self,
+                 workdir,
+                 options,
+                 tables,
+                 root_key='releases',
+                 csv=True,
+                 xlsx=True):
+        self.flattener = Flattener(options, tables)
+        self.workdir = Path(workdir)
+        self.root_key = root_key
+        self.writers = []
+
+        if csv:
+            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
+        if xlsx:
+            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
 
     def writerow(self, table, row):
         ''''''
@@ -94,25 +240,52 @@ class SpoonbillTool:
             wr.close() 
 
     def flatten_file(self, filename):
-        self.writers = (
-            CSVWriter(self.spec, self.workdir),
-            XlsxWriter(self.spec, self.workdir),            
-        )
-        full_path = self.workdir / filename
-        flattener = Flattener(self.spec, iter_file(full_path, self.root))
-        for data in flattener:
-            for table, rows in data.items():
-                for row in rows:
-                    self.writerow(table, row)
+        path = self.workdir / filename
+        for w in self.writers:
+            w.writeheaders()
+
+        for data in self.flattener.flatten(iter_file(path, self.root_key)):
+            try:
+                for table, rows in data.items():
+                    for row in rows:
+                        self.writerow(table, row)
+            except Exception as err:
+                import pdb; pdb.set_trace()
+                pass
         self.close()
-            # for table, row in :
-                
-        
+
 
 if __name__ == '__main__':
-    from pprint import pprint
-    options = FlattenOptions(['releases', 'parties'], '.', 'releases')
-    dt = SpoonbillTool(options, 'schema.json')
-    dt.analyze_file('ocds-213czf-000-00001.json')
-    dt = SpoonbillTool(options, datafile='ocds-213czf-000-00001.json.analyzed.json')
-    dt.flatten_file('ocds-213czf-000-00001.json')
+    import cProfile
+    import pprofile
+    with open('schema.json') as schema_fd:  # 
+        spec = DataPreprocessor(
+            json.load(schema_fd),
+            ROOT_TABLES,
+            combined_tables=COMBINED_TABLES,
+            propagate_cols=['/ocid'])
+        # prof = pprofile.Profile()  # 
+        # with prof:
+        # spec.process_items(iter_file('releases.json', 'releases'))
+        spec.process_items(iter_file('tests/data/ocds-sample-data.json', 'releases'))
+        with open('big.result.json', 'w') as fd:
+            json.dump(spec.dump(), fd, default=str)
+    options = {
+        'selection': {'tenders': {'split': True}, 'parties': {'split': False}},
+        'pretty_headers': False
+    }
+    with open('big.result.json') as fd:
+        tables = json.load(fd)
+        flatten = FileFlattener('.', options, tables['tables'])
+        flatten.flatten_file('tests/data/ocds-sample-data.json')
+
+        # flattener = Flattener(options,
+                              # tables['tables']
+                              # )
+        # for flat in flattener.flatten(iter_file('releases.json', 'releases')):
+            # for name, rows in flat.items():
+                # for row in rows:
+                    # print(name, ' => ', row)
+        # prof.print_stats()
+        # prof.dump_stats("profiler_stats.txt")
+        # spec.process_items(iter_file('tests/data/ocds-sample-data.json', 'releases'))
