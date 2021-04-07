@@ -17,8 +17,8 @@ class CSVWriter:
         self.options = options
         for name, table in tables.items():
             # if table.total_rows == 0:
-                # LOGGER.info("Skipping table %s as empty")
-                # continue
+            # LOGGER.info("Skipping table %s as empty")
+            # continue
             split = options.selection[name].split
             fd = open(workdir / f'{name}.csv', 'w')
             writer = csv.DictWriter(fd, table.available_rows(split=split))
@@ -50,7 +50,7 @@ class XlsxWriter:
     def writeheaders(self):
         for name, table in self.tables.items():
             # if spec[name]['total_rows'] == 0:
-                # continue
+            # continue
             split = self.options.selection[name].split
             sheet = self.workbook.add_worksheet(name)
             headers = table.available_rows(split=split)

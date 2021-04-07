@@ -9,7 +9,7 @@ COLUMNS = {
     'parties': parties_columns,
     'awards': awards_columns,
     'contracts': contracts_columns,
-        'planning': planning_columns
+    'planning': planning_columns
 }
 COMBINED_COLUMNS = {
     'tenders': tenders_combined_columns,
@@ -26,14 +26,13 @@ ARRAYS_COLUMNS = {
     'planning': planning_arrays
 }
 
-    
-def test_parse_schema(schema):
 
+def test_parse_schema(schema):
     spec = DataPreprocessor(
-            schema,
-            TEST_ROOT_TABLES,
-            combined_tables=TEST_COMBINED_TABLES,
-            propagate_cols=['/ocid'])
+        schema,
+        TEST_ROOT_TABLES,
+        combined_tables=TEST_COMBINED_TABLES
+    )
     for name in TEST_ROOT_TABLES:
         table = spec[name]
         assert isinstance(table, Table)
@@ -46,36 +45,36 @@ def test_parse_schema(schema):
             assert isinstance(col, Column)
             assert col.hits == 0
             assert col.id == col_id
-            assert col.title == titles[col_id]
+            assert col.title == OCDS_TITLES_COMBINED[col_id]
 
         for col_id in COMBINED_COLUMNS[name]:
             col = table.combined_columns[col_id]
             assert col.hits == 0
             assert col.id == col_id
-            assert col.title == titles[col_id]
+            assert col.title == OCDS_TITLES_COMBINED[col_id]
 
         for col_id in ARRAYS_COLUMNS[name]:
             col = table.arrays[col_id]
             assert col == 0
 
+
 def test_get_table(schema, releases):
     spec = DataPreprocessor(
-            schema,
-            TEST_ROOT_TABLES,
-            combined_tables=TEST_COMBINED_TABLES,
-            propagate_cols=['/ocid'])
+        schema,
+        TEST_ROOT_TABLES,
+        combined_tables=TEST_COMBINED_TABLES)
     table = spec.get_table('/tender')
     assert table.name == 'tenders'
     table = spec.get_table('/tender/submissionMethodDetails')
     assert table.name == 'tenders'
     table = spec.get_table('/tender/submissionMethod')
-    assert table.name == 'tenders_tende_submi'
+    assert table.name == 'tenders_submi'
 
     table = spec.get_table('/tender/items/id')
-    assert table.name == 'tenders_tende_items'
-    
+    assert table.name == 'tenders_items'
+
     table = spec.get_table('/tender/items/additionalClassifications/id')
-    assert table.name == 'tenders_tende_items_addit'
+    assert table.name == 'tenders_items_addit'
 
     table = spec.get_table('/planning')
     assert table.name == 'planning'
@@ -88,23 +87,23 @@ def test_get_table(schema, releases):
 
 def test_generate_titles(schema, releases):
     spec = DataPreprocessor(
-            schema,
-            TEST_ROOT_TABLES,
-            combined_tables=TEST_COMBINED_TABLES,
-            propagate_cols=['/ocid'])
+        schema,
+        TEST_ROOT_TABLES,
+        combined_tables=TEST_COMBINED_TABLES)
     for table in spec.tables.values():
         for path, title in table.titles.items():
-            assert titles[path] == title
+            assert OCDS_TITLES_COMBINED[path] == title
+
+
+def test_parse_with_combined_tables(schema):
+    pass
 
 
 def test_analyze(schema, releases):
     spec = DataPreprocessor(
-            schema,
-            TEST_ROOT_TABLES,
-            combined_tables=TEST_COMBINED_TABLES,
-            propagate_cols=['/ocid'])
+        schema,
+        TEST_ROOT_TABLES,
+        combined_tables=TEST_COMBINED_TABLES)
 
     spec.process_items(releases)
-    
-    
-    
+

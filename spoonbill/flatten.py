@@ -1,49 +1,18 @@
 from dataclasses import dataclass, is_dataclass, field
 from collections.abc import Mapping, Sequence
 from collections import defaultdict, deque
-from spoonbill.spec import Table
-from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file
-from spoonbill.writer import XlsxWriter, CSVWriter
 from pathlib import Path
-from typing import Set
 
 import json
 import logging
 
-LOGGER = logging.getLogger('spoonbill')
+from spoonbill.spec import Table
+from spoonbill.stats import DataPreprocessor
+from spoonbill.utils import iter_file, generate_row_id
+from spoonbill.writer import XlsxWriter, CSVWriter
+from spoonbill.common import ROOT_TABLES, COMBINED_TABLES
 
-# we can try to infer tables from  schema
-# but it may require some heuristics or handling exceptional cases
-# like "tenders" which is not array and called "tender"
-# so this way seems like middle ground between flexibility and simlpicity
-ROOT_TABLES = {
-    'tenders': ['/tender'],
-    'awards': ['/awards'],
-    'contracts': ['/contracts'],
-    'planning': ['/planning'],
-    'parties': ['/parties']
-}
-COMBINED_TABLES = {
-    'documents': [
-        '/planning/documents',
-        '/tender/documents',
-        '/awards/documents',
-        '/contracts/documents',
-    ],
-    'milestones': [
-        '/planning/milestones',
-        '/tender/milestones',
-        '/contracts/milestones',
-        '/contracts/implementation/milestones'
-    ],
-    'amendments': [
-        "/planning/milestones",
-        "/tender/milestones",
-        "/contracts/milestones",
-        "/contracts/implementation/milestones"
-    ]
-}
+LOGGER = logging.getLogger('spoonbill')
 
 
 @dataclass
@@ -67,68 +36,68 @@ class FlattenOptions:
 
 @dataclass
 class Flattener:
-    ''''''
     options: FlattenOptions
     tables: Mapping[str, Table]
 
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
     _types_cache: Mapping[str, Sequence[str]] = field(default_factory=dict, init=False)
-    _path_cache: Mapping[str, Table] = field(default_factлory=dict, init=False)
-    _propagate_cols: Set[str] = field(default_factory=set, init=False)
+    _path_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
 
     def __post_init__(self):
-        self.options = FlattenOptions(**self.options)
+        if not is_dataclass(self.options):
+            self.options = FlattenOptions(**self.options)
         tables = {}
         for name, table in self.tables.items():
             if name not in self.options.selection:
                 continue
-
-            split = self.options.selection[name].split
             for p in table.path:
                 self._path_cache[p] = table
             for path in table.types:
                 self._types_cache[path] = table
+
+            split = self.options.selection[name].split
             cols = table if split else table.combined_columns
             for path in cols:
-                if path not in table.propagated_columns:
-                    self._lookup_cache[path] = table
-            for col in table.propagated_columns:
-                self._propagate_cols.add(col)
+                self._lookup_cache[path] = table
 
             if split:
                 for c_name in table.child_tables:
-                    data = self.tables[c_name]
-                    data.pop('preview_rows', '')
-                    data.pop('preview_rows_combined', '')
-                    c_table = Table(**data)
+                    c_table = self.tables[c_name]
                     tables[c_name] = c_table
                     self.options.selection[c_name] = TableFlattenConfig(split=True)
                     for p in c_table.path:
                         self._path_cache[p] = c_table
                     for path in c_table.types:
                         self._types_cache[path] = c_table
-                    for col in c_table.propagated_columns:
-                        self._propagate_cols.add(col)
         if tables:
             self.tables = tables
 
-    def flatten(self, records):
+    def flatten(self, releases):
 
-        for item in records:
+        for release in releases:
             rows = defaultdict(list)
-            to_flatten = deque([('', '', {}, item, {})])
+            to_flatten = deque([('', '', '', {}, release)])
             separator = self.options.separator
+            ocid = release['ocid']
+            top_level_id = release['id']
 
             while to_flatten:
-                abs_path, path, parent, record, propagate = to_flatten.pop()
+                abs_path, path, parent_key, parent, record = to_flatten.pop()
                 # Strict match /tender /parties etc., so this is a new row
                 if table := self._path_cache.get(path):
-                    rows[table.name].append({})
+                    row_id = generate_row_id(ocid,
+                                             record.get('id', ''),
+                                             parent_key,
+                                             top_level_id)
+                    rows[table.name].append({
+                        'rowID': row_id,
+                        'id': top_level_id,
+                        'parentID': parent.get('id'),
+                        'ocid': ocid
+                    })
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
-                    if pointer in self._propagate_cols:
-                        propagate[pointer] = item
                     table = self._lookup_cache.get(pointer)
                     if not table:
                         table = self._types_cache.get(pointer)
@@ -137,7 +106,7 @@ class Flattener:
 
                     if isinstance(item, dict):
                         a_p = separator.join((abs_path, key))
-                        to_flatten.append((a_p, pointer, record, item, propagate))
+                        to_flatten.append((a_p, pointer, key, record, item))
                     elif isinstance(item, list):
                         for index, value in enumerate(item):
                             if isinstance(value, dict):
@@ -145,14 +114,19 @@ class Flattener:
                                     a_p = separator.join((abs_path, key))
                                 else:
                                     a_p = separator.join((abs_path, key, str(index)))
-                                to_flatten.append((a_p, pointer, record, value, propagate))
+                                to_flatten.append((a_p, pointer, key, record, value))
                             else:
                                 if self.options.selection[table.name].split:
                                     a_p = separator.join((abs_path, key))
                                 else:
                                     a_p = separator.join((abs_path, key, str(index)))
                                 if not table.is_root:
-                                    rows[table.name].append({})
+                                    rows[table.name].append({
+                                        'rowID': row_id,
+                                        'id': top_level_id,
+                                        'parentID': parent.get('id'),
+                                        'ocid': ocid
+                                    })
                                 rows[table.name][-1][a_p] = value
                     else:
                         a_pointer = separator.join((abs_path, key))
@@ -160,10 +134,6 @@ class Flattener:
                             rows[table.name][-1][a_pointer] = item
                         else:
                             rows[table.name][-1][pointer] = item
-            if propagate:
-                for data in rows.values():
-                    for row in data:
-                        row.update(propagate)
             yield rows
 
 
@@ -174,7 +144,6 @@ class FileAnalyzer:
                  schema,
                  root_tables=ROOT_TABLES,
                  combined_tables=COMBINED_TABLES,
-                 propagate_cols=['/ocid'],
                  root_key='releases',
                  preview=True
                  ):
@@ -183,7 +152,6 @@ class FileAnalyzer:
             json.load(schema),
             root_tables,
             combined_tables=combined_tables,
-            propagate_cols=propagate_cols,
             preview=preview
         )
         self.root_key = root_key

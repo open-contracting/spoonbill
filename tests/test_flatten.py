@@ -8,15 +8,16 @@ def test_flatten(schema, releases):
     spec = DataPreprocessor(
         schema,
         TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES,
-        propagate_cols=['/ocid'])
+        combined_tables=TEST_COMBINED_TABLES
+    )
     options = {
         'selection': {'tenders': {'split': True}, 'parties': {'split': False}},
         'pretty_headers': False
     }
-    flattener = Flattener(options, spec.dump()['tables'])
+    flattener = Flattener(options, spec.tables)
     for flat in flattener.flatten(releases):
             for name, rows in flat.items():
                 for row in rows:
-                    assert row
-                    
+                    assert 'id' in row
+                    assert 'ocid' in row
+                    assert 'rowID' in row

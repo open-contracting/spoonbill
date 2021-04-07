@@ -1,8 +1,10 @@
 import logging
 from collections import OrderedDict
+from typing import List
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from spoonbill.utils import get_root, combine_path, prepare_title
+from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
 
 LOGGER = logging.getLogger('spoonbill')
 
@@ -29,17 +31,16 @@ class Table:
     propagated_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     additional_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     # max length not count
-    arrays: dict[str, int] = field(default_factory=dict)
+    arrays: Mapping[str, int] = field(default_factory=dict)
     # for headers
-    titles: dict[str, str] = field(default_factory=dict)
-    child_tables: list[str] = field(default_factory=list)
-    types: dict[str, str] = field(default_factory=dict)
+    titles: Mapping[str, str] = field(default_factory=dict)
+    child_tables: List[str] = field(default_factory=list)
+    types: Mapping[str, str] = field(default_factory=dict)
 
-    preview_rows: list[dict] = field(default_factory=list, init=False)
-    preview_rows_combined: list[dict] = field(default_factory=list, init=False)
+    preview_rows: Sequence[dict] = field(default_factory=list, init=False)
+    preview_rows_combined: Sequence[dict] = field(default_factory=list, init=False)
 
     def __post_init__(self):
-        ''''''
         for attr in ('columns', 'propagated_columns',
                      'combined_columns', 'additional_columns'):
             if obj := getattr(self, attr, {}):
@@ -47,7 +48,6 @@ class Table:
                 setattr(self, attr, init)
 
     def _counter(self, split, cond):
-        ''''''
         cols = self.columns if split else self.combined_columns
         return [
             header for header, col in cols.items()
@@ -65,7 +65,6 @@ class Table:
             yield col
 
     def __getitem__(self, path):
-        ''''''
         return self.columns.get(path)
 
     def add_column(self,
@@ -74,8 +73,7 @@ class Table:
                    type_,
                    parent,
                    combined_only=False,
-                   additional=False,
-                   propagated=False):
+                   additional=False):
         title = prepare_title(item, parent)
         column = Column(title, type_, path)
         root = get_root(self)
@@ -98,8 +96,6 @@ class Table:
             )
         if additional:
             self.additional_columns[path] = column
-        if propagated:
-            self.propagated_columns[path] = column
 
     def inc_column(self, header):
         self.columns[header].hits += 1
@@ -118,3 +114,11 @@ class Table:
 
     def inc(self):
         self.total_rows += 1
+
+
+def add_child_table(current_table, pointer, parent_key, key):
+    table_name = generate_table_name(current_table.name, parent_key, key)
+    child_table = Table(table_name, [pointer], parent=current_table)
+    current_table.child_tables.append(table_name)
+    get_root(current_table).arrays[pointer] = 0
+    return child_table

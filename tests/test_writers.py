@@ -5,19 +5,17 @@ from csv import DictReader
 
 from .data import *
 
-
 ID_FIELDS = {
     'tenders': '/tender/id',
-    'parties':'/parties/id'
+    'parties': '/parties/id'
 }
 
 
-def test_writer_init (schema, tmpdir, flatten_options):
+def test_writer_init(schema, tmpdir, flatten_options):
     spec = DataPreprocessor(
         schema,
         TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES,
-        propagate_cols=['/ocid'])
+        combined_tables=TEST_COMBINED_TABLES)
 
     tables = {
         name: table for name, table
@@ -27,7 +25,7 @@ def test_writer_init (schema, tmpdir, flatten_options):
         table.inc_column(ID_FIELDS[name])
     workdir = Path(tmpdir)
     writers = [CSVWriter(workdir, tables, flatten_options),
-              XlsxWriter(workdir, tables, flatten_options)]
+               XlsxWriter(workdir, tables, flatten_options)]
     for writer in writers:
         writer.close()
     path = workdir / 'result.xlsx'
@@ -41,8 +39,7 @@ def test_headers_filtering(schema, tmpdir, flatten_options):
     spec = DataPreprocessor(
         schema,
         TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES,
-        propagate_cols=['/ocid'])
+        combined_tables=TEST_COMBINED_TABLES)
 
     tables = {
         name: table for name, table
@@ -61,4 +58,3 @@ def test_headers_filtering(schema, tmpdir, flatten_options):
             headers = reader.fieldnames
             assert len(headers) == 1
             assert headers[0] == ID_FIELDS[name]
-    
