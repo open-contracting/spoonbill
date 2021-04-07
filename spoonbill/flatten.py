@@ -1,18 +1,15 @@
 from dataclasses import dataclass, is_dataclass, field
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from collections import defaultdict, deque
 from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writer import XlsxWriter, CSVWriter
-from typing import List
 from pathlib import Path
+from typing import Set
 
-import codecs
 import json
-import collections
 import logging
-
 
 LOGGER = logging.getLogger('spoonbill')
 
@@ -59,12 +56,13 @@ class FlattenOptions:
     selection: Mapping[str, TableFlattenConfig]
     pretty_headers: bool = False
     separator: bool = '/'
+
     # combine: bool = True
 
     def __post_init__(self):
         for name, table in self.selection.items():
             if not is_dataclass(table):
-                self.selection[name] =  TableFlattenConfig(**table)
+                self.selection[name] = TableFlattenConfig(**table)
 
 
 @dataclass
@@ -75,8 +73,8 @@ class Flattener:
 
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
     _types_cache: Mapping[str, Sequence[str]] = field(default_factory=dict, init=False)
-    _path_cache: dict[str, Table] = field(default_factory=dict, init=False)
-    _propagate_cols: Sequence[str] = field(default_factory=set, init=False)
+    _path_cache: Mapping[str, Table] = field(default_factлory=dict, init=False)
+    _propagate_cols: Set[str] = field(default_factory=set, init=False)
 
     def __post_init__(self):
         self.options = FlattenOptions(**self.options)
@@ -84,11 +82,6 @@ class Flattener:
         for name, table in self.tables.items():
             if name not in self.options.selection:
                 continue
-            if not is_dataclass(table):
-                table.pop('preview_rows', '')
-                table.pop('preview_rows_combined', '')
-                table = Table(**table)
-                tables[name] =  table
 
             split = self.options.selection[name].split
             for p in table.path:
@@ -128,7 +121,7 @@ class Flattener:
 
             while to_flatten:
                 abs_path, path, parent, record, propagate = to_flatten.pop()
-
+                # Strict match /tender /parties etc., so this is a new row
                 if table := self._path_cache.get(path):
                     rows[table.name].append({})
 
@@ -146,31 +139,27 @@ class Flattener:
                         a_p = separator.join((abs_path, key))
                         to_flatten.append((a_p, pointer, record, item, propagate))
                     elif isinstance(item, list):
-                            for index, value in enumerate(item):
-                                if isinstance(value, dict):
-                                    if table.is_root:
-                                        a_p = separator.join((abs_path, key))
-                                    else:
-                                        a_p = separator.join((abs_path, key, str(index)))
-                                    to_flatten.append((a_p, pointer, record, value, propagate))
+                        for index, value in enumerate(item):
+                            if isinstance(value, dict):
+                                if table.is_root:
+                                    a_p = separator.join((abs_path, key))
                                 else:
-                                    if self.options.selection[table.name].split:
-                                        a_p = separator.join((abs_path, key))
-                                    else:
-                                        a_p = separator.join((abs_path, key, str(index)))
-                                    if not table.is_root:
-                                        rows[table.name].append({})
-                                    rows[table.name][-1][a_p] = value
+                                    a_p = separator.join((abs_path, key, str(index)))
+                                to_flatten.append((a_p, pointer, record, value, propagate))
+                            else:
+                                if self.options.selection[table.name].split:
+                                    a_p = separator.join((abs_path, key))
+                                else:
+                                    a_p = separator.join((abs_path, key, str(index)))
+                                if not table.is_root:
+                                    rows[table.name].append({})
+                                rows[table.name][-1][a_p] = value
                     else:
                         a_pointer = separator.join((abs_path, key))
-                        try:
-                            if a_pointer in self._lookup_cache:
-                                rows[table.name][-1][a_pointer] = item
-                            else:
-                                rows[table.name][-1][pointer] = item
-                        except:
-                            import pdb; pdb.set_trace()
-                            pass
+                        if a_pointer in self._lookup_cache:
+                            rows[table.name][-1][a_pointer] = item
+                        else:
+                            rows[table.name][-1][pointer] = item
             if propagate:
                 for data in rows.values():
                     for row in data:
@@ -189,9 +178,9 @@ class FileAnalyzer:
                  root_key='releases',
                  preview=True
                  ):
-        self.workdir = Path(options.workdir)
+        self.workdir = Path(workdir)
         self.spec = DataPreprocessor(
-            json.load(schema_fd),
+            json.load(schema),
             root_tables,
             combined_tables=combined_tables,
             propagate_cols=propagate_cols,
@@ -201,7 +190,7 @@ class FileAnalyzer:
 
         def analyze_file(self, filename):
             path = self.workdir / filename
-            spec.process_items(
+            self.spec.process_items(
                 iter_file(path, self.root_key)
             )
 
@@ -237,7 +226,7 @@ class FileFlattener:
 
     def close(self):
         for wr in self.writers:
-            wr.close() 
+            wr.close()
 
     def flatten_file(self, filename):
         path = self.workdir / filename
@@ -250,42 +239,5 @@ class FileFlattener:
                     for row in rows:
                         self.writerow(table, row)
             except Exception as err:
-                import pdb; pdb.set_trace()
-                pass
+                LOGGER.warning(f"Failed to write row {row}")
         self.close()
-
-
-if __name__ == '__main__':
-    import cProfile
-    import pprofile
-    with open('schema.json') as schema_fd:  # 
-        spec = DataPreprocessor(
-            json.load(schema_fd),
-            ROOT_TABLES,
-            combined_tables=COMBINED_TABLES,
-            propagate_cols=['/ocid'])
-        # prof = pprofile.Profile()  # 
-        # with prof:
-        # spec.process_items(iter_file('releases.json', 'releases'))
-        spec.process_items(iter_file('tests/data/ocds-sample-data.json', 'releases'))
-        with open('big.result.json', 'w') as fd:
-            json.dump(spec.dump(), fd, default=str)
-    options = {
-        'selection': {'tenders': {'split': True}, 'parties': {'split': False}},
-        'pretty_headers': False
-    }
-    with open('big.result.json') as fd:
-        tables = json.load(fd)
-        flatten = FileFlattener('.', options, tables['tables'])
-        flatten.flatten_file('tests/data/ocds-sample-data.json')
-
-        # flattener = Flattener(options,
-                              # tables['tables']
-                              # )
-        # for flat in flattener.flatten(iter_file('releases.json', 'releases')):
-            # for name, rows in flat.items():
-                # for row in rows:
-                    # print(name, ' => ', row)
-        # prof.print_stats()
-        # prof.dump_stats("profiler_stats.txt")
-        # spec.process_items(iter_file('tests/data/ocds-sample-data.json', 'releases'))

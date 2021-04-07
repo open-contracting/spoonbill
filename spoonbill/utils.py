@@ -3,7 +3,6 @@ from os.path import commonpath
 
 import ijson
 
-
 # for now we care only about types which can break flattening
 _PYTHON_TO_JSON_TYPE = {'list': 'array', 'dict': 'object'}
 
@@ -94,4 +93,3 @@ def get_maching_tables(tables, path):
         key=lambda c: max((len(p) for p in c.path)),
         reverse=True
     )
-

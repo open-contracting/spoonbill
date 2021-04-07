@@ -1,30 +1,20 @@
-import pathlib
 import json
-from collections import deque, defaultdict
-from dataclasses import asdict
-from spoonbill.spec import Table, Column
-from spoonbill.utils import iter_file
-
-
-from collections import deque, defaultdict, OrderedDict
-from itertools import chain
-from os.path import commonpath
-from dataclasses import dataclass, field, asdict, replace
-from spoonbill.utils import extract_type,\
-    iter_file, validate_type, get_root, combine_path, prepare_title,\
-    get_maching_tables
-
-import codecs
-import json
-import jsonref
 import logging
+from collections import deque, defaultdict
+from dataclasses import dataclass, field, asdict, replace
+from os.path import commonpath
 
+import jsonref
+
+from spoonbill.spec import Table
+from spoonbill.utils import extract_type, \
+    validate_type, get_root, get_maching_tables
 
 PREVIEW_ROWS = 20
 LOGGER = logging.getLogger('spoonbill')
 
 
-@dataclass    
+@dataclass
 class DataPreprocessor:
     schema_dict: dict
     root_tables: dict[str, list]
@@ -61,11 +51,11 @@ class DataPreprocessor:
             else:
                 with open(self.schema_dict) as fd:
                     self.schema_dict = json.load(fd)
-            
+
         self.schema_dict = jsonref.JsonRef.replace_refs(self.schema_dict)
         self._init_tables(self.root_tables, is_root=True)
         if self.combined_tables:
-            self._init_tables(self.combined_tables, is_combined=True, is_root=True)            
+            self._init_tables(self.combined_tables, is_combined=True, is_root=True)
 
         separator = self.header_separator
         to_analyze = deque([('', ('', {}), self.schema_dict, [])])
@@ -84,7 +74,7 @@ class DataPreprocessor:
                     type_ = extract_type(item)
                     pointer = separator.join([path, key])
                     self.curr_table = self.get_table(pointer)
-                    
+
                     if pointer in self.propagate_cols:
                         propagate_cols.append((pointer, item))
                         for table in self.tables.values():
@@ -126,7 +116,7 @@ class DataPreprocessor:
                             self.curr_table = child_table
                         items = item['items']
                         item_type = extract_type(items)
-                        if set(item_type) & set(('array', 'object')):
+                        if set(item_type) & {'array', 'object'}:
                             to_analyze.append((pointer, (key, properties), items, propagate_cols))
                         else:
                             self.curr_table.add_column(
@@ -152,7 +142,7 @@ class DataPreprocessor:
         candidates = get_maching_tables(self.tables, path)
         if not candidates:
             return
-        table = candidates[0] 
+        table = candidates[0]
         self._lookup_cache[path] = table
         return table
 
@@ -183,8 +173,8 @@ class DataPreprocessor:
                         continue
                     type_ = self.curr_table.types.get(pointer)
 
-                    if pointer not in self.propagate_cols\
-                       and pointer in self.curr_table.path:
+                    if pointer not in self.propagate_cols \
+                            and pointer in self.curr_table.path:
                         if count < PREVIEW_ROWS:
                             self.add_preview_row(propagate_cols)
                     if type_ and not validate_type(type_, item):
@@ -194,9 +184,9 @@ class DataPreprocessor:
                         continue
                     if isinstance(item, dict):
                         to_analyze.append((separator.join([abs_path, key]),
-                                     pointer,
-                                     record,
-                                     item))
+                                           pointer,
+                                           record,
+                                           item))
                     elif isinstance(item, list):
                         if self.curr_table.is_root:
                             a_path = separator.join([abs_path, key])
@@ -254,16 +244,11 @@ class DataPreprocessor:
 
                         self.curr_table.inc_column(pointer)
                         if self.preview and count < PREVIEW_ROWS:
-                            table = self.curr_table
-                            if not self.curr_table.is_root:
-                                table = get_root(self.curr_table)
-                            p = separator.join((abs_path, key))
-                            table.preview_rows_combined[-1][p] = item
                             self.curr_table.preview_rows[-1][pointer] = item
+                            p = separator.join((abs_path, key))
+                            root.preview_rows_combined[-1][p] = item
 
     def dump(self):
         return {
             'tables': {name: asdict(table) for name, table in self.tables.items()}
         }
-
-

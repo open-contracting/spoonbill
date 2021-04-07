@@ -1,16 +1,8 @@
-from collections import deque, defaultdict, OrderedDict
-from itertools import chain
-from os.path import commonpath
-from dataclasses import dataclass, field, asdict, replace
-from spoonbill.utils import extract_type,\
-    iter_file, validate_type, get_root, combine_path, prepare_title,\
-    get_maching_tables
-
-import codecs
-import json
-import jsonref
 import logging
+from collections import OrderedDict
+from dataclasses import dataclass, field
 
+from spoonbill.utils import get_root, combine_path, prepare_title
 
 LOGGER = logging.getLogger('spoonbill')
 
@@ -37,9 +29,9 @@ class Table:
     propagated_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     additional_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
     # max length not count
-    arrays: dict[str, int]  = field(default_factory=dict)
+    arrays: dict[str, int] = field(default_factory=dict)
     # for headers
-    titles: dict[str, str]  = field(default_factory=dict)
+    titles: dict[str, str] = field(default_factory=dict)
     child_tables: list[str] = field(default_factory=list)
     types: dict[str, str] = field(default_factory=dict)
 
@@ -126,4 +118,3 @@ class Table:
 
     def inc(self):
         self.total_rows += 1
-

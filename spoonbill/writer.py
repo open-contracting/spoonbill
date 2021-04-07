@@ -1,9 +1,8 @@
-import xlsxwriter
-import csv
-import pathlib
 import collections
+import csv
 import logging
 
+import xlsxwriter
 
 LOGGER = logging.getLogger('spoonbill')
 
