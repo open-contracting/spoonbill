@@ -1,118 +1,210 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass, field
+from collections.abc import Mapping, Sequence
 from collections import defaultdict, deque
-from collections.abc import Iterable
+from pathlib import Path
 
-from spoonbill.spec import TablesDefinition
-from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file
-from spoonbill.writer import XlsxWriter, CSVWriter
-
-import codecs
 import json
-import pathlib
+import logging
+
+from spoonbill.spec import Table
+from spoonbill.stats import DataPreprocessor
+from spoonbill.utils import iter_file, generate_row_id
+from spoonbill.writer import XlsxWriter, CSVWriter
+from spoonbill.common import ROOT_TABLES, COMBINED_TABLES
+
+LOGGER = logging.getLogger('spoonbill')
+
+
+@dataclass
+class TableFlattenConfig:
+    split: bool
 
 
 @dataclass
 class FlattenOptions:
-    selection: list[str]
-    workdir: str
-    root: str
+    selection: Mapping[str, TableFlattenConfig]
+    pretty_headers: bool = False
+    separator: str = '/'
+
+    # combine: bool = True
+
+    def __post_init__(self):
+        for name, table in self.selection.items():
+            if not is_dataclass(table):
+                self.selection[name] = TableFlattenConfig(**table)
 
 
 @dataclass
 class Flattener:
-    ''''''
-    tables: TablesDefinition
-    records: Iterable[dict]
+    options: FlattenOptions
+    tables: Mapping[str, Table]
 
-    def __iter__(self):
-        root = self.tables.root_table
+    _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
+    _types_cache: Mapping[str, Sequence[str]] = field(default_factory=dict, init=False)
+    _path_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
 
-        for item in self.records:
-            scopes = deque()
-            contiainers = []
-            rows = {root: [defaultdict(str)]}
+    def __post_init__(self):
+        if not is_dataclass(self.options):
+            self.options = FlattenOptions(**self.options)
+        tables = {}
+        for name, table in self.tables.items():
+            if name not in self.options.selection:
+                continue
+            for p in table.path:
+                self._path_cache[p] = table
+            for path in table.types:
+                self._types_cache[path] = table
 
-            to_parse = deque([('', root, item)])
+            split = self.options.selection[name].split
+            cols = table if split else table.combined_columns
+            for path in cols:
+                self._lookup_cache[path] = table
 
-            while to_parse:
-                path, table_name, record = to_parse.pop()
-                table = self.tables.factory(table_name)
-        
+            if split:
+                for c_name in table.child_tables:
+                    c_table = self.tables[c_name]
+                    tables[c_name] = c_table
+                    self.options.selection[c_name] = TableFlattenConfig(split=True)
+                    for p in c_table.path:
+                        self._path_cache[p] = c_table
+                    for path in c_table.types:
+                        self._types_cache[path] = c_table
+        if tables:
+            self.tables = tables
+
+    def flatten(self, releases):
+
+        for release in releases:
+            rows = defaultdict(list)
+            to_flatten = deque([('', '', '', {}, release)])
+            separator = self.options.separator
+            ocid = release['ocid']
+            top_level_id = release['id']
+
+            while to_flatten:
+                abs_path, path, parent_key, parent, record = to_flatten.pop()
+                # Strict match /tender /parties etc., so this is a new row
+                if table := self._path_cache.get(path):
+                    row_id = generate_row_id(ocid,
+                                             record.get('id', ''),
+                                             parent_key,
+                                             top_level_id)
+                    rows[table.name].append({
+                        'rowID': row_id,
+                        'id': top_level_id,
+                        'parentID': parent.get('id'),
+                        'ocid': ocid
+                    })
+
                 for key, item in record.items():
+                    pointer = separator.join((path, key))
+                    table = self._lookup_cache.get(pointer)
+                    if not table:
+                        table = self._types_cache.get(pointer)
+                    if not table:
+                        continue
+
                     if isinstance(item, dict):
-                        to_parse.append((f'{path}/{key}', table_name, item))
+                        a_p = separator.join((abs_path, key))
+                        to_flatten.append((a_p, pointer, key, record, item))
                     elif isinstance(item, list):
                         for index, value in enumerate(item):
-                            if isinstance(value, (dict, list)):
-                                if key not in rows:
-                                    rows[key] = []
-                                rows[key].append(defaultdict(str))
-                                to_parse.append((key, key, value))
+                            if isinstance(value, dict):
+                                if table.is_root:
+                                    a_p = separator.join((abs_path, key))
+                                else:
+                                    a_p = separator.join((abs_path, key, str(index)))
+                                to_flatten.append((a_p, pointer, key, record, value))
                             else:
-                                header = f'{path}/{key}/{index}'
-                                rows[table_name][-1][header] = value
+                                if self.options.selection[table.name].split:
+                                    a_p = separator.join((abs_path, key))
+                                else:
+                                    a_p = separator.join((abs_path, key, str(index)))
+                                if not table.is_root:
+                                    rows[table.name].append({
+                                        'rowID': row_id,
+                                        'id': top_level_id,
+                                        'parentID': parent.get('id'),
+                                        'ocid': ocid
+                                    })
+                                rows[table.name][-1][a_p] = value
                     else:
-                        header = f'{path}/{key}'
-                        rows[table_name][-1][header] = item
+                        a_pointer = separator.join((abs_path, key))
+                        if a_pointer in self._lookup_cache:
+                            rows[table.name][-1][a_pointer] = item
+                        else:
+                            rows[table.name][-1][pointer] = item
             yield rows
 
 
+class FileAnalyzer:
 
-class SpoonbillTool:
+    def __init__(self,
+                 workdir,
+                 schema,
+                 root_tables=ROOT_TABLES,
+                 combined_tables=COMBINED_TABLES,
+                 root_key='releases',
+                 preview=True
+                 ):
+        self.workdir = Path(workdir)
+        self.spec = DataPreprocessor(
+            json.load(schema),
+            root_tables,
+            combined_tables=combined_tables,
+            preview=preview
+        )
+        self.root_key = root_key
 
-    def __init__(self, options, schema=None, datafile=None,):
-        ''''''
-        self.options = options
-        self.workdir = pathlib.Path(options.workdir)
-        self.root = options.root
-        if datafile:
-            path = self.workdir / datafile
-            self.spec = TablesDefinition.from_file(path)
-        elif schema:
-            path = self.workdir / schema
-            with codecs.open(path) as fd:
-                schema = json.load(fd)
-                self.dp = DataPreprocessor(schema, options.root)
-                self.spec = self.dp.spec
-        else:
-            raise Exception("No source for tables provided")
+    def analyze_file(self, filename):
+        path = self.workdir / filename
+        self.spec.process_items(
+            iter_file(path, self.root_key)
+        )
 
-    def analyze_file(self, filename, with_preview=True):
-        full_path = self.workdir / filename
-        out_path = f'{full_path}.analyzed.json'
-        self.dp.process_file(full_path, with_preview)
-        self.dp.save_to_file(out_path)
+    def dump_to_file(self, filename):
+        path = self.workdir / filename
+        with open(path, 'w') as fd:
+            json.dump(self.spec.dump(), fd, default=str)
+
+
+class FileFlattener:
+
+    def __init__(self,
+                 workdir,
+                 options,
+                 tables,
+                 root_key='releases',
+                 csv=True,
+                 xlsx=True):
+        self.flattener = Flattener(options, tables)
+        self.workdir = Path(workdir)
+        self.root_key = root_key
+        self.writers = []
+
+        if csv:
+            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
+        if xlsx:
+            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
 
     def writerow(self, table, row):
-        ''''''
         for wr in self.writers:
             wr.writerow(table, row)
 
     def close(self):
         for wr in self.writers:
-            wr.close() 
+            wr.close()
 
     def flatten_file(self, filename):
-        self.writers = (
-            CSVWriter(self.spec, self.workdir),
-            XlsxWriter(self.spec, self.workdir),            
-        )
-        full_path = self.workdir / filename
-        flattener = Flattener(self.spec, iter_file(full_path, self.root))
-        for data in flattener:
-            for table, rows in data.items():
-                for row in rows:
-                    self.writerow(table, row)
-        self.close()
-            # for table, row in :
-                
-        
+        path = self.workdir / filename
+        for w in self.writers:
+            w.writeheaders()
 
-if __name__ == '__main__':
-    from pprint import pprint
-    options = FlattenOptions(['releases', 'parties'], '.', 'releases')
-    dt = SpoonbillTool(options, 'schema.json')
-    dt.analyze_file('ocds-213czf-000-00001.json')
-    dt = SpoonbillTool(options, datafile='ocds-213czf-000-00001.json.analyzed.json')
-    dt.flatten_file('ocds-213czf-000-00001.json')
+        for data in self.flattener.flatten(iter_file(path, self.root_key)):
+            try:
+                for table, rows in data.items():
+                    for row in rows:
+                        self.writerow(table, row)
+            except Exception as err:
+                LOGGER.warning(f"Failed to write row {row}")
+        self.close()

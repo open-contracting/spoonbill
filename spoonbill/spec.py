@@ -1,86 +1,124 @@
-from collections import deque, defaultdict
+import logging
+from collections import OrderedDict
+from typing import List
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-import codecs
-import json
-import jsonref
+from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
+
+LOGGER = logging.getLogger('spoonbill')
+
+
+@dataclass
+class Column:
+    title: str
+    type: str
+    id: str
+    hits: int = 0
 
 
 @dataclass
 class Table:
     name: str
-    data: dict[str, int] = field(default_factory=dict)
+    path: [str]
     total_rows: int = 0
-    arrays: dict[str, int]  = field(default_factory=dict)
-    titles: dict[str, str]  = field(default_factory=dict)
-    additional_rows: dict[str, str]  = field(default_factory=dict)
-    preview_rows: list[dict] = field(default_factory=list)
+    # parent is Table object but dataclasses don`t play well with recursion
+    parent: object = field(default_factory=dict)
+    is_root: bool = False
+    is_combined: bool = False
+    columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    combined_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    propagated_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    additional_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    # max length not count
+    arrays: Mapping[str, int] = field(default_factory=dict)
+    # for headers
+    titles: Mapping[str, str] = field(default_factory=dict)
+    child_tables: List[str] = field(default_factory=list)
+    types: Mapping[str, str] = field(default_factory=dict)
 
-    def __contains__(self, key):
-        return key in self.data
+    preview_rows: Sequence[dict] = field(default_factory=list, init=False)
+    preview_rows_combined: Sequence[dict] = field(default_factory=list, init=False)
 
-    def add_array(self, path):
-        self.arrays[path] = 0
+    def __post_init__(self):
+        for attr in ('columns', 'propagated_columns',
+                     'combined_columns', 'additional_columns'):
+            if obj := getattr(self, attr, {}):
+                init = {name: Column(**col) for name, col in obj.items()}
+                setattr(self, attr, init)
 
-    def add_column(self, header, title=''):
-        self.data[header] = 0
-        self.titles[header] = title
+    def _counter(self, split, cond):
+        cols = self.columns if split else self.combined_columns
+        return [
+            header for header, col in cols.items()
+            if cond(col)
+        ]
+
+    def missing_rows(self, split=True):
+        return self._counter(split, lambda c: c.hits == 0)
+
+    def available_rows(self, split=True):
+        return self._counter(split, lambda c: c.hits > 0)
+
+    def __iter__(self):
+        for col in self.columns:
+            yield col
+
+    def __getitem__(self, path):
+        return self.columns.get(path)
+
+    def add_column(self,
+                   path,
+                   item,
+                   type_,
+                   parent,
+                   combined_only=False,
+                   additional=False):
+        title = prepare_title(item, parent)
+        column = Column(title, type_, path)
+        root = get_root(self)
+        combined_path = combine_path(root, path)
+        self.combined_columns[combined_path] = Column(title, type_, combined_path)
+
+        for p in (path, combined_path):
+            self.titles[p] = title
+
+        if not combined_only:
+            self.columns[path] = column
+        if not self.is_root:
+            root_table = get_root(self)
+            root_table.add_column(
+                path,
+                item,
+                type_,
+                parent=parent,
+                combined_only=True
+            )
+        if additional:
+            self.additional_columns[path] = column
 
     def inc_column(self, header):
-        self.data[header] += 1
-        if header in self.additional_rows:
-            self.additional_rows[header] += 1
+        self.columns[header].hits += 1
+        if header in self.combined_columns:
+            self.combined_columns[header].hits += 1
+        if header in self.additional_columns:
+            self.additional_columns[header].hits += 1
 
-    def inc_array(self, header):
-        self.array[header] += 1
+    def set_array(self, header, item):
+        count = self.arrays[header] or 0
+        length = len(item)
+        if length > count:
+            self.arrays[header] = length
+            return True
+        return False
 
     def inc(self):
         self.total_rows += 1
 
 
-@dataclass    
-class TablesDefinition:
-    root_table: str
-    tables: dict[Table] = field(default_factory=dict)
-    # schema_dict: dict = field(default_factory=dict)
-
-    def __getitem__(self, table):
-        ''''''
-        return self.tables[table]
-
-    def factory(self, name):
-        if name not in self.tables:
-            self.tables[name] = Table(name)
-        return self[name]
-
-    @classmethod
-    def from_schema(cls, schema, root):
-        ''''''
-        schema_dict = jsonref.JsonRef.replace_refs(schema)
-        tables = cls(root_table=root)
-        properties = deque([('', tables.root_table, schema_dict)])
-        while properties:
-            path, table_name, prop = properties.pop()
-            table = tables.factory(table_name)
-            for key, item in prop['properties'].items():
-                type_ = 'type' in item and item['type']
-                d_key = f'{path}/{key}'
-                if type_ == 'array':
-                    d_type_  = item['items']['type']
-                    if d_type_ in ('array', 'object'):
-                        table.add_array(d_key)
-                        items = item['items']
-                        properties.append((key, key, items))
-                    else:
-                        table.add_column(d_key, item.get('title'))
-                elif type_ == 'object':
-                    properties.append((d_key, table_name, item))
-                else:
-                    table.add_column(d_key, item.get('title'))
-        return tables
-
-    @classmethod
-    def from_file(cls, filename):
-        with codecs.open(filename) as fd:
-            data = json.load(fd)
-        return cls(**data)
+def add_child_table(current_table, pointer, parent_key, key):
+    table_name = generate_table_name(current_table.name, parent_key, key)
+    child_table = Table(table_name, [pointer], parent=current_table)
+    current_table.child_tables.append(table_name)
+    get_root(current_table).arrays[pointer] = 0
+    return child_table

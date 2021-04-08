@@ -1,27 +1,36 @@
-import xlsxwriter
-import csv
-import pathlib
 import collections
+import csv
+import logging
+
+import xlsxwriter
+
+LOGGER = logging.getLogger('spoonbill')
 
 
 class CSVWriter:
-    def __init__(self, spec, workdir ):
-        self.spec = spec
-        self.sheets = {}
+
+    def __init__(self, workdir, tables, options):
+        self.workdir = workdir
+        self.writers = {}
         self.fds = []
-        for name in spec.tables:
-            if spec[name]['total_rows'] == 0:
-                continue
-            headers = [k for k, c in spec[name]['data'].items() if c > 0]
-            sheet_path = pathlib.Path(workdir) / f'{name}.csv'
-            fd = open(sheet_path, 'w')
-            writer = csv.DictWriter(fd, headers)
+        self.tables = tables
+        self.options = options
+        for name, table in tables.items():
+            # if table.total_rows == 0:
+            # LOGGER.info("Skipping table %s as empty")
+            # continue
+            split = options.selection[name].split
+            fd = open(workdir / f'{name}.csv', 'w')
+            writer = csv.DictWriter(fd, table.available_rows(split=split))
             self.fds.append(fd)
-            writer.writeheader()
-            self.sheets[name] = writer
+            self.writers[name] = writer
+
+    def writeheaders(self):
+        for w in self.writers.values():
+            w.writeheader()
 
     def writerow(self, table, row):
-        self.sheets[table].writerow(row)
+        self.writers[table].writerow(row)
 
     def close(self):
         for fd in self.fds:
@@ -29,29 +38,34 @@ class CSVWriter:
 
 
 class XlsxWriter:
-    def __init__(self, spec, workdir):
-        path = workdir / 'result.xlsx'
-        self.workbook = xlsxwriter.Workbook(path, {'constant_memory': True})
-        self.counters = {}
-        self.headers = collections.defaultdict(dict)
-        for name in spec.tables:
-            if spec[name]['total_rows'] == 0:
-                continue
+
+    def __init__(self, workdir, tables, options):
+        self.workdir = workdir
+        self.workbook = xlsxwriter.Workbook(workdir / 'result.xlsx', {'constant_memory': True})
+        self.row_counters = {}
+        self.tables = tables
+        self.options = options
+        self.col_index = collections.defaultdict(dict)
+
+    def writeheaders(self):
+        for name, table in self.tables.items():
+            # if spec[name]['total_rows'] == 0:
+            # continue
+            split = self.options.selection[name].split
             sheet = self.workbook.add_worksheet(name)
-            headers = [k for k, c in spec[name]['data'].items() if c > 0]
+            headers = table.available_rows(split=split)
             for col_index, col_name in enumerate(headers):
-                self.headers[name][col_name] = col_index
+                self.col_index[name][col_name] = col_index
                 sheet.write(0, col_index, col_name)
-            self.counters[name] = 1
+            self.row_counters[name] = 1
 
     def writerow(self, table, row):
         sheet = self.workbook.get_worksheet_by_name(table)
-        headers = self.headers[table]
-        curr_row = self.counters[table]
+
         for column, value in row.items():
-            col_index = headers[column]
-            sheet.write(curr_row, col_index, value)
-        self.counters[table] += 1
+            col_index = self.col_index[table][column]
+            sheet.write(self.row_counters[table], col_index, value)
+        self.row_counters[table] += 1
 
     def close(self):
         self.workbook.close()
