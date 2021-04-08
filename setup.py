@@ -17,6 +17,7 @@ setup(
         'ijson>=2.5',
         'jsonref',
         'xlsxwriter',
+        'requests',
         'click',        
     ],
     extras_require={
