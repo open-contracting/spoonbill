@@ -24,7 +24,7 @@ class TableFlattenConfig:
 class FlattenOptions:
     selection: Mapping[str, TableFlattenConfig]
     pretty_headers: bool = False
-    separator: bool = '/'
+    separator: str = '/'
 
     # combine: bool = True
 
