@@ -53,7 +53,8 @@ def validate_type(type_, item):
     True
     """
     name = type(item).__name__
-    if expected := _PYTHON_TO_JSON_TYPE.get(name):
+    expected = _PYTHON_TO_JSON_TYPE.get(name)
+    if expected:
         return expected in type_
     return True
 

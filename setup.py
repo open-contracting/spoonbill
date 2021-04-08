@@ -3,6 +3,27 @@ from setuptools import find_packages, setup
 with open('README.rst') as f:
     long_description = f.read()
 
+
+requires = [
+    'ijson>=2.5',
+    'jsonref',
+    'jsonpointer',
+    'xlsxwriter',
+    'requests',
+    'click',
+    'dataclasses;python_version<"3.7"'
+]
+test_requires = [
+    'pytest',
+    'pytest-cov',
+    'coveralls'
+] + requires
+docs_requires = [
+    'Sphinx',
+    'sphinx-autobuild',
+    'sphinx-rtd-theme',
+]
+
 setup(
     name='spoonbill',
     version='0.0.1',
@@ -13,33 +34,22 @@ setup(
     license='BSD',
     packages=find_packages(exclude=['tests', 'tests.*']),
     long_description=long_description,
-    install_requires=[
-        'ijson>=2.5',
-        'jsonref',
-        'xlsxwriter',
-        'requests',
-        'click',        
-    ],
+    install_requires=requires,
     extras_require={
-        'test': [
-            'pytest',
-            'pytest-cov',
-            'coveralls',
-        ],
-        'docs': [
-            'Sphinx',
-            'sphinx-autobuild',
-            'sphinx-rtd-theme',
-        ],
+        'test': test_requires,
+        'docs': docs_requires,
     },
     classifiers=[
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        # 'Programming Language :: Python :: 3.6',
-        # 'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
     entry_points={
+        'console_scripts': [
+            'spoonbill = spoonbill.cli:cli'
+        ]
     }
 )

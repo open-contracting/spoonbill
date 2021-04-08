@@ -1,7 +1,6 @@
 import json
 import logging
-from typing import List
-from collections.abc import Mapping
+from typing import List, Mapping
 from collections import deque
 from dataclasses import dataclass, field, asdict
 
@@ -70,7 +69,8 @@ class DataPreprocessor:
             if prop.get('deprecated'):
                 continue
             # TODO: handle oneOf anyOf allOf
-            if properties := prop.get('properties', {}):
+            properties = prop.get('properties', {})
+            if properties:
                 for key, item in properties.items():
                     if item.get('deprecated'):
                         continue
@@ -146,7 +146,8 @@ class DataPreprocessor:
 
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
-                if table := self._table_by_path.get(path):
+                table = self._table_by_path.get(path)
+                if table:
                     table.inc()
                     for col_name in DEFAULT_FIELDS:
                         table.inc_column(col_name)
@@ -177,7 +178,6 @@ class DataPreprocessor:
                         continue
 
                     if isinstance(item, dict):
-
                         to_analyze.append((separator.join([abs_path, key]),
                                            pointer,
                                            key,

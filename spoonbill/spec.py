@@ -1,7 +1,6 @@
 import logging
 from collections import OrderedDict
-from typing import List
-from collections.abc import Mapping, Sequence
+from typing import Mapping, Sequence, List
 from dataclasses import dataclass, field, is_dataclass
 
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
@@ -26,10 +25,10 @@ class Table:
     parent: object = field(default_factory=dict)
     is_root: bool = False
     is_combined: bool = False
-    columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
-    combined_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
-    propagated_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
-    additional_columns: OrderedDict[str, Column] = field(default_factory=OrderedDict)
+    columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    propagated_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     # max length not count
     arrays: Mapping[str, int] = field(default_factory=dict)
     # for headers
@@ -43,7 +42,8 @@ class Table:
     def __post_init__(self):
         for attr in ('columns', 'propagated_columns',
                      'combined_columns', 'additional_columns'):
-            if obj := getattr(self, attr, {}):
+            obj = getattr(self, attr, {})
+            if obj:
                 init = {name: Column(**col) for name, col in obj.items() if not is_dataclass(col)}
                 setattr(self, attr, init)
 
