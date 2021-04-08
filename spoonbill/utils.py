@@ -5,7 +5,7 @@ from os.path import commonpath
 
 import ijson
 
-from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
+from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
 # for now we care only about types which can break flattening
 _PYTHON_TO_JSON_TYPE = {'list': 'array', 'dict': 'object'}
@@ -68,7 +68,7 @@ def get_root(table):
 def combine_path(root, path, index="0", separator="/"):
     combined_path = path
     for array in sorted(root.arrays, reverse=True):
-        if path.startswith(array):
+        if commonpath((path, array)) == array:
             chunk = separator.join((array, index))
             combined_path = combined_path.replace(array, chunk)
     return combined_path

@@ -2,7 +2,7 @@ import logging
 from collections import OrderedDict
 from typing import List
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass
 
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
 
@@ -35,7 +35,7 @@ class Table:
     # for headers
     titles: Mapping[str, str] = field(default_factory=dict)
     child_tables: List[str] = field(default_factory=list)
-    types: Mapping[str, str] = field(default_factory=dict)
+    types: Mapping[str, List[str]] = field(default_factory=dict)
 
     preview_rows: Sequence[dict] = field(default_factory=list, init=False)
     preview_rows_combined: Sequence[dict] = field(default_factory=list, init=False)
@@ -44,7 +44,7 @@ class Table:
         for attr in ('columns', 'propagated_columns',
                      'combined_columns', 'additional_columns'):
             if obj := getattr(self, attr, {}):
-                init = {name: Column(**col) for name, col in obj.items()}
+                init = {name: Column(**col) for name, col in obj.items() if not is_dataclass(col)}
                 setattr(self, attr, init)
 
     def _counter(self, split, cond):
