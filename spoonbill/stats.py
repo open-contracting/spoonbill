@@ -9,7 +9,7 @@ import jsonref
 from spoonbill.spec import Table, Column, add_child_table
 from spoonbill.common import DEFAULT_FIELDS
 from spoonbill.utils import extract_type, \
-    validate_type, get_root, get_maching_tables, generate_row_id, recalculate_headers
+    validate_type, get_root, get_maching_tables, generate_row_id, recalculate_headers, PYTHON_TO_JSON_TYPE
 
 PREVIEW_ROWS = 20
 LOGGER = logging.getLogger('spoonbill')
@@ -240,7 +240,7 @@ class DataPreprocessor:
                             self.current_table.add_column(
                                 pointer,
                                 {'title': key},
-                                'na',
+                                PYTHON_TO_JSON_TYPE.get(type(item).__name__, 'N/A'),
                                 parent=record,
                                 additional=True
                             )
