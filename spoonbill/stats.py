@@ -3,19 +3,17 @@ import logging
 from typing import List
 from collections.abc import Mapping
 from collections import deque
-from dataclasses import dataclass, field, asdict, replace
-from os.path import commonpath
+from dataclasses import dataclass, field, asdict
 
 import jsonref
 
 from spoonbill.spec import Table, Column, add_child_table
-from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
+from spoonbill.common import DEFAULT_FIELDS
 from spoonbill.utils import extract_type, \
     validate_type, get_root, get_maching_tables, generate_row_id, recalculate_headers
 
 PREVIEW_ROWS = 20
 LOGGER = logging.getLogger('spoonbill')
-
 
 
 @dataclass
@@ -205,11 +203,12 @@ class DataPreprocessor:
                                 if isinstance(value,  dict):
                                     if count < PREVIEW_ROWS:
                                         if pointer in self.current_table.path:
-                                            self.add_preview_row(ocid,
-                                                     value.get('id'),
-                                                     row_id,
-                                                     parent.get('id'),
-                                                     parent_key)
+                                            self.add_preview_row(
+                                                ocid,
+                                                value.get('id'),
+                                                row_id,
+                                                parent.get('id'),
+                                                parent_key)
                                     p = separator.join([abs_path, key, str(i)])
                                     to_analyze.append((
                                         p,
@@ -221,11 +220,12 @@ class DataPreprocessor:
                                 else:
                                     if count < PREVIEW_ROWS:
                                         if pointer in self.current_table.path:
-                                            self.add_preview_row(ocid,
-                                                     record.get('id'),
-                                                     row_id,
-                                                     parent.get('id'),
-                                                     parent_key)
+                                            self.add_preview_row(
+                                                ocid,
+                                                record.get('id'),
+                                                row_id,
+                                                parent.get('id'),
+                                                parent_key)
                                     p = separator.join((pointer, str(i)))
                                     if self.preview and count < PREVIEW_ROWS:
                                         self.current_table.preview_rows[-1][pointer] = value
@@ -250,8 +250,6 @@ class DataPreprocessor:
                             self.current_table.preview_rows[-1][pointer] = item
                             p = separator.join((abs_path, key))
                             root.preview_rows_combined[-1][p] = item
-
-
 
     def dump(self):
         return {
