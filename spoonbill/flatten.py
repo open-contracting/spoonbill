@@ -156,16 +156,16 @@ class FileAnalyzer:
         )
         self.root_key = root_key
 
-        def analyze_file(self, filename):
-            path = self.workdir / filename
-            self.spec.process_items(
-                iter_file(path, self.root_key)
-            )
+    def analyze_file(self, filename):
+        path = self.workdir / filename
+        self.spec.process_items(
+            iter_file(path, self.root_key)
+        )
 
-        def dump_to_file(self, filename):
-            path = self.workdir / filename
-            with open(path, 'w') as fd:
-                json.dump(self.spec.dump(), fd, default=str)
+    def dump_to_file(self, filename):
+        path = self.workdir / filename
+        with open(path, 'w') as fd:
+            json.dump(self.spec.dump(), fd, default=str)
 
 
 class FileFlattener:
@@ -188,7 +188,6 @@ class FileFlattener:
             self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
 
     def writerow(self, table, row):
-        ''''''
         for wr in self.writers:
             wr.writerow(table, row)
 
