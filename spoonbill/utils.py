@@ -189,16 +189,17 @@ def recalculate_headers(root, abs_path, key, item, separator='/'):
     tail = OrderedDict()
     cols = head
     base_prefix = separator.join((abs_path, key))
+
     for col_path, col in root.combined_columns.items():
         cols[col_path] = col
         if col_path in DEFAULT_FIELDS_COMBINED or base_prefix not in col_path:
             continue
 
+        zero_index = separator.join((base_prefix, "0"))
         for col_i, _ in enumerate(item, 1):
-            prev_col_prefix = separator.join((base_prefix, str(col_i - 1)))
-            new_col_prefix = separator.join((base_prefix, str(col_i)))
-            if commonpath((col_path, prev_col_prefix)) == prev_col_prefix:
-                new_id = col.id.replace(prev_col_prefix, new_col_prefix)
+            if commonpath((col_path, zero_index)) == zero_index:
+                col_prefix = separator.join((base_prefix, str(col_i)))
+                new_id = col.id.replace(zero_index, col_prefix)
                 new_col = replace(col, id=new_id)
                 cols = tail
                 cols[new_id] = new_col
