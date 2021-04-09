@@ -10,7 +10,7 @@ from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file, generate_row_id
 from spoonbill.writer import XlsxWriter, CSVWriter
-from spoonbill.common import ROOT_TABLES, COMBINED_TABLES
+from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE, JOINABLE_SEPARATOR
 
 LOGGER = logging.getLogger('spoonbill')
 
@@ -99,36 +99,27 @@ class Flattener:
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
-                    table = self._lookup_cache.get(pointer)
-                    if not table:
-                        table = self._types_cache.get(pointer)
+                    table = self._lookup_cache.get(pointer) or \
+                        self._types_cache.get(pointer)
                     if not table:
                         continue
+                    type_ = table.types.get(pointer)
 
                     if isinstance(item, dict):
                         a_p = separator.join((abs_path, key))
                         to_flatten.append((a_p, pointer, key, record, item))
                     elif isinstance(item, list):
-                        for index, value in enumerate(item):
-                            if isinstance(value, dict):
-                                if table.is_root:
-                                    a_p = separator.join((abs_path, key))
-                                else:
-                                    a_p = separator.join((abs_path, key, str(index)))
-                                to_flatten.append((a_p, pointer, key, record, value))
-                            else:
-                                if self.options.selection[table.name].split:
-                                    a_p = separator.join((abs_path, key))
-                                else:
-                                    a_p = separator.join((abs_path, key, str(index)))
-                                if not table.is_root:
-                                    rows[table.name].append({
-                                        'rowID': row_id,
-                                        'id': top_level_id,
-                                        'parentID': parent.get('id'),
-                                        'ocid': ocid
-                                    })
-                                rows[table.name][-1][a_p] = value
+                        if type_ == JOINABLE:
+                            value = JOINABLE.join(item)
+                            rows[table.name][-1][pointer] = value
+                        else:
+                            for index, value in enumerate(item):
+                                if isinstance(value, dict):
+                                    if table.is_root:
+                                        a_p = separator.join((abs_path, key))
+                                    else:
+                                        a_p = separator.join((abs_path, key, str(index)))
+                                    to_flatten.append((a_p, pointer, key, record, value))
                     else:
                         a_pointer = separator.join((abs_path, key))
                         if a_pointer in self._lookup_cache:

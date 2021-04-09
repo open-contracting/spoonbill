@@ -17,6 +17,12 @@ PYTHON_TO_JSON_TYPE = {
 
 
 def iter_file(filename, root):
+    """Iterate over `root` array in file provided by `filename` using ijson
+
+    :param str filename: Path to file
+    :param str root: Array field name inside file
+    :return: Array items iterator
+    """
     with open(filename) as fd:
         reader = ijson.items(fd, f'{root}.item')
         for item in reader:
@@ -72,6 +78,7 @@ def get_root(table):
 
 
 def combine_path(root, path, index="0", separator="/"):
+    """Generates index based header for combined column"""
     combined_path = path
     for array in sorted(root.arrays, reverse=True):
         if commonpath((path, array)) == array:
@@ -81,6 +88,12 @@ def combine_path(root, path, index="0", separator="/"):
 
 
 def prepare_title(item, parent):
+    """Attempts to extract human friendly table header from schema
+
+    :param item: Schema description of item for which title should be generated
+    :param parent: Schema description of item parent object
+    :return: Generated title
+    """
     title = []
     if hasattr(parent, '__reference__') and parent.__reference__.get('title'):
         parent_title = parent.__reference__.get('title', '')
@@ -93,7 +106,15 @@ def prepare_title(item, parent):
     return ' '.join(title)
 
 
-def get_maching_tables(tables, path):
+def get_matching_tables(tables, path):
+    """ Get list of matching tables for provided path
+
+    Return list is sorted by longest matching path part
+
+    :param tables: List of `Table' objects
+    :param path: Path like string
+    :return: List of matched by path tables
+    """
     candidates = []
     for table in tables.values():
         for candidate in table.path:
@@ -155,11 +176,19 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
 
 
 def recalculate_headers(root, abs_path, key, item, separator='/'):
-    """Recalculate table combined headers when array is expanded with attempt to preserve order"""
+    """Rebuild table combined headers when array is expanded with attempt to preserve order
+
+    :param root: Table for which headers should be rebuild
+    :param abs_path: Full jsonpath for array on `abs_path`
+    :param key: Array fieldname
+    :param item: Full array
+    :param separator: header path separator
+
+    """
     head = OrderedDict()
     tail = OrderedDict()
     cols = head
-    base_prefix= separator.join((abs_path, key))
+    base_prefix = separator.join((abs_path, key))
     for col_path, col in root.combined_columns.items():
         cols[col_path] = col
         if col_path in DEFAULT_FIELDS_COMBINED or base_prefix not in col_path:

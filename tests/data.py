@@ -611,7 +611,6 @@ OCDS_TITLES_COMBINED = {
     '/tender/submissionMethod': 'Tender Submission Method',
     '/tender/submissionMethod/0': 'Tender Submission Method',
     '/tender/submissionMethodDetails': 'Tender Submission Method Details',
-    '/tender/submissionMethodDetails': 'Tender Submission Method Details',
     '/tender/tenderPeriod/durationInDays': 'Tender Period Duration (days)',
     '/tender/tenderPeriod/endDate': 'Tender Period End Date',
     '/tender/tenderPeriod/maxExtentDate': 'Tender Period Maximum Extent',
