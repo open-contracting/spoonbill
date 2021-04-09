@@ -102,6 +102,7 @@ class Table:
     def inc_column(self, header, combined=False):
         if combined:
             self.combined_columns[header].hits += 1
+            return
         self.columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
