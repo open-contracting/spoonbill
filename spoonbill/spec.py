@@ -73,11 +73,12 @@ class Table:
                    type_,
                    parent,
                    combined_only=False,
-                   additional=False):
+                   additional=False,
+                   joinable=False):
         title = prepare_title(item, parent)
         column = Column(title, type_, path)
         root = get_root(self)
-        combined_path = combine_path(root, path)
+        combined_path = combine_path(root, path) if not joinable else path
         self.combined_columns[combined_path] = Column(title, type_, combined_path)
 
         for p in (path, combined_path):
@@ -92,15 +93,16 @@ class Table:
                 item,
                 type_,
                 parent=parent,
-                combined_only=True
+                combined_only=True,
+                joinable=joinable
             )
         if additional:
             self.additional_columns[path] = column
 
-    def inc_column(self, header):
-        self.columns[header].hits += 1
-        if header in self.combined_columns:
+    def inc_column(self, header, combined=False):
+        if combined:
             self.combined_columns[header].hits += 1
+        self.columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
 

@@ -34,3 +34,7 @@ COMBINED_TABLES = {
 
 DEFAULT_FIELDS = ['ocid', 'id', 'rowID', 'parentID']
 DEFAULT_FIELDS_COMBINED = ['ocid', 'id', 'rowID', 'parentID', 'parentTable']
+
+ARRAY = 'array of {}'
+JOINABLE = 'joinable'
+JOINABLE_SEPARATOR = ';'
