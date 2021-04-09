@@ -7,8 +7,13 @@ import ijson
 
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
-# for now we care only about types which can break flattening
-_PYTHON_TO_JSON_TYPE = {'list': 'array', 'dict': 'object'}
+PYTHON_TO_JSON_TYPE = {
+    'list': 'array',
+    'dict': 'object',
+    'string': 'string',
+    'int': 'integer',
+    'float': 'number'
+}
 
 
 def iter_file(filename, root):
@@ -53,7 +58,7 @@ def validate_type(type_, item):
     True
     """
     name = type(item).__name__
-    expected = _PYTHON_TO_JSON_TYPE.get(name)
+    expected = PYTHON_TO_JSON_TYPE.get(name)
     if expected:
         return expected in type_
     return True
