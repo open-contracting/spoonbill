@@ -1,5 +1,5 @@
 from dataclasses import dataclass, is_dataclass, field
-from collections.abc import Mapping, Sequence
+from typing import Mapping, Sequence
 from collections import defaultdict, deque
 from pathlib import Path
 
@@ -84,7 +84,8 @@ class Flattener:
             while to_flatten:
                 abs_path, path, parent_key, parent, record = to_flatten.pop()
                 # Strict match /tender /parties etc., so this is a new row
-                if table := self._path_cache.get(path):
+                table = self._path_cache.get(path)
+                if table:
                     row_id = generate_row_id(ocid,
                                              record.get('id', ''),
                                              parent_key,
