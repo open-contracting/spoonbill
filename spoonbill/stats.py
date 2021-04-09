@@ -120,15 +120,24 @@ class DataPreprocessor:
     def get_table(self, path):
         if path in self._lookup_cache:
             return self._lookup_cache[path]
-        candidates = get_maching_tables(self.tables, path)
+        candidates = get_matching_tables(self.tables, path)
         if not candidates:
             return
         table = candidates[0]
         self._lookup_cache[path] = table
         return table
 
-    def add_preview_row(self, ocid, id, row_id, parent_id, parent_table=''):
-        defaults = {'ocid': ocid, "rowID": row_id, 'parentID': parent_id}
+    def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=''):
+        """Append empty row to previews
+
+        Important to do because all preview items is set using -1 index to access current row
+        :param ocid: Row ocid
+        :param item_id: Current object id
+        :param row_id: Unique row id
+        :param parent_id: Parent object id
+        :param parent_table: Parent table name
+        """
+        defaults = {'ocid': ocid, "rowID": row_id, 'parentID': parent_id, "id": item_id}
         if parent_table:
             defaults['parentTable'] = parent_table
         self.current_table.preview_rows.append(defaults)
@@ -136,8 +145,15 @@ class DataPreprocessor:
             self.current_table.preview_rows_combined.append(defaults)
 
     def process_items(self, releases, with_preview=True):
-        separator = self.header_separator
+        """Analyze releases
 
+        Iterate over every item in provided list to
+        calculate metrics and optionally generate combined and split of flattened preview
+
+        :param releases: Iterator of items to analyze
+        :param with_preview: Generate previews if set to True
+        """
+        separator = self.header_separator
         for count, release in enumerate(releases):
 
             to_analyze = deque([('', '', '', {}, release)])
