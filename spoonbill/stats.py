@@ -9,9 +9,10 @@ import jsonref
 from spoonbill.spec import Table, Column, add_child_table
 from spoonbill.common import DEFAULT_FIELDS, ARRAY, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.utils import extract_type, \
-    validate_type, get_root, get_maching_tables, generate_row_id, recalculate_headers, PYTHON_TO_JSON_TYPE
+    validate_type, get_root, get_matching_tables, generate_row_id, recalculate_headers, PYTHON_TO_JSON_TYPE
 
 PREVIEW_ROWS = 20
+ARRAY_THRESHOLD = 5
 LOGGER = logging.getLogger('spoonbill')
 
 
@@ -24,6 +25,7 @@ class DataPreprocessor:
     # better to keep '/' to be more like jsonpointers
     # TODO: do we need this to be configurable at all???
     header_separator: str = '/'
+    array_threshold: int = ARRAY_THRESHOLD
     tables: Mapping[str, Table] = field(default_factory=dict, init=False)
     current_table: Table = field(init=False)
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
@@ -210,10 +212,10 @@ class DataPreprocessor:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.preview_rows[-1][pointer] = value
                         elif self.current_table.is_root:
-                            a_path = separator.join([abs_path, key])
+                            abs_pointer = separator.join([abs_path, key])
                             for value in item:
                                 to_analyze.append((
-                                    a_path,
+                                    abs_pointer,
                                     pointer,
                                     key,
                                     record,
