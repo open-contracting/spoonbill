@@ -126,6 +126,11 @@ class DataPreprocessor:
                 continue
 
     def get_table(self, path):
+        """Get best matching table for `path`
+
+        :param path: Path to find corresponding table
+        :return: Best matching table
+        """
         if path in self._lookup_cache:
             return self._lookup_cache[path]
         candidates = get_matching_tables(self.tables, path)
