@@ -4,12 +4,19 @@ from typing import Mapping, Sequence, List
 from dataclasses import dataclass, field, is_dataclass
 
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
+from spoonbill.common import DEFAULT_FIELDS
 
 LOGGER = logging.getLogger('spoonbill')
 
 
 @dataclass
 class Column:
+    """Column class is a data container to store column information
+    :param title: Column human friendly title
+    :param type: Column expected type
+    :param id: Column path
+    :param hits: Count number of times column is set during analysis
+    """
     title: str
     type: str
     id: str
@@ -55,9 +62,11 @@ class Table:
         ]
 
     def missing_rows(self, split=True):
+        """Return columns available in schema but not in analyzed data"""
         return self._counter(split, lambda c: c.hits == 0)
 
     def available_rows(self, split=True):
+        """Return available in analyzed data columns"""
         return self._counter(split, lambda c: c.hits > 0)
 
     def __iter__(self):
@@ -100,14 +109,27 @@ class Table:
             self.additional_columns[path] = column
 
     def inc_column(self, header, combined=False):
+        """Increment data counter in column
+
+        :param header: Column path
+        :param combined: Increment header only in combined version of table
+        """
         if combined:
             self.combined_columns[header].hits += 1
             return
         self.columns[header].hits += 1
+        if header in self.combined_columns:
+            self.combined_columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
 
     def set_array(self, header, item):
+        """Try to set maximum length of array
+
+        :param header: Path to array object
+        :param item: Array from data
+        :return: True if array is bigger than previously found and length was updated
+        """
         count = self.arrays[header] or 0
         length = len(item)
         if length > count:
@@ -116,12 +138,26 @@ class Table:
         return False
 
     def inc(self):
+        """Increment number of rows in table"""
         self.total_rows += 1
 
 
 def add_child_table(current_table, pointer, parent_key, key):
+    """Create and append new child table to `current_table`
+
+    :param current_table: Parent table to newly created table
+    :param pointer: Path to which table should match
+    :param parent_key: New table parent object filed name, used to generate table name
+    :param key: New table field name object filed name, used to generate table name
+    :return: Child table
+    """
     table_name = generate_table_name(current_table.name, parent_key, key)
     child_table = Table(table_name, [pointer], parent=current_table)
+    for col in DEFAULT_FIELDS:
+        column = Column(col, 'string', col)
+        child_table.columns[col] = column
+        child_table.combined_columns[col] = column
+        child_table.titles[col] = col
     current_table.child_tables.append(table_name)
     get_root(current_table).arrays[pointer] = 0
     return child_table
