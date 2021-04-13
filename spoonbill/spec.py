@@ -83,16 +83,27 @@ class Table:
     def add_column(self,
                    path,
                    item,
-                   type_,
+                   item_type,
                    parent,
                    combined_only=False,
                    additional=False,
                    joinable=False):
+        """Add new column to the table
+
+        :param path: Column path
+        :param item: Object schema description
+        :param item_type: Column expected type
+        :param parent: Parent object schema description
+        :param combined_only: Make this column available only in combined version of table
+        :param additional: Mark this column as missing in schema
+        :param joinable: Mark this column as array of strings
+        """
         title = prepare_title(item, parent)
-        column = Column(title, type_, path)
+        column = Column(title, item_type, path)
         root = get_root(self)
-        combined_path = combine_path(root, path) if not joinable else path
-        self.combined_columns[combined_path] = Column(title, type_, combined_path)
+        # combined_path = combine_path(root, path) if not joinable else path
+        combined_path = combine_path(root, path)
+        self.combined_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):
             self.titles[p] = title
@@ -104,7 +115,7 @@ class Table:
             root_table.add_column(
                 path,
                 item,
-                type_,
+                item_type,
                 parent=parent,
                 combined_only=True,
                 joinable=joinable
