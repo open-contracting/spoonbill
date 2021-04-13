@@ -10,22 +10,32 @@ from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file, generate_row_id
 from spoonbill.writer import XlsxWriter, CSVWriter
-from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE, JOINABLE_SEPARATOR
+from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE
 
 LOGGER = logging.getLogger('spoonbill')
 
 
 @dataclass
 class TableFlattenConfig:
+    """Table specific flattening configuration
+
+    :param split: Split child arrays to separate tables
+    :param pretty_headers: Use human friendly headers extracted from schema
+    :param headers: User edited headers to override automatically extracted
+    """
     split: bool
+    pretty_headers: bool = False
+    headers: Mapping[str, str] = field(default_factory=dict)
+
 
 
 @dataclass
 class FlattenOptions:
-    selection: Mapping[str, TableFlattenConfig]
-    pretty_headers: bool = False
-    separator: str = '/'
+    """Whole flattening process configuration
 
+    :param selection: List of of tables to extract from data and flatten
+    """
+    selection: Mapping[str, TableFlattenConfig]
     # combine: bool = True
 
     def __post_init__(self):
@@ -36,6 +46,11 @@ class FlattenOptions:
 
 @dataclass
 class Flattener:
+    """Configurable data flattener
+
+    :param options: Flattening options
+    :param tables: Analyzed tables data
+    """
     options: FlattenOptions
     tables: Mapping[str, Table]
 
@@ -73,11 +88,16 @@ class Flattener:
             self.tables = tables
 
     def flatten(self, releases):
+        """Flatten releases
+
+        :param releases: releases as iterable object
+        :return: Iterator over mapping between table name and list of rows for each release
+        """
 
         for release in releases:
             rows = defaultdict(list)
             to_flatten = deque([('', '', '', {}, release)])
-            separator = self.options.separator
+            separator = '/'
             ocid = release['ocid']
             top_level_id = release['id']
 
@@ -130,37 +150,60 @@ class Flattener:
 
 
 class FileAnalyzer:
+    """Main utility for analyzing files
+
+    :param workdir: Working directory
+    :param schema: Json schema file to use with data
+    :param root_tables: Path configuration which should become root tables
+    :param combined_tables: Path configuration for tables with multiple sources
+    :param root_key: Field name to access records
+    """
 
     def __init__(self,
                  workdir,
                  schema,
                  root_tables=ROOT_TABLES,
                  combined_tables=COMBINED_TABLES,
-                 root_key='releases',
-                 preview=True
+                 root_key='releases'
                  ):
         self.workdir = Path(workdir)
         self.spec = DataPreprocessor(
             json.load(schema),
             root_tables,
-            combined_tables=combined_tables,
-            preview=preview
+            combined_tables=combined_tables
         )
+        # TODO: decect package
         self.root_key = root_key
 
     def analyze_file(self, filename):
+        """Analyze provided file
+        :param filename: Input filename
+        """
         path = self.workdir / filename
         self.spec.process_items(
             iter_file(path, self.root_key)
         )
 
     def dump_to_file(self, filename):
+        """Save analyzed information to file
+
+        :param filename: Output filename in working directory
+        """
         path = self.workdir / filename
         with open(path, 'w') as fd:
             json.dump(self.spec.dump(), fd, default=str)
 
 
 class FileFlattener:
+    """Main utility for flattening files
+
+    :param workdir: Working directory
+    :param options: Flattening configuration
+    :param tables: Analyzed tables data
+    :param root_key: Field name to access records
+    :param csv: If True generate cvs files
+    :param xlsx: Generate combined xlsx table
+    """
 
     def __init__(self,
                  workdir,
@@ -171,6 +214,7 @@ class FileFlattener:
                  xlsx=True):
         self.flattener = Flattener(options, tables)
         self.workdir = Path(workdir)
+        # TODO: detect package, where?
         self.root_key = root_key
         self.writers = []
 
@@ -180,14 +224,19 @@ class FileFlattener:
             self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
 
     def writerow(self, table, row):
+        """Write row to output file"""
         for wr in self.writers:
             wr.writerow(table, row)
 
-    def close(self):
+    def _close(self):
         for wr in self.writers:
             wr.close()
 
     def flatten_file(self, filename):
+        """Flatten file
+
+        :param filename: Input filename in working directory
+        """
         path = self.workdir / filename
         for w in self.writers:
             w.writeheaders()
@@ -199,4 +248,4 @@ class FileFlattener:
                         self.writerow(table, row)
             except Exception as err:
                 LOGGER.warning(f"Failed to write row {row}")
-        self.close()
+        self._close()

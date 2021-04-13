@@ -4,12 +4,19 @@ from typing import Mapping, Sequence, List
 from dataclasses import dataclass, field, is_dataclass
 
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
+from spoonbill.common import DEFAULT_FIELDS
 
 LOGGER = logging.getLogger('spoonbill')
 
 
 @dataclass
 class Column:
+    """Column class is a data container to store column information
+    :param title: Column human friendly title
+    :param type: Column expected type
+    :param id: Column path
+    :param hits: Count number of times column is set during analysis
+    """
     title: str
     type: str
     id: str
@@ -44,7 +51,11 @@ class Table:
                      'combined_columns', 'additional_columns'):
             obj = getattr(self, attr, {})
             if obj:
-                init = {name: Column(**col) for name, col in obj.items() if not is_dataclass(col)}
+                init = OrderedDict()
+                for name, col in obj.items():
+                    if not is_dataclass(col):
+                        col = Column(**col)
+                    init[name] = col
                 setattr(self, attr, init)
 
     def _counter(self, split, cond):
@@ -55,9 +66,11 @@ class Table:
         ]
 
     def missing_rows(self, split=True):
+        """Return columns available in schema but not in analyzed data"""
         return self._counter(split, lambda c: c.hits == 0)
 
     def available_rows(self, split=True):
+        """Return available in analyzed data columns"""
         return self._counter(split, lambda c: c.hits > 0)
 
     def __iter__(self):
@@ -70,16 +83,27 @@ class Table:
     def add_column(self,
                    path,
                    item,
-                   type_,
+                   item_type,
                    parent,
                    combined_only=False,
                    additional=False,
                    joinable=False):
+        """Add new column to the table
+
+        :param path: Column path
+        :param item: Object schema description
+        :param item_type: Column expected type
+        :param parent: Parent object schema description
+        :param combined_only: Make this column available only in combined version of table
+        :param additional: Mark this column as missing in schema
+        :param joinable: Mark this column as array of strings
+        """
         title = prepare_title(item, parent)
-        column = Column(title, type_, path)
+        column = Column(title, item_type, path)
         root = get_root(self)
-        combined_path = combine_path(root, path) if not joinable else path
-        self.combined_columns[combined_path] = Column(title, type_, combined_path)
+        # combined_path = combine_path(root, path) if not joinable else path
+        combined_path = combine_path(root, path)
+        self.combined_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):
             self.titles[p] = title
@@ -91,7 +115,7 @@ class Table:
             root_table.add_column(
                 path,
                 item,
-                type_,
+                item_type,
                 parent=parent,
                 combined_only=True,
                 joinable=joinable
@@ -100,14 +124,27 @@ class Table:
             self.additional_columns[path] = column
 
     def inc_column(self, header, combined=False):
+        """Increment data counter in column
+
+        :param header: Column path
+        :param combined: Increment header only in combined version of table
+        """
         if combined:
             self.combined_columns[header].hits += 1
             return
         self.columns[header].hits += 1
+        if header in self.combined_columns:
+            self.combined_columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
 
     def set_array(self, header, item):
+        """Try to set maximum length of array
+
+        :param header: Path to array object
+        :param item: Array from data
+        :return: True if array is bigger than previously found and length was updated
+        """
         count = self.arrays[header] or 0
         length = len(item)
         if length > count:
@@ -116,12 +153,26 @@ class Table:
         return False
 
     def inc(self):
+        """Increment number of rows in table"""
         self.total_rows += 1
 
 
 def add_child_table(current_table, pointer, parent_key, key):
+    """Create and append new child table to `current_table`
+
+    :param current_table: Parent table to newly created table
+    :param pointer: Path to which table should match
+    :param parent_key: New table parent object filed name, used to generate table name
+    :param key: New table field name object filed name, used to generate table name
+    :return: Child table
+    """
     table_name = generate_table_name(current_table.name, parent_key, key)
     child_table = Table(table_name, [pointer], parent=current_table)
+    for col in DEFAULT_FIELDS:
+        column = Column(col, 'string', col)
+        child_table.columns[col] = column
+        child_table.combined_columns[col] = column
+        child_table.titles[col] = col
     current_table.child_tables.append(table_name)
     get_root(current_table).arrays[pointer] = 0
     return child_table

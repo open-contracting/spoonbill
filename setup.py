@@ -15,6 +15,7 @@ requires = [
 ]
 test_requires = [
     'pytest',
+    'jmespath',
     'pytest-cov',
     'coveralls'
 ] + requires

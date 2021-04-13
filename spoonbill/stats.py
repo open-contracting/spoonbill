@@ -66,6 +66,7 @@ class DataPreprocessor:
         separator = self.header_separator
         to_analyze = deque([('', '', {}, self.schema_dict)])
 
+        # TODO: check if recursion is better for field ordering
         while to_analyze:
             path, parent_key, parent, prop = to_analyze.pop()
             if prop.get('deprecated'):
@@ -98,6 +99,7 @@ class DataPreprocessor:
                                 self.tables[child_table.name] = child_table
                                 self._lookup_cache = dict()
                                 self.current_table = child_table
+                                self._table_by_path[pointer] = child_table
                             to_analyze.append((pointer, key, properties, items))
                         else:
                             # This means we in array of strings, so this becomes a single joinable column
@@ -124,6 +126,11 @@ class DataPreprocessor:
                 continue
 
     def get_table(self, path):
+        """Get best matching table for `path`
+
+        :param path: Path to find corresponding table
+        :return: Best matching table
+        """
         if path in self._lookup_cache:
             return self._lookup_cache[path]
         candidates = get_matching_tables(self.tables, path)

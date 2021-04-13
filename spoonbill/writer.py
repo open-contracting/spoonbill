@@ -26,13 +26,16 @@ class CSVWriter:
             self.writers[name] = writer
 
     def writeheaders(self):
+        """Write headers to output file"""
         for w in self.writers.values():
             w.writeheader()
 
     def writerow(self, table, row):
+        """Write row to output file"""
         self.writers[table].writerow(row)
 
     def close(self):
+        """Finish work"""
         for fd in self.fds:
             fd.close()
 
@@ -48,6 +51,7 @@ class XlsxWriter:
         self.col_index = collections.defaultdict(dict)
 
     def writeheaders(self):
+        """Write headers to output file"""
         for name, table in self.tables.items():
             # if spec[name]['total_rows'] == 0:
             # continue
@@ -60,6 +64,7 @@ class XlsxWriter:
             self.row_counters[name] = 1
 
     def writerow(self, table, row):
+        """Write row to output file"""
         sheet = self.workbook.get_worksheet_by_name(table)
 
         for column, value in row.items():
@@ -68,4 +73,5 @@ class XlsxWriter:
         self.row_counters[table] += 1
 
     def close(self):
+        """Finish work"""
         self.workbook.close()

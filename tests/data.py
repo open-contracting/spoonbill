@@ -37,9 +37,12 @@ tenders_columns = [
     '/tender/procurementMethodDetails',
     '/tender/procurementMethodRationale',
     '/tender/mainProcurementCategory',
+    '/tender/additionalProcurementCategories',
     '/tender/awardCriteria',
     '/tender/awardCriteriaDetails',
     '/tender/submissionMethodDetails',
+    '/tender/submissionMethod',
+
     '/tender/hasEnquiries',
     '/tender/eligibilityCriteria',
     '/tender/numberOfTenderers',
@@ -68,8 +71,6 @@ tenders_columns = [
 ]
 tenders_arrays = [
     '/tender/items',
-    '/tender/additionalProcurementCategories',
-    '/tender/submissionMethod',
     '/tender/tenderers',
     '/tender/items/additionalClassifications'
 ]
@@ -82,10 +83,11 @@ tenders_combined_columns = [
     '/tender/procurementMethodDetails',
     '/tender/procurementMethodRationale',
     '/tender/mainProcurementCategory',
-    '/tender/additionalProcurementCategories/0',
+    '/tender/additionalProcurementCategories',
+
     '/tender/awardCriteria',
     '/tender/awardCriteriaDetails',
-    '/tender/submissionMethod/0',
+    '/tender/submissionMethod',
     '/tender/submissionMethodDetails',
     '/tender/hasEnquiries',
     '/tender/eligibilityCriteria',
@@ -203,7 +205,6 @@ contracts_columns = [
 contracts_arrays = [
     '/contracts/items',
     '/contracts/relatedProcesses',
-    '/contracts/relatedProcesses/relationship',
     '/contracts/implementation/transactions',
     '/contracts/items/additionalClassifications'
 ]
@@ -215,7 +216,7 @@ contracts_combined_columns = [
     '/contracts/status',
     '/contracts/dateSigned',
     '/contracts/relatedProcesses/0/id',
-    '/contracts/relatedProcesses/0/relationship/0',
+    '/contracts/relatedProcesses/0/relationship',
     '/contracts/relatedProcesses/0/title',
     '/contracts/relatedProcesses/0/scheme',
     '/contracts/relatedProcesses/0/identifier',
@@ -279,10 +280,11 @@ planning_combined_columns = [
     '/planning/budget/amount/currency'
 ]
 planning_arrays = []
-parties_arrays = ['/parties/additionalIdentifiers', '/parties/roles']
+parties_arrays = ['/parties/additionalIdentifiers']
 parties_columns = [
     '/parties/name',
     '/parties/id',
+    '/parties/roles',
     '/parties/contactPoint/name',
     '/parties/contactPoint/email',
     '/parties/contactPoint/telephone',
@@ -301,7 +303,8 @@ parties_columns = [
 parties_combined_columns = [
     '/parties/name',
     '/parties/id',
-    '/parties/roles/0',
+    '/parties/roles',
+    '/parties/roles',
     '/parties/contactPoint/name',
     '/parties/contactPoint/email',
     '/parties/contactPoint/telephone',
@@ -483,7 +486,7 @@ OCDS_TITLES_COMBINED = {
     '/contracts/period/startDate': 'Period Start Date',
     '/contracts/relatedProcesses/0/id': 'Related Process Relationship Id',
     '/contracts/relatedProcesses/0/identifier': 'Related Process Identifier',
-    '/contracts/relatedProcesses/0/relationship/0': 'Related Process Relationship',
+    '/contracts/relatedProcesses/0/relationship': 'Related Process Relationship',
     '/contracts/relatedProcesses/0/scheme': 'Related Process Scheme',
     '/contracts/relatedProcesses/0/title': 'Related Process Title',
     '/contracts/relatedProcesses/0/uri': 'Related Process Uri',

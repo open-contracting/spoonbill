@@ -52,7 +52,7 @@ def validate_type(type_, item):
     """ Validate if python object corresponds to provided type
     >>> validate_type(['string'], 'test_string')
     True
-    >>> validate_type(['number'], 11)
+    >>> validate_type(['number'], 11.1)
     True
     >>> validate_type(['array'], [])
     True
