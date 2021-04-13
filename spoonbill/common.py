@@ -1,7 +1,7 @@
 # we can try to infer tables from  schema
 # but it may require some heuristics or handling exceptional cases
 # like "tenders" which is not array and called "tender"
-# so this way seems like middle ground between flexibility and simlpicity
+# so this way seems like middle ground between flexibility and simplicity
 ROOT_TABLES = {
     'tenders': ['/tender'],
     'awards': ['/awards'],
@@ -9,6 +9,7 @@ ROOT_TABLES = {
     'planning': ['/planning'],
     'parties': ['/parties']
 }
+# TODO: extract types from schema? items and additionalClassifications as table?
 COMBINED_TABLES = {
     'documents': [
         '/planning/documents',
@@ -36,5 +37,6 @@ DEFAULT_FIELDS = ['ocid', 'id', 'rowID', 'parentID']
 DEFAULT_FIELDS_COMBINED = ['ocid', 'id', 'rowID', 'parentID', 'parentTable']
 
 ARRAY = 'array of {}'
+# TODO: is joinable good name?
 JOINABLE = 'joinable'
 JOINABLE_SEPARATOR = ';'
