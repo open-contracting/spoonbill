@@ -51,7 +51,11 @@ class Table:
                      'combined_columns', 'additional_columns'):
             obj = getattr(self, attr, {})
             if obj:
-                init = {name: Column(**col) for name, col in obj.items() if not is_dataclass(col)}
+                init = OrderedDict()
+                for name, col in obj.items():
+                    if not is_dataclass(col):
+                        col = Column(**col)
+                    init[name] = col
                 setattr(self, attr, init)
 
     def _counter(self, split, cond):
