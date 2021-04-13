@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, is_dataclass
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
 from spoonbill.common import DEFAULT_FIELDS
 
-LOGGER = logging.getLogger('spoonbill')
+LOGGER = logging.getLogger("spoonbill")
 
 
 @dataclass
@@ -17,6 +17,7 @@ class Column:
     :param id: Column path
     :param hits: Count number of times column is set during analysis
     """
+
     title: str
     type: str
     id: str
@@ -47,8 +48,12 @@ class Table:
     preview_rows_combined: Sequence[dict] = field(default_factory=list, init=False)
 
     def __post_init__(self):
-        for attr in ('columns', 'propagated_columns',
-                     'combined_columns', 'additional_columns'):
+        for attr in (
+            "columns",
+            "propagated_columns",
+            "combined_columns",
+            "additional_columns",
+        ):
             obj = getattr(self, attr, {})
             if obj:
                 init = OrderedDict()
@@ -60,10 +65,7 @@ class Table:
 
     def _counter(self, split, cond):
         cols = self.columns if split else self.combined_columns
-        return [
-            header for header, col in cols.items()
-            if cond(col)
-        ]
+        return [header for header, col in cols.items() if cond(col)]
 
     def missing_rows(self, split=True):
         """Return columns available in schema but not in analyzed data"""
@@ -80,14 +82,16 @@ class Table:
     def __getitem__(self, path):
         return self.columns.get(path)
 
-    def add_column(self,
-                   path,
-                   item,
-                   item_type,
-                   parent,
-                   combined_only=False,
-                   additional=False,
-                   joinable=False):
+    def add_column(
+        self,
+        path,
+        item,
+        item_type,
+        parent,
+        combined_only=False,
+        additional=False,
+        joinable=False,
+    ):
         """Add new column to the table
 
         :param path: Column path
@@ -118,7 +122,7 @@ class Table:
                 item_type,
                 parent=parent,
                 combined_only=True,
-                joinable=joinable
+                joinable=joinable,
             )
         if additional:
             self.additional_columns[path] = column
@@ -169,7 +173,7 @@ def add_child_table(current_table, pointer, parent_key, key):
     table_name = generate_table_name(current_table.name, parent_key, key)
     child_table = Table(table_name, [pointer], parent=current_table)
     for col in DEFAULT_FIELDS:
-        column = Column(col, 'string', col)
+        column = Column(col, "string", col)
         child_table.columns[col] = column
         child_table.combined_columns[col] = column
         child_table.titles[col] = col

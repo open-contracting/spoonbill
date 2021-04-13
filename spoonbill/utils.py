@@ -8,11 +8,11 @@ import ijson
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
 PYTHON_TO_JSON_TYPE = {
-    'list': 'array',
-    'dict': 'object',
-    'string': 'string',
-    'int': 'integer',
-    'float': 'number'
+    "list": "array",
+    "dict": "object",
+    "string": "string",
+    "int": "integer",
+    "float": "number",
 }
 
 
@@ -24,7 +24,7 @@ def iter_file(filename, root):
     :return: Array items iterator
     """
     with open(filename) as fd:
-        reader = ijson.items(fd, f'{root}.item')
+        reader = ijson.items(fd, f"{root}.item")
         for item in reader:
             yield item
 
@@ -40,16 +40,16 @@ def extract_type(item):
     >>> extract_type({'type': ['string', 'null']})
     ['string', 'null']
     """
-    if not item or 'type' not in item:
+    if not item or "type" not in item:
         return []
-    type_ = item['type']
+    type_ = item["type"]
     if not isinstance(type_, list):
         type_ = [type_]
     return type_
 
 
 def validate_type(type_, item):
-    """ Validate if python object corresponds to provided type
+    """Validate if python object corresponds to provided type
     >>> validate_type(['string'], 'test_string')
     True
     >>> validate_type(['number'], 11.1)
@@ -95,19 +95,19 @@ def prepare_title(item, parent):
     :return: Generated title
     """
     title = []
-    if hasattr(parent, '__reference__') and parent.__reference__.get('title'):
-        parent_title = parent.__reference__.get('title', '')
+    if hasattr(parent, "__reference__") and parent.__reference__.get("title"):
+        parent_title = parent.__reference__.get("title", "")
     else:
-        parent_title = parent.get('title', '')
-    for chunk in chain(parent_title.split(), item['title'].split()):
+        parent_title = parent.get("title", "")
+    for chunk in chain(parent_title.split(), item["title"].split()):
         chunk = chunk.capitalize()
         if chunk not in title:
             title.append(chunk)
-    return ' '.join(title)
+    return " ".join(title)
 
 
 def get_matching_tables(tables, path):
-    """ Get list of matching tables for provided path
+    """Get list of matching tables for provided path
 
     Return list is sorted by longest matching path part
 
@@ -120,15 +120,11 @@ def get_matching_tables(tables, path):
         for candidate in table.path:
             if commonpath((candidate, path)) == candidate:
                 candidates.append(table)
-    return sorted(
-        candidates,
-        key=lambda c: max((len(p) for p in c.path)),
-        reverse=True
-    )
+    return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
 
 def generate_table_name(parent_table, parent_key, key):
-    """ Generates name for non root table, to be used as sheet name
+    """Generates name for non root table, to be used as sheet name
 
     :param str parent_table: Parent table name
     :param str parent_key: Parent object field name
@@ -144,13 +140,13 @@ def generate_table_name(parent_table, parent_key, key):
     'parties_roles'
     """
     if parent_key in parent_table:
-        return f'{parent_table}_{key[:5]}'
+        return f"{parent_table}_{key[:5]}"
     else:
-        return f'{parent_table}_{parent_key[:5]}_{key[:5]}'
+        return f"{parent_table}_{parent_key[:5]}_{key[:5]}"
 
 
 def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
-    """ Generates uniq rowID for table row
+    """Generates uniq rowID for table row
 
     :param str ocid: OCID of release
     :param str item_id: Corresponding object id for current row, e.g. tender/id
@@ -168,22 +164,20 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     >>> generate_row_id('ocid', 'item', '', '')
     'ocid/item'
     """
-    tail = f'{parent_key}:{item_id}' if parent_key else \
-        item_id
+    tail = f"{parent_key}:{item_id}" if parent_key else item_id
     if top_level_id:
-        return f'{ocid}/{top_level_id}/{tail}'
-    return f'{ocid}/{tail}'
+        return f"{ocid}/{top_level_id}/{tail}"
+    return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, abs_path, key, item, separator='/'):
-    """Rebuild table combined headers when array is expanded with attempt to preserve order
+def recalculate_headers(root, abs_path, key, item, separator="/"):
+    """Rebuild table headers when array is expanded with attempt to preserve order
 
     :param root: Table for which headers should be rebuild
-    :param abs_path: Full jsonpath for array on `abs_path`
-    :param key: Array fieldname
-    :param item: Full array
+    :param abs_path: Full jsonpath to array
+    :param key: Array field name
+    :param item: Array items
     :param separator: header path separator
-
     """
     head = OrderedDict()
     tail = OrderedDict()
