@@ -30,7 +30,7 @@ def test_combine_path():
             ('id', Column(title='id', type='string', id='id', hits=0)),
             ('rowID', Column(title='rowID', type='string', id='rowID', hits=0)),
             ('parentID', Column(title='parentID', type='string', id='parentID', hits=0)),
-            ("/tender/submissionMethod/0", Column(
+            ("/tender/submissionMethod", Column(
                 title="Tender Submission Method",
                 type="array",
                 id="/tender/submissionMethod/0")),
@@ -40,14 +40,14 @@ def test_combine_path():
                 id="/tender/submissionMethodDetails",
                 hits=0))
         ]),
-        arrays={'/tender/submissionMethod': 0, '/tender/items': 0, '/tender/items/additionalClassifications': 0}
+        arrays={'/tender/items': 0, '/tender/items/additionalClassifications': 0}
     )
     path = combine_path(root, '/tender/id')
     assert path == '/tender/id'
     path = combine_path(root, '/tender/submissionMethodDetails')
     assert path == '/tender/submissionMethodDetails'
     path = combine_path(root, '/tender/submissionMethod')
-    assert path == '/tender/submissionMethod/0'
+    assert path == '/tender/submissionMethod'
     path = combine_path(root, '/tender/items/id')
     assert path == '/tender/items/0/id'
     path = combine_path(root, '/tender/items/additionalClassifications/id')
