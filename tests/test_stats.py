@@ -1,8 +1,25 @@
 from jmespath import search
 from spoonbill.spec import Table, Column
 
-from .data import *
-
+from tests.data import (
+    tenders_columns,
+    parties_columns,
+    awards_columns,
+    contracts_columns,
+    planning_columns,
+    tenders_combined_columns,
+    parties_combined_columns,
+    awards_combined_columns,
+    contracts_combined_columns,
+    planning_combined_columns,
+    parties_arrays,
+    tenders_arrays,
+    awards_arrays,
+    contracts_arrays,
+    planning_arrays,
+    TEST_ROOT_TABLES,
+    OCDS_TITLES_COMBINED,
+)
 
 COLUMNS = {
     "tenders": tenders_columns,
@@ -96,7 +113,7 @@ def test_analyze(spec, releases):
     tender_items = sorted(search("[].tender.items", releases), reverse=True, key=len)
     max_len = len(tender_items[0])
     assert tenders.arrays["/tender/items"] == max_len
-    for index, item in enumerate(tender_items[0]):
+    for index, _ in enumerate(tender_items[0]):
         path = f"/tender/items/{index}/id"
         items = search(f"[].tender.items[{index}].id", releases)
         assert len(items) == tenders.combined_columns[path].hits

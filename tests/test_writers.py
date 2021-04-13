@@ -3,7 +3,7 @@ from spoonbill.stats import DataPreprocessor
 from pathlib import Path
 from csv import DictReader
 
-from .data import *
+from tests.data import TEST_ROOT_TABLES, TEST_COMBINED_TABLES
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
 

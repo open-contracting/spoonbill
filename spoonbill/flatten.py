@@ -252,5 +252,5 @@ class FileFlattener:
                     for row in rows:
                         self.writerow(table, row)
             except Exception as err:
-                LOGGER.warning(f"Failed to write row {row}")
+                LOGGER.warning(f"Failed to write row {row} with {err}")
         self._close()
