@@ -4,11 +4,10 @@ import logging
 
 import xlsxwriter
 
-LOGGER = logging.getLogger('spoonbill')
+LOGGER = logging.getLogger("spoonbill")
 
 
 class CSVWriter:
-
     def __init__(self, workdir, tables, options):
         self.workdir = workdir
         self.writers = {}
@@ -20,7 +19,7 @@ class CSVWriter:
             # LOGGER.info("Skipping table %s as empty")
             # continue
             split = options.selection[name].split
-            fd = open(workdir / f'{name}.csv', 'w')
+            fd = open(workdir / f"{name}.csv", "w")
             writer = csv.DictWriter(fd, table.available_rows(split=split))
             self.fds.append(fd)
             self.writers[name] = writer
@@ -41,10 +40,11 @@ class CSVWriter:
 
 
 class XlsxWriter:
-
     def __init__(self, workdir, tables, options):
         self.workdir = workdir
-        self.workbook = xlsxwriter.Workbook(workdir / 'result.xlsx', {'constant_memory': True})
+        self.workbook = xlsxwriter.Workbook(
+            workdir / "result.xlsx", {"constant_memory": True}
+        )
         self.row_counters = {}
         self.tables = tables
         self.options = options

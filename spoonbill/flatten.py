@@ -12,7 +12,7 @@ from spoonbill.utils import iter_file, generate_row_id
 from spoonbill.writer import XlsxWriter, CSVWriter
 from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE
 
-LOGGER = logging.getLogger('spoonbill')
+LOGGER = logging.getLogger("spoonbill")
 
 
 @dataclass
@@ -23,10 +23,10 @@ class TableFlattenConfig:
     :param pretty_headers: Use human friendly headers extracted from schema
     :param headers: User edited headers to override automatically extracted
     """
+
     split: bool
     pretty_headers: bool = False
     headers: Mapping[str, str] = field(default_factory=dict)
-
 
 
 @dataclass
@@ -35,6 +35,7 @@ class FlattenOptions:
 
     :param selection: List of of tables to extract from data and flatten
     """
+
     selection: Mapping[str, TableFlattenConfig]
     # combine: bool = True
 
@@ -51,6 +52,7 @@ class Flattener:
     :param options: Flattening options
     :param tables: Analyzed tables data
     """
+
     options: FlattenOptions
     tables: Mapping[str, Table]
 
@@ -96,31 +98,33 @@ class Flattener:
 
         for release in releases:
             rows = defaultdict(list)
-            to_flatten = deque([('', '', '', {}, release)])
-            separator = '/'
-            ocid = release['ocid']
-            top_level_id = release['id']
+            to_flatten = deque([("", "", "", {}, release)])
+            separator = "/"
+            ocid = release["ocid"]
+            top_level_id = release["id"]
 
             while to_flatten:
                 abs_path, path, parent_key, parent, record = to_flatten.pop()
                 # Strict match /tender /parties etc., so this is a new row
                 table = self._path_cache.get(path)
                 if table:
-                    row_id = generate_row_id(ocid,
-                                             record.get('id', ''),
-                                             parent_key,
-                                             top_level_id)
-                    rows[table.name].append({
-                        'rowID': row_id,
-                        'id': top_level_id,
-                        'parentID': parent.get('id'),
-                        'ocid': ocid
-                    })
+                    row_id = generate_row_id(
+                        ocid, record.get("id", ""), parent_key, top_level_id
+                    )
+                    rows[table.name].append(
+                        {
+                            "rowID": row_id,
+                            "id": top_level_id,
+                            "parentID": parent.get("id"),
+                            "ocid": ocid,
+                        }
+                    )
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
-                    table = self._lookup_cache.get(pointer) or \
-                        self._types_cache.get(pointer)
+                    table = self._lookup_cache.get(pointer) or self._types_cache.get(
+                        pointer
+                    )
                     if not table:
                         continue
                     type_ = table.types.get(pointer)
@@ -138,8 +142,12 @@ class Flattener:
                                     if table.is_root:
                                         a_p = separator.join((abs_path, key))
                                     else:
-                                        a_p = separator.join((abs_path, key, str(index)))
-                                    to_flatten.append((a_p, pointer, key, record, value))
+                                        a_p = separator.join(
+                                            (abs_path, key, str(index))
+                                        )
+                                    to_flatten.append(
+                                        (a_p, pointer, key, record, value)
+                                    )
                     else:
                         a_pointer = separator.join((abs_path, key))
                         if a_pointer in self._lookup_cache:
@@ -159,18 +167,17 @@ class FileAnalyzer:
     :param root_key: Field name to access records
     """
 
-    def __init__(self,
-                 workdir,
-                 schema,
-                 root_tables=ROOT_TABLES,
-                 combined_tables=COMBINED_TABLES,
-                 root_key='releases'
-                 ):
+    def __init__(
+        self,
+        workdir,
+        schema,
+        root_tables=ROOT_TABLES,
+        combined_tables=COMBINED_TABLES,
+        root_key="releases",
+    ):
         self.workdir = Path(workdir)
         self.spec = DataPreprocessor(
-            json.load(schema),
-            root_tables,
-            combined_tables=combined_tables
+            json.load(schema), root_tables, combined_tables=combined_tables
         )
         # TODO: decect package
         self.root_key = root_key
@@ -180,9 +187,7 @@ class FileAnalyzer:
         :param filename: Input filename
         """
         path = self.workdir / filename
-        self.spec.process_items(
-            iter_file(path, self.root_key)
-        )
+        self.spec.process_items(iter_file(path, self.root_key))
 
     def dump_to_file(self, filename):
         """Save analyzed information to file
@@ -190,7 +195,7 @@ class FileAnalyzer:
         :param filename: Output filename in working directory
         """
         path = self.workdir / filename
-        with open(path, 'w') as fd:
+        with open(path, "w") as fd:
             json.dump(self.spec.dump(), fd, default=str)
 
 
@@ -205,13 +210,9 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self,
-                 workdir,
-                 options,
-                 tables,
-                 root_key='releases',
-                 csv=True,
-                 xlsx=True):
+    def __init__(
+        self, workdir, options, tables, root_key="releases", csv=True, xlsx=True
+    ):
         self.flattener = Flattener(options, tables)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
@@ -219,9 +220,13 @@ class FileFlattener:
         self.writers = []
 
         if csv:
-            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
+            self.writers.append(
+                CSVWriter(self.workdir, self.flattener.tables, self.flattener.options)
+            )
         if xlsx:
-            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
+            self.writers.append(
+                XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options)
+            )
 
     def writerow(self, table, row):
         """Write row to output file"""
