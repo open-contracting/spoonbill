@@ -1,8 +1,8 @@
+from jmespath import search
 from spoonbill.spec import Table, Column
-from spoonbill.stats import DataPreprocessor
-from jsonpointer import resolve_pointer
 
 from .data import *
+
 
 COLUMNS = {
     'tenders': tenders_columns,
@@ -27,12 +27,7 @@ ARRAYS_COLUMNS = {
 }
 
 
-def test_parse_schema(schema):
-    spec = DataPreprocessor(
-        schema,
-        TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES
-    )
+def test_parse_schema(schema, spec):
     for name in TEST_ROOT_TABLES:
         table = spec[name]
         assert isinstance(table, Table)
@@ -58,17 +53,13 @@ def test_parse_schema(schema):
             assert col == 0
 
 
-def test_get_table(schema, releases):
-    spec = DataPreprocessor(
-        schema,
-        TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES)
+def test_get_table(spec, releases):
     table = spec.get_table('/tender')
     assert table.name == 'tenders'
     table = spec.get_table('/tender/submissionMethodDetails')
     assert table.name == 'tenders'
     table = spec.get_table('/tender/submissionMethod')
-    assert table.name == 'tenders_submi'
+    assert table.name == 'tenders'
 
     table = spec.get_table('/tender/items/id')
     assert table.name == 'tenders_items'
@@ -81,29 +72,39 @@ def test_get_table(schema, releases):
     table = spec.get_table('/parties')
     assert table.name == 'parties'
 
-    table = spec.get_table('/parties/roles')
-    assert table.name == 'parties_roles'
 
-
-def test_generate_titles(schema, releases):
-    spec = DataPreprocessor(
-        schema,
-        TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES)
+def test_generate_titles(spec):
     for table in spec.tables.values():
         for path, title in table.titles.items():
             assert OCDS_TITLES_COMBINED[path] == title
 
 
-def test_parse_with_combined_tables(schema):
-    pass
-
-
-def test_analyze(schema, releases):
-    spec = DataPreprocessor(
-        schema,
-        TEST_ROOT_TABLES,
-        combined_tables=TEST_COMBINED_TABLES)
-
+# TODO: analyze combined tables
+def test_analyze(spec, releases):
     spec.process_items(releases)
+    tenders = spec.tables['tenders']
+    parties = spec.tables['parties']
+    awards = spec.tables['awards']
+    contracts = spec.tables['contracts']
 
+    tender_ids = search('[].tender.id', releases)
+    assert tenders.total_rows == len(tender_ids)
+    assert tenders['/tender/id'].hits == len(tender_ids)
+    preview_ids = [i['/tender/id'] for i in tenders.preview_rows]
+    assert not set(tender_ids).difference(preview_ids)
+
+    tender_items = sorted(search('[].tender.items', releases), reverse=True, key=len)
+    max_len = len(tender_items[0])
+    assert tenders.arrays['/tender/items'] == max_len
+    for index, item in enumerate(tender_items[0]):
+        path = f'/tender/items/{index}/id'
+        items = search(f'[].tender.items[{index}].id', releases)
+        assert len(items) == tenders.combined_columns[path].hits
+    items_ids = [i['id'] for item in tender_items for i in item]
+    assert len(items_ids) == spec.tables['tenders_items'].total_rows
+
+    for array in ('awards', 'parties', 'contracts'):
+        ids = search(f'[].{array}[]', releases)
+        table = locals().get(array)
+        assert table.total_rows == len(ids)
+        assert table[f'/{array}/id'].hits == len(ids)

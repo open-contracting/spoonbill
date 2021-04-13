@@ -26,7 +26,6 @@ def releases():
 def flatten_options():
     return FlattenOptions(**{
         'selection': {'tenders': {'split': True}, 'parties': {'split': False}},
-        'pretty_headers': False
     })
 
 
