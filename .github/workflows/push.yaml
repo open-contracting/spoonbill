@@ -1,0 +1,44 @@
+name: push
+on:
+  workflow_dispatch:
+  push:
+    branches:
+       - master
+       - main
+  pull_request:
+    branches:
+       - master
+       - main
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version:  ${{ matrix.python-version }}
+      - name: Install requirements
+        run: |
+              pip install .[test]
+              pip install tox
+      - name: Run linux test
+        if: matrix.os == 'ubuntu-latest'
+        run: tox -e py"${PYVER//.}"
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Run windows test
+        if: matrix.os == 'windows-latest'
+        run: tox -e py${env:PYVER//.}
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Upload to coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github
