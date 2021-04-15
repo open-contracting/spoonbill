@@ -55,14 +55,7 @@ class DataPreprocessor:
 
     def __post_init__(self):
         if isinstance(self.schema_dict, str):
-            if self.schema_dict.startswith("http"):
-                import requests
-
-                self.schema_dict = requests.get(self.schema_dict).json()
-            else:
-                with open(self.schema_dict) as fd:
-                    self.schema_dict = json.load(fd)
-
+            self.schema_dict = resolve_file_uri(self.schema_dict)
         self.schema_dict = jsonref.JsonRef.replace_refs(self.schema_dict)
         self.init_tables(self.root_tables)
         if self.combined_tables:

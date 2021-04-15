@@ -1,9 +1,11 @@
 from itertools import chain
 from dataclasses import replace
 from collections import OrderedDict
-from os.path import commonpath
 
 import ijson
+import json
+import codecs
+import logging
 
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
@@ -14,6 +16,23 @@ PYTHON_TO_JSON_TYPE = {
     "int": "integer",
     "float": "number",
 }
+LOGGER = logging.getLogger('spoonbill')
+
+
+def common_prefix(path, subpath, separator='/'):
+    """Given two paths, returns the longest common sub-path.
+
+    >>> common_prefix('/contracts', '/contracts/items')
+    '/contracts'
+    >>> common_prefix('/tender/submissionMethod', '/tender/submissionMethodDetails')
+    '/tender'
+    >>> common_prefix('/tender/items/id', '/tender/items/description')
+    '/tender/items'
+    """
+    paths = path.split(separator)
+    subpaths = subpath.split(separator)
+    common = [chunk for chunk in paths if chunk in subpaths]
+    return separator.join(common)
 
 
 def iter_file(filename, root):
@@ -81,7 +100,7 @@ def combine_path(root, path, index="0", separator="/"):
     """Generates index based header for combined column"""
     combined_path = path
     for array in sorted(root.arrays, reverse=True):
-        if commonpath((path, array)) == array:
+        if common_prefix(path, array) == array:
             chunk = separator.join((array, index))
             combined_path = combined_path.replace(array, chunk)
     return combined_path
@@ -118,7 +137,7 @@ def get_matching_tables(tables, path):
     candidates = []
     for table in tables.values():
         for candidate in table.path:
-            if commonpath((candidate, path)) == candidate:
+            if common_prefix(candidate, path) == candidate:
                 candidates.append(table)
     return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
@@ -183,19 +202,43 @@ def recalculate_headers(root, abs_path, key, item, separator="/"):
     tail = OrderedDict()
     cols = head
     base_prefix = separator.join((abs_path, key))
+    zero_prefix = separator.join((base_prefix, "0"))
 
-    for col_path, col in root.combined_columns.items():
-        cols[col_path] = col
-        if col_path in DEFAULT_FIELDS_COMBINED or base_prefix not in col_path:
-            continue
+    zero_cols = {
+        col_p: col for col_p, col in root.combined_columns.items()
+        if col_p not in DEFAULT_FIELDS_COMBINED
+        and common_prefix(col_p, zero_prefix) == zero_prefix
+    }
+    new_cols = {}
+    for col_i, _ in enumerate(item, 1):
+        col_prefix = separator.join((base_prefix, str(col_i)))
+        for col_p, col in zero_cols.items():
+            col_id = col.id.replace(zero_prefix, col_prefix)
+            new_cols[col_id] = replace(col, id=col_id)
 
-        zero_index = separator.join((base_prefix, "0"))
-        for col_i, _ in enumerate(item, 1):
-            if commonpath((col_path, zero_index)) == zero_index:
-                col_prefix = separator.join((base_prefix, str(col_i)))
-                new_id = col.id.replace(zero_index, col_prefix)
-                new_col = replace(col, id=new_id)
-                cols = tail
-                cols[new_id] = new_col
+    head_updated = False
+    for col_p, col in root.combined_columns.items():
+        if col_p in zero_cols and not head_updated:
+            head.update(zero_cols)
+            tail.update(new_cols)
+            head_updated = True
+            cols = tail
+        else:
+            if col_p not in cols:
+                cols[col_p] = col
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
+
+
+def resolve_file_uri(file_path):
+    """Read json file from provided uri
+
+    :param file_path: URI to file, could be url or path
+    :return: Read file as dictionary
+    """
+    if file_path.startswith("http"):
+        import requests
+        return requests.get(file_path).json()
+    else:
+        with codecs.open(file_path, encoding="utf-8") as fd:
+            return json.load(fd)
