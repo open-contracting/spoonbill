@@ -34,20 +34,19 @@ class XlsxWriter:
 
     def writeheaders(self):
         """Write headers to output file"""
-        for name, table in self.tables.items():
-            opt = self.options.selection[name]
+        for table_key, opt in self.self.options.selection.items():
             split = opt.split
-            sheet = self.workbook.add_worksheet(name)
-            headers = get_headers(table, opt)
+            sheet = self.workbook.add_worksheet(table_key)
+            headers = get_headers(self.tables[table_key], opt)
             for col_index, col_name in enumerate(headers):
-                self.col_index[name][col_name] = col_index
+                self.col_index[table_key][col_name] = col_index
                 try:
                     sheet.write(0, col_index, headers[col_name])
                 except XlsxWriterException as err:
                     LOGGER.error(_("Failed to write header {} to xlsx sheet {} with error {}").format(
-                        col_name, name, err
+                        col_name, table_key, err
                     ))
-            self.row_counters[name] = 1
+            self.row_counters[table_key] = 1
 
     def writerow(self, table, row):
         """Write row to output file"""

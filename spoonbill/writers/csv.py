@@ -27,14 +27,13 @@ class CSVWriter:
         self.tables = tables
         self.options = options
         self.headers = {}
-        for name, table in self.tables.items():
-            opt = self.options.selection[name]
-            headers = get_headers(table, opt)
-            self.headers[name] = headers
-            fd = open(workdir / f"{name}.csv", "w")
+        for table_key, opt in self.options.selection.items():
+            headers = get_headers(tables[table_key], opt)
+            self.headers[table_key] = headers
+            fd = open(workdir / f"{table_key}.csv", "w")
             writer = csv.DictWriter(fd, headers)
             self.fds.append(fd)
-            self.writers[name] = writer
+            self.writers[table_key] = writer
 
     def writeheaders(self):
         """Write headers to output file"""
