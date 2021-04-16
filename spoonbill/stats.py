@@ -32,8 +32,8 @@ class DataPreprocessor:
     # better to keep '/' to be more like jsonpointers
     # TODO: do we need this to be configurable at all???
     header_separator: str = "/"
-    array_threshold: int = ARRAY_THRESHOLD
-    tables: Mapping[str, Table] = field(default_factory=dict, init=False)
+    table_threshold: int = TABLE_THRESHOLD
+    tables: Mapping[str, Table] = field(default_factory=dict)
     current_table: Table = field(init=False)
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
     _table_by_path: Mapping[str, Table] = field(default_factory=dict, init=False)
