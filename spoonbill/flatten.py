@@ -9,7 +9,7 @@ import logging
 from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file, generate_row_id
-from spoonbill.writer import XlsxWriter, CSVWriter
+from spoonbill.writers import XlsxWriter, CSVWriter
 from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE
 
 LOGGER = logging.getLogger("spoonbill")

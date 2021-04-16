@@ -1,4 +1,4 @@
-from spoonbill.writer import CSVWriter, XlsxWriter
+from spoonbill.writers import CSVWriter, XlsxWriter
 from spoonbill.stats import DataPreprocessor
 from pathlib import Path
 from csv import DictReader

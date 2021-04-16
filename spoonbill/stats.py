@@ -7,19 +7,27 @@ from dataclasses import dataclass, field, asdict
 import jsonref
 
 from spoonbill.spec import Table, Column, add_child_table
-from spoonbill.common import DEFAULT_FIELDS, ARRAY, JOINABLE, JOINABLE_SEPARATOR
+from spoonbill.common import (
+    DEFAULT_FIELDS,
+    DEFAULT_FIELDS_COMBINED,
+    ARRAY,
+    JOINABLE,
+    JOINABLE_SEPARATOR,
+    TABLE_THRESHOLD
+)
 from spoonbill.utils import (
+    common_prefix,
     extract_type,
     validate_type,
     get_root,
     get_matching_tables,
     generate_row_id,
     recalculate_headers,
+    resolve_file_uri,
     PYTHON_TO_JSON_TYPE,
 )
 
 PREVIEW_ROWS = 20
-ARRAY_THRESHOLD = 5
 LOGGER = logging.getLogger("spoonbill")
 
 
@@ -32,8 +40,8 @@ class DataPreprocessor:
     # better to keep '/' to be more like jsonpointers
     # TODO: do we need this to be configurable at all???
     header_separator: str = "/"
-    array_threshold: int = ARRAY_THRESHOLD
-    tables: Mapping[str, Table] = field(default_factory=dict, init=False)
+    table_threshold: int = TABLE_THRESHOLD
+    tables: Mapping[str, Table] = field(default_factory=dict)
     current_table: Table = field(init=False)
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
     _table_by_path: Mapping[str, Table] = field(default_factory=dict, init=False)
@@ -42,6 +50,7 @@ class DataPreprocessor:
         return self.tables[table]
 
     def init_tables(self, tables, is_combined=False):
+        """Initialize root tables with default fields"""
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             for col in DEFAULT_FIELDS:
@@ -136,6 +145,7 @@ class DataPreprocessor:
         """Append empty row to previews
 
         Important to do because all preview items is set using -1 index to access current row
+
         :param ocid: Row ocid
         :param item_id: Current object id
         :param row_id: Unique row id
@@ -153,14 +163,13 @@ class DataPreprocessor:
         """Analyze releases
 
         Iterate over every item in provided list to
-        calculate metrics and optionally generate combined and split of flattened preview
+        calculate metrics and optionally generate preview for combined and split version of the table
 
         :param releases: Iterator of items to analyze
-        :param with_preview: Generate previews if set to True
+        :param with_preview: If set to True generates previews for each table
         """
         separator = self.header_separator
         for count, release in enumerate(releases):
-
             to_analyze = deque([("", "", "", {}, release)])
             ocid = release["ocid"]
             top_level_id = release["id"]
@@ -187,10 +196,16 @@ class DataPreprocessor:
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
-                    type_ = self.current_table.types.get(pointer)
+                    item_type = self.current_table.types.get(pointer)
                     # TODO: this validation should probably be smarter with arrays
-                    if type_ and type_ != JOINABLE and not validate_type(type_, item):
-                        LOGGER.debug(f"Mismatched type on {pointer} expected {type_}")
+                    if (
+                        item_type
+                        and item_type != JOINABLE
+                        and not validate_type(item_type, item)
+                    ):
+                        LOGGER.debug(
+                            f"Mismatched type on {pointer} expected {item_type}"
+                        )
                         continue
 
                     if isinstance(item, dict):
@@ -204,7 +219,8 @@ class DataPreprocessor:
                             )
                         )
                     elif isinstance(item, list):
-                        if type_ == JOINABLE:
+                        if item_type == JOINABLE:
+                            self.current_table.inc_column(pointer)
                             if with_preview and count < PREVIEW_ROWS:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.preview_rows[-1][pointer] = value
@@ -238,10 +254,12 @@ class DataPreprocessor:
                                                 parent.get("id"),
                                                 parent_key,
                                             )
-                                    p = separator.join([abs_path, key, str(i)])
+                                    abs_pointer = separator.join(
+                                        [abs_path, key, str(i)]
+                                    )
                                     to_analyze.append(
                                         (
-                                            p,
+                                            abs_pointer,
                                             pointer,
                                             key,
                                             record,

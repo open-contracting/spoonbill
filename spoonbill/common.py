@@ -40,3 +40,4 @@ ARRAY = "array of {}"
 # TODO: is joinable good name?
 JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
+TABLE_THRESHOLD = 5

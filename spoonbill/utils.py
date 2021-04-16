@@ -242,3 +242,21 @@ def resolve_file_uri(file_path):
     else:
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd)
+
+
+def get_headers(table, options):
+    """Generate table headers respecting human and override options
+
+    :param table: Target table
+    :param options: Flattening options
+    :return: Mapping between column and its header
+    """
+    split = options.split
+    headers = {c: c for c in table.available_rows(split=split)}
+    if options.pretty_headers:
+        for c in headers:
+            headers[c] = table.titles.get(c, c)
+    if options.headers:
+        for c, h in options.headers.items():
+            headers[c] = h
+    return headers
