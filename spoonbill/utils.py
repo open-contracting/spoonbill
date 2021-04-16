@@ -17,10 +17,10 @@ PYTHON_TO_JSON_TYPE = {
     "int": "integer",
     "float": "number",
 }
-LOGGER = logging.getLogger('spoonbill')
+LOGGER = logging.getLogger("spoonbill")
 
 
-def common_prefix(path, subpath, separator='/'):
+def common_prefix(path, subpath, separator="/"):
     """Given two paths, returns the longest common sub-path.
 
     >>> common_prefix('/contracts', '/contracts/items')
@@ -48,7 +48,7 @@ def iter_file(filename, root):
     >>> len([r for r in iter_file('tests/data/ocds-sample-data.json', 'releases')])
     6
     """
-    with open(filename, 'rb') as fd:
+    with open(filename, "rb") as fd:
         reader = ijson.items(fd, f"{root}.item")
         for item in reader:
             yield item
@@ -91,7 +91,7 @@ def validate_type(type_, item):
     True
     """
     if isinstance(item, Number):
-        name = 'number'
+        name = "number"
     else:
         name = type(item).__name__
     expected = PYTHON_TO_JSON_TYPE.get(name)
@@ -216,7 +216,8 @@ def recalculate_headers(root, abs_path, key, item, separator="/"):
     zero_prefix = separator.join((base_prefix, "0"))
 
     zero_cols = {
-        col_p: col for col_p, col in root.combined_columns.items()
+        col_p: col
+        for col_p, col in root.combined_columns.items()
         if col_p not in DEFAULT_FIELDS_COMBINED
         and common_prefix(col_p, zero_prefix) == zero_prefix
     }
@@ -249,6 +250,7 @@ def resolve_file_uri(file_path):
     """
     if file_path.startswith("http"):
         import requests
+
         return requests.get(file_path).json()
     else:
         with codecs.open(file_path, encoding="utf-8") as fd:
@@ -271,3 +273,9 @@ def get_headers(table, options):
         for c, h in options.headers.items():
             headers[c] = h
     return headers
+
+
+def get_pointer(pointer, abs_path, key, split, separator="/", is_root=True):
+    if split or is_root:
+        return pointer
+    return separator.join((abs_path, key))
