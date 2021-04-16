@@ -41,8 +41,13 @@ def iter_file(filename, root):
     :param str filename: Path to file
     :param str root: Array field name inside file
     :return: Array items iterator
+
+    >>> [r for r in iter_file('tests/data/ocds-sample-data.json', 'records')]
+    []
+    >>> len([r for r in iter_file('tests/data/ocds-sample-data.json', 'releases')])
+    6
     """
-    with open(filename) as fd:
+    with open(filename, 'rb') as fd:
         reader = ijson.items(fd, f"{root}.item")
         for item in reader:
             yield item
