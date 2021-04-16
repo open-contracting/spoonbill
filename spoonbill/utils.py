@@ -1,6 +1,7 @@
 from itertools import chain
 from dataclasses import replace
 from collections import OrderedDict
+from numbers import Number
 
 import ijson
 import json
@@ -78,6 +79,8 @@ def validate_type(type_, item):
     True
     >>> validate_type(['number'], 11.1)
     True
+    >>> validate_type(['number'], 11)
+    True
     >>> validate_type(['array'], [])
     True
     >>> validate_type(['array'], {})
@@ -87,7 +90,10 @@ def validate_type(type_, item):
     >>> validate_type(['object'], {})
     True
     """
-    name = type(item).__name__
+    if isinstance(item, Number):
+        name = 'number'
+    else:
+        name = type(item).__name__
     expected = PYTHON_TO_JSON_TYPE.get(name)
     if expected:
         return expected in type_
