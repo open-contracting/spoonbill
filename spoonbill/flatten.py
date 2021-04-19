@@ -79,12 +79,8 @@ class Flattener:
             return
 
         name = table.name
-        count = self.options.count
         options = self.options.selection[name]
-        unnest = options.unnest
         split = options.split
-        repeat = options.repeat
-
         tables[name] = table
 
         for p in table.path:
@@ -294,7 +290,6 @@ class FileAnalyzer:
         path = self.workdir / filename
         with open(path, "w") as fd:
             json.dump(self.spec.dump(), fd, default=str)
-
 
 
 class FileFlattener:

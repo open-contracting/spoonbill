@@ -293,4 +293,46 @@ class DataPreprocessor:
 
     def dump(self):
         """Dump table objects to python dictionary"""
-        return {"tables": {name: asdict(table) for name, table in self.tables.items()}}
+        return {
+            "schema_dict": self.schema_dict,
+            "root_tables": self.root_tables,
+            "combined_tables": self.combined_tables,
+            "header_separator": self.header_separator,
+            "tables": {name: table.dump() for name, table in self.tables.items()},
+            "table_threshold": self.table_threshold,
+        }
+
+    @classmethod
+    def restore(cls, data):
+        """Restore DataPreprocessor from existing data
+
+        :param data: Data to restore from
+        """
+        try:
+            spec = {
+                "schema_dict": data["schema_dict"],
+                "root_tables": data["root_tables"],
+                "combined_tables": data["combined_tables"],
+                "header_separator": data["header_separator"],
+                "table_threshold": data["table_threshold"],
+            }
+        except KeyError as e:
+            LOGGER.error(
+                _(
+                    "Failed to restore from mailformed data. Missing {} attribute"
+                ).format(e)
+            )
+            return
+        tables = {
+            name: Table(**table)
+            for name, table in data["tables"].items()
+            if table["is_root"]
+        }
+
+        for name, table in data["tables"].items():
+            if not table["is_root"]:
+                parent = tables[table["parent"]]
+                table["parent"] = parent
+                tables[name] = Table(**table)
+        spec["tables"] = tables
+        return cls(**spec)

@@ -2,15 +2,13 @@ from jmespath import search
 from spoonbill.flatten import Flattener, FlattenOptions
 
 
-def test_flatten(spec, releases):
-    spec.process_items(releases)
-
+def test_flatten(spec_analyzed, releases):
     options = FlattenOptions(
         **{
             "selection": {"tenders": {"split": True}, "parties": {"split": False}},
         }
     )
-    flattener = Flattener(options, spec.tables)
+    flattener = Flattener(options, spec_analyzed.tables)
     for flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
@@ -19,13 +17,12 @@ def test_flatten(spec, releases):
                 assert "rowID" in row
 
 
-def test_flatten_with_count(spec, releases):
-    spec.process_items(releases)
+def test_flatten_with_count(spec_analyzed, releases):
 
     options = FlattenOptions(
         **{"selection": {"tenders": {"split": True}}, "count": True}
     )
-    flattener = Flattener(options, spec.tables)
+    flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in enumerate(flattener.flatten(releases)):
         for name, rows in flat.items():
             if name == "tenders":
@@ -48,14 +45,13 @@ def test_flatten_with_count(spec, releases):
                         )
 
 
-def test_flatten_with_repeat(spec, releases):
-    spec.process_items(releases)
+def test_flatten_with_repeat(spec_analyzed, releases):
     options = FlattenOptions(
         **{
             "selection": {"tenders": {"split": True, "repeat": ["/tender/id"]}},
         }
     )
-    flattener = Flattener(options, spec.tables)
+    flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in enumerate(flattener.flatten(releases)):
         for name, rows in flat.items():
             if name == "tenders":
@@ -68,15 +64,14 @@ def test_flatten_with_repeat(spec, releases):
                 assert row["/tender/id"] == search(f"[{count}].tender.id", releases)
 
 
-def test_flatten_with_unnest(spec, releases):
-    spec.process_items(releases)
+def test_flatten_with_unnest(spec_analyzed, releases):
     field = "/tender/items/0/id"
     options = FlattenOptions(
         **{
             "selection": {"tenders": {"split": True, "unnest": [field]}},
         }
     )
-    flattener = Flattener(options, spec.tables)
+    flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in enumerate(flattener.flatten(releases)):
         for name, rows in flat.items():
             for row in rows:

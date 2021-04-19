@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from typing import Mapping, Sequence, List
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, is_dataclass, asdict
 
 from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
 from spoonbill.common import DEFAULT_FIELDS
@@ -44,8 +44,8 @@ class Table:
     child_tables: List[str] = field(default_factory=list)
     types: Mapping[str, List[str]] = field(default_factory=dict)
 
-    preview_rows: Sequence[dict] = field(default_factory=list, init=False)
-    preview_rows_combined: Sequence[dict] = field(default_factory=list, init=False)
+    preview_rows: Sequence[dict] = field(default_factory=list)
+    preview_rows_combined: Sequence[dict] = field(default_factory=list)
 
     def __post_init__(self):
         for attr in (
@@ -159,6 +159,13 @@ class Table:
     def inc(self):
         """Increment number of rows in table"""
         self.total_rows += 1
+
+    def dump(self):
+        data = asdict(self)
+        if data['parent']:
+            data['parent'] = data['parent']['name']
+        return data
+
 
 
 def add_child_table(current_table, pointer, parent_key, key):
