@@ -58,7 +58,7 @@
           "id": "6801ad388f3a38b7740dde20108c58b35984ee91",
           "description": "Budget allocation for highway maintenance, aligned with 2015 strategic plan. ",
           "amount": {
-            "amount": 6700000,
+            "amount": 6700000.1,
             "currency": "GBP"
           },
           "project": "Central Junction Cycle Scheme",
@@ -115,7 +115,7 @@
         "mainProcurementCategory": "works",
         "status": "planned",
         "minValue": {
-          "amount": 500000,
+          "amount": 500000.1,
           "currency": "GBP"
         },
         "value": {

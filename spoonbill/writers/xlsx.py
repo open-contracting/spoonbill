@@ -8,7 +8,7 @@ from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
 
-LOGGER = logging.getLogger('spoonbill')
+LOGGER = logging.getLogger("spoonbill")
 
 
 class XlsxWriter:
@@ -20,6 +20,7 @@ class XlsxWriter:
     :param tables: Tables data
     :options: Flattening options
     """
+
     name = "xlsx"
 
     def __init__(self, workdir, tables, options):
@@ -44,9 +45,11 @@ class XlsxWriter:
                 try:
                     sheet.write(0, col_index, headers[col_name])
                 except XlsxWriterException as err:
-                    LOGGER.error(_("Failed to write header {} to xlsx sheet {} with error {}").format(
-                        col_name, name, err
-                    ))
+                    LOGGER.error(
+                        _(
+                            "Failed to write header {} to xlsx sheet {} with error {}"
+                        ).format(col_name, name, err)
+                    )
             self.row_counters[name] = 1
 
     def writerow(self, table, row):
@@ -58,9 +61,11 @@ class XlsxWriter:
             try:
                 sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
-                LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(
-                    column, table, err
-                ))
+                LOGGER.error(
+                    _(
+                        "Failed to write column {} to xlsx sheet {} with error {}"
+                    ).format(column, table, err)
+                )
 
         self.row_counters[table] += 1
 

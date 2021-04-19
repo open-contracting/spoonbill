@@ -11,9 +11,11 @@ requires = [
     "xlsxwriter",
     "requests",
     "click",
+    "ocdskit",
+    "ocdsextensionregistry",
     'dataclasses;python_version<"3.7"',
 ]
-test_requires = ["pytest", "jmespath", "pytest-cov", "coveralls"] + requires
+test_requires = ["pytest", "jmespath", "pytest-cov", "coveralls", "openpyxl"] + requires
 docs_requires = [
     "Sphinx",
     "sphinx-autobuild",

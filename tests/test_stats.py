@@ -109,4 +109,4 @@ def test_analyze(spec, releases):
         assert table.total_rows == len(ids)
         assert table[f"/{array}/id"].hits == len(ids)
     # check joinable calculation
-    assert parties['/parties/roles'].hits == len(search("[].parties[].roles", releases))
+    assert parties["/parties/roles"].hits == len(search("[].parties[].roles", releases))

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, is_dataclass, field
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, List
 from collections import defaultdict, deque
 from pathlib import Path
 
@@ -8,9 +8,11 @@ import logging
 
 from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file, generate_row_id
+from spoonbill.utils import iter_file, generate_row_id, get_root, get_pointer
 from spoonbill.writers import XlsxWriter, CSVWriter
 from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE
+from spoonbill.i18n import _
+
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -22,22 +24,29 @@ class TableFlattenConfig:
     :param split: Split child arrays to separate tables
     :param pretty_headers: Use human friendly headers extracted from schema
     :param headers: User edited headers to override automatically extracted
+    :param unnest: List of columns to output from child to parent table
+    :param repeat: List of columns to clone in child tables
     """
 
     split: bool
     pretty_headers: bool = False
     headers: Mapping[str, str] = field(default_factory=dict)
+    only: List[str] = field(default_factory=list)
+    repeat: List[str] = field(default_factory=list)
+    unnest: List[str] = field(default_factory=list)
 
 
 @dataclass
 class FlattenOptions:
+
     """Whole flattening process configuration
 
-    :param selection: List of of tables to extract from data and flatten
+    :param selection: List of selected tables to extract from data
+    :param count: Include number of rows in child table in each parent table
     """
 
     selection: Mapping[str, TableFlattenConfig]
-    # combine: bool = True
+    count: bool = False
 
     def __post_init__(self):
         for name, table in self.selection.items():
@@ -63,31 +72,88 @@ class Flattener:
     def __post_init__(self):
         if not is_dataclass(self.options):
             self.options = FlattenOptions(**self.options)
+        self._init()
+
+    def _init_table_cache(self, tables, table):
+        if table.total_rows == 0:
+            return
+
+        name = table.name
+        count = self.options.count
+        options = self.options.selection[name]
+        unnest = options.unnest
+        split = options.split
+        repeat = options.repeat
+
+        tables[name] = table
+
+        for p in table.path:
+            self._path_cache[p] = table
+        for path in table.types:
+            self._types_cache[path] = table
+
+        cols = table if split else table.combined_columns
+        for path in cols:
+            self._lookup_cache[path] = table
+
+    def _init_options(self, tables):
+        """"""
+        for table in tables.values():
+            name = table.name
+            count = self.options.count
+            options = self.options.selection[name]
+            unnest = options.unnest
+            split = options.split
+            repeat = options.repeat
+            if count:
+                for array in table.arrays:
+                    parts = array.split("/")
+                    parts[-1] = f"{parts[-1]}Count"
+                    title = parts[-1]
+                    table.add_column(
+                        "/".join(parts),
+                        {"title": title},
+                        "integer",
+                        parent={},
+                    )
+
+            if unnest:
+                for col_id in unnest:
+                    col = table.combined_columns[col_id]
+                    table.columns[col_id] = col
+
+            if repeat:
+                for col_id in repeat:
+                    columns = table.columns if split else table.combined_columns
+                    title = table.titles.get(col_id)
+                    col = columns.get(col_id)
+                    if not col:
+                        LOGGER.warning(
+                            _(
+                                "Ingoring repeat column {} because it is not in table {}"
+                            ).format(col_id, name)
+                        )
+                        continue
+                    for c_name in table.child_tables:
+                        child_table = self.tables.get(c_name)
+                        child_table.columns[col_id] = col
+                        child_table.titles[col_id] = title
+
+    def _init(self):
+        # init cache and filter only selected tables
         tables = {}
         for name, table in self.tables.items():
             if name not in self.options.selection:
                 continue
-            for p in table.path:
-                self._path_cache[p] = table
-            for path in table.types:
-                self._types_cache[path] = table
-
+            self._init_table_cache(tables, table)
             split = self.options.selection[name].split
-            cols = table if split else table.combined_columns
-            for path in cols:
-                self._lookup_cache[path] = table
-
             if split:
                 for c_name in table.child_tables:
                     c_table = self.tables[c_name]
-                    tables[c_name] = c_table
                     self.options.selection[c_name] = TableFlattenConfig(split=True)
-                    for p in c_table.path:
-                        self._path_cache[p] = c_table
-                    for path in c_table.types:
-                        self._types_cache[path] = c_table
-        if tables:
-            self.tables = tables
+                    self._init_table_cache(tables, c_table)
+        self.tables = tables
+        self._init_options(self.tables)
 
     def flatten(self, releases):
         """Flatten releases
@@ -98,27 +164,28 @@ class Flattener:
 
         for release in releases:
             rows = defaultdict(list)
-            to_flatten = deque([("", "", "", {}, release)])
+            to_flatten = deque([("", "", "", {}, release, {})])
             separator = "/"
             ocid = release["ocid"]
             top_level_id = release["id"]
 
             while to_flatten:
-                abs_path, path, parent_key, parent, record = to_flatten.pop()
-                # Strict match /tender /parties etc., so this is a new row
+                abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
                 table = self._path_cache.get(path)
                 if table:
+                    # Strict match /tender /parties etc., so this is a new row
                     row_id = generate_row_id(
                         ocid, record.get("id", ""), parent_key, top_level_id
                     )
-                    rows[table.name].append(
-                        {
-                            "rowID": row_id,
-                            "id": top_level_id,
-                            "parentID": parent.get("id"),
-                            "ocid": ocid,
-                        }
-                    )
+                    new_row = {
+                        "rowID": row_id,
+                        "id": top_level_id,
+                        "parentID": parent.get("id"),
+                        "ocid": ocid,
+                    }
+                    if repeat:
+                        new_row.update(repeat)
+                    rows[table.name].append(new_row)
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
@@ -127,33 +194,60 @@ class Flattener:
                     )
                     if not table:
                         continue
-                    type_ = table.types.get(pointer)
+                    item_type = table.types.get(pointer)
+                    abs_pointer = separator.join((abs_path, key))
+                    options = self.options.selection[table.name]
+                    split = options.split
+
+                    if pointer in options.repeat:
+                        repeat[pointer] = item
 
                     if isinstance(item, dict):
-                        a_p = separator.join((abs_path, key))
-                        to_flatten.append((a_p, pointer, key, record, item))
+                        to_flatten.append(
+                            (abs_pointer, pointer, key, record, item, repeat)
+                        )
                     elif isinstance(item, list):
-                        if type_ == JOINABLE:
+                        if item_type == JOINABLE:
                             value = JOINABLE.join(item)
                             rows[table.name][-1][pointer] = value
                         else:
+                            if self.options.count:
+                                abs_pointer = get_pointer(
+                                    pointer,
+                                    abs_path,
+                                    key,
+                                    split,
+                                    separator,
+                                    table.is_root,
+                                )
+                                abs_pointer += "Count"
+                                rows[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    if table.is_root:
-                                        a_p = separator.join((abs_path, key))
-                                    else:
-                                        a_p = separator.join(
-                                            (abs_path, key, str(index))
-                                        )
+                                    abs_pointer = separator.join(
+                                        (abs_path, key, str(index))
+                                    )
                                     to_flatten.append(
-                                        (a_p, pointer, key, record, value)
+                                        (
+                                            abs_pointer,
+                                            pointer,
+                                            key,
+                                            record,
+                                            value,
+                                            repeat,
+                                        )
                                     )
                     else:
-                        a_pointer = separator.join((abs_path, key))
-                        if a_pointer in self._lookup_cache:
-                            rows[table.name][-1][a_pointer] = item
-                        else:
-                            rows[table.name][-1][pointer] = item
+                        if not table.is_root:
+                            root = get_root(table)
+                            unnest = self.options.selection[root.name].unnest
+                            if unnest and abs_pointer in unnest:
+                                rows[root.name][-1][abs_pointer] = item
+                                continue
+                        pointer = get_pointer(
+                            pointer, abs_path, key, split, separator, table.is_root
+                        )
+                        rows[table.name][-1][pointer] = item
             yield rows
 
 
@@ -177,17 +271,20 @@ class FileAnalyzer:
     ):
         self.workdir = Path(workdir)
         self.spec = DataPreprocessor(
-            json.load(schema), root_tables, combined_tables=combined_tables
+            schema, root_tables, combined_tables=combined_tables
         )
-        # TODO: decect package
+        # TODO: detect package
         self.root_key = root_key
 
-    def analyze_file(self, filename):
+    def analyze_file(self, filename, with_preview=True):
         """Analyze provided file
         :param filename: Input filename
+        :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
-        self.spec.process_items(iter_file(path, self.root_key))
+        self.spec.process_items(
+            iter_file(path, self.root_key), with_preview=with_preview
+        )
 
     def dump_to_file(self, filename):
         """Save analyzed information to file
@@ -197,6 +294,7 @@ class FileAnalyzer:
         path = self.workdir / filename
         with open(path, "w") as fd:
             json.dump(self.spec.dump(), fd, default=str)
+
 
 
 class FileFlattener:
@@ -218,7 +316,6 @@ class FileFlattener:
         # TODO: detect package, where?
         self.root_key = root_key
         self.writers = []
-
         if csv:
             self.writers.append(
                 CSVWriter(self.workdir, self.flattener.tables, self.flattener.options)
@@ -247,10 +344,7 @@ class FileFlattener:
             w.writeheaders()
 
         for data in self.flattener.flatten(iter_file(path, self.root_key)):
-            try:
-                for table, rows in data.items():
-                    for row in rows:
-                        self.writerow(table, row)
-            except Exception as err:
-                LOGGER.warning(f"Failed to write row {row}")
+            for table, rows in data.items():
+                for row in rows:
+                    self.writerow(table, row)
         self._close()
