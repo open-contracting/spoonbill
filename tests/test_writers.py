@@ -43,6 +43,11 @@ def test_writers_pretty_headers(spec, tmpdir):
             "selection": {
                 "tenders": {"split": True, "pretty_headers": True},
                 "parties": {"split": False, "pretty_headers": True},
+                "tenders_items": {
+                    "split": True,
+                    "headers": {"/tender/items/id": "item id"},
+                    "pretty_headers": True,
+                },
             }
         }
     )
@@ -62,6 +67,8 @@ def test_writers_pretty_headers(spec, tmpdir):
         table = tables[name]
         for col in tables[name]:
             title = table.titles.get(col)
+            if col == "/tender/items/id":
+                title = "item id"
             assert title in xlsx_headers
             assert title in csv_headers
 
@@ -71,6 +78,11 @@ def test_writers_pretty_headers(spec, tmpdir):
                 "tenders": {
                     "split": True,
                     "headers": {"/tender/id": "TENDER"},
+                    "pretty_headers": True,
+                },
+                "tenders_items": {
+                    "split": True,
+                    "headers": {"/tender/items/id": "item id"},
                     "pretty_headers": True,
                 },
                 "parties": {
@@ -85,14 +97,20 @@ def test_writers_pretty_headers(spec, tmpdir):
     workdir = Path(tmpdir)
     writers = get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
+
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
-
     xlsx_headers = read_xlsx_headers(xlsx, sheet)
     csv_headers = read_csv_headers(path)
-
     assert "TENDER" in xlsx_headers
     assert "TENDER" in csv_headers
+
+    sheet = "tenders_items"
+    path = workdir / f"{sheet}.csv"
+    xlsx_headers = read_xlsx_headers(xlsx, sheet)
+    csv_headers = read_csv_headers(path)
+    assert "item id" in xlsx_headers
+    assert "item id" in csv_headers
 
     xlsx = workdir / "result.xlsx"
     sheet = "parties"
