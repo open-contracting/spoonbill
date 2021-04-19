@@ -13,7 +13,7 @@ from spoonbill.common import (
     ARRAY,
     JOINABLE,
     JOINABLE_SEPARATOR,
-    TABLE_THRESHOLD
+    TABLE_THRESHOLD,
 )
 from spoonbill.utils import (
     common_prefix,
@@ -157,7 +157,9 @@ class DataPreprocessor:
             defaults["parentTable"] = parent_table
         self.current_table.preview_rows.append(defaults)
         if self.current_table.is_root:
-            self.current_table.preview_rows_combined.append(defaults)
+            self.current_table.preview_rows_combined.append(
+                {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
+            )
 
     def process_items(self, releases, with_preview=True):
         """Analyze releases
@@ -197,6 +199,7 @@ class DataPreprocessor:
                     if not self.current_table:
                         continue
                     item_type = self.current_table.types.get(pointer)
+
                     # TODO: this validation should probably be smarter with arrays
                     if (
                         item_type
@@ -209,6 +212,7 @@ class DataPreprocessor:
                         continue
 
                     if isinstance(item, dict):
+
                         to_analyze.append(
                             (
                                 separator.join([abs_path, key]),
