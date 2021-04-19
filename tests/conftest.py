@@ -10,6 +10,7 @@ schema_path = here / "data" / "ocds-simplified-schema.json"
 releases_path = here / "data" / "ocds-sample-data.json"
 analyzed_path = here / "data" / "analyzed.json"
 
+
 @pytest.fixture
 def schema():
     with open(schema_path) as fd:
@@ -41,8 +42,6 @@ def spec(schema):
 @pytest.fixture
 def spec_analyzed():
     with open(analyzed_path) as fd:
-        data =  json.load(fd)
+        data = json.load(fd)
     dp = DataPreprocessor.restore(data)
     return dp
-
-
