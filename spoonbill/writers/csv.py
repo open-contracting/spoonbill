@@ -4,7 +4,6 @@ import logging
 from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
-
 LOGGER = logging.getLogger("spoonbill")
 
 
@@ -47,9 +46,7 @@ class CSVWriter:
         try:
             self.writers[table].writerow(row)
         except ValueError as err:
-            LOGGER.error(
-                _("Failed to write row {} with error {}").format(row["rowID"], err)
-            )
+            LOGGER.error(_("Failed to write row {} with error {}").format(row["rowID"], err))
 
     def close(self):
         """Finish work"""

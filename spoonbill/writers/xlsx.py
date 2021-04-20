@@ -1,12 +1,11 @@
-from xlsxwriter.exceptions import XlsxWriterException
-
-import xlsxwriter
 import collections
 import logging
 
+import xlsxwriter
+from xlsxwriter.exceptions import XlsxWriterException
+
 from spoonbill.i18n import _
 from spoonbill.utils import get_headers
-
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -25,9 +24,7 @@ class XlsxWriter:
 
     def __init__(self, workdir, tables, options):
         self.workdir = workdir
-        self.workbook = xlsxwriter.Workbook(
-            workdir / "result.xlsx", {"constant_memory": True}
-        )
+        self.workbook = xlsxwriter.Workbook(workdir / "result.xlsx", {"constant_memory": True})
         self.row_counters = {}
         self.tables = tables
         self.options = options
@@ -37,7 +34,6 @@ class XlsxWriter:
         """Write headers to output file"""
         for name, table in self.tables.items():
             opt = self.options.selection[name]
-            split = opt.split
             sheet = self.workbook.add_worksheet(name)
             headers = get_headers(table, opt)
             for col_index, col_name in enumerate(headers):
@@ -46,9 +42,7 @@ class XlsxWriter:
                     sheet.write(0, col_index, headers[col_name])
                 except XlsxWriterException as err:
                     LOGGER.error(
-                        _(
-                            "Failed to write header {} to xlsx sheet {} with error {}"
-                        ).format(col_name, name, err)
+                        _("Failed to write header {} to xlsx sheet {} with error {}").format(col_name, name, err)
                     )
             self.row_counters[name] = 1
 
@@ -61,11 +55,7 @@ class XlsxWriter:
             try:
                 sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
-                LOGGER.error(
-                    _(
-                        "Failed to write column {} to xlsx sheet {} with error {}"
-                    ).format(column, table, err)
-                )
+                LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 
         self.row_counters[table] += 1
 

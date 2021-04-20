@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from spoonbill.spec import Table, Column
+
+from spoonbill.spec import Column, Table
 from spoonbill.utils import combine_path
 
 
@@ -130,9 +131,7 @@ def test_inc_column():
                 ),
                 (
                     "/tender/items/0/id",
-                    Column(
-                        title="Tender Item id", type="string", id="/tender/items/0/id"
-                    ),
+                    Column(title="Tender Item id", type="string", id="/tender/items/0/id"),
                 ),
             ]
         ),

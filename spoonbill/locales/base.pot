@@ -58,4 +58,3 @@ msgstr ""
 #: spoonbill/cli.py:52
 msgid "For each array field, add a count column to the parent table"
 msgstr ""
-

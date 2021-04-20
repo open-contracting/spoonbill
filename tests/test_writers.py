@@ -1,12 +1,9 @@
-from spoonbill.writers import CSVWriter, XlsxWriter
-from spoonbill.stats import DataPreprocessor
-from spoonbill.flatten import FlattenOptions
 from pathlib import Path
-from csv import DictReader
 
-from .data import *
-from .utils import read_xlsx_headers, read_csv_headers, prepare_tables, get_writers
+from spoonbill.flatten import FlattenOptions
 
+# from .data import *
+from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
 
@@ -14,7 +11,7 @@ ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
 def test_writer_init(spec, tmpdir, flatten_options):
     tables = prepare_tables(spec, flatten_options, ID_FIELDS)
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, flatten_options)
+    get_writers(workdir, tables, flatten_options)
     path = workdir / "result.xlsx"
 
     assert path.is_file()
@@ -26,7 +23,7 @@ def test_writer_init(spec, tmpdir, flatten_options):
 def test_headers_filtering(spec, tmpdir, flatten_options):
     tables = prepare_tables(spec, flatten_options, ID_FIELDS)
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, flatten_options)
+    get_writers(workdir, tables, flatten_options)
     for name in flatten_options.selection:
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(workdir / "result.xlsx", name)
@@ -57,7 +54,7 @@ def test_writers_pretty_headers(spec, tmpdir):
             table.inc_column(col)
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
 
     for name in options.selection:
@@ -95,7 +92,7 @@ def test_writers_pretty_headers(spec, tmpdir):
     )
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
 
     sheet = "tenders"

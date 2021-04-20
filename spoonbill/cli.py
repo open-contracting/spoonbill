@@ -1,16 +1,16 @@
 """cli.py - Command line interface related routines"""
-from ocdskit.util import detect_format
+import logging
+import pathlib
+
+import click
 from ocdsextensionregistry import ProfileBuilder
+from ocdskit.util import detect_format
+
+from spoonbill.common import COMBINED_TABLES, ROOT_TABLES
+from spoonbill.flatten import FileAnalyzer, FileFlattener, FlattenOptions
 from spoonbill.i18n import _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.flatten import FileFlattener, FileAnalyzer, FlattenOptions
 from spoonbill.utils import resolve_file_uri
-from spoonbill.common import ROOT_TABLES, COMBINED_TABLES
-
-import pathlib
-import logging
-import click
-
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("spoonbill")
@@ -74,15 +74,11 @@ def should_split(spec, table_name, split, threshold=5):
     type=CommaSeparated(),
     default="",
 )
-@click.option(
-    "--combine", help=_("Combine same objects to single table"), type=CommaSeparated()
-)
+@click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
 @click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated())
 @click.option(
     "--reify",
-    help=_(
-        "For array, use one field value as the column name and another field value as the cell value"
-    ),
+    help=_("For array, use one field value as the column name and another field value as the cell value"),
 )
 @click.option(
     "--repeat",
@@ -143,13 +139,12 @@ def cli(
             profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
             schema = profile.record_package_schema()
     if reify:
-        raise NotImplementedError(
-            _("We are sorry but reify option is currently disabled")
-        )
+        raise NotImplementedError(_("We are sorry but reify option is currently disabled"))
     title = schema.get("title", "").lower()
     if not title:
         raise Exception(_("Incomplete schema, please make sure your data is correct"))
     if "package" in title:
+        # TODO: is is a good way to get release/record schema
         schema = schema["properties"][root_key]["items"]
 
     path = pathlib.Path(filename)
@@ -159,8 +154,6 @@ def cli(
     combine = combine or COMBINED_TABLES.keys()
     root_tables = get_selected_tables(ROOT_TABLES, selection)
     combined_tables = get_selected_tables(COMBINED_TABLES, combine)
-
-    # TODO: is is a good way to get release/record schema
 
     if state_file:
         analyzer = FileAnalyzer(workdir, state_file=state_file)
@@ -189,10 +182,5 @@ def cli(
         }
 
     options = FlattenOptions(**options)
-    flattener = FileFlattener(
-        workdir, options, analyzer.spec.tables, root_key=root_key, csv=csv, xlsx=xlsx
-    )
+    flattener = FileFlattener(workdir, options, analyzer.spec.tables, root_key=root_key, csv=csv, xlsx=xlsx)
     flattener.flatten_file(filename)
-    import sys
-
-    sys.exit(0)

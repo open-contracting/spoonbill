@@ -1,10 +1,28 @@
+from json import dump, load
+
 from jmespath import search
-from json import load, dump
-from spoonbill.spec import Table, Column
+
+from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
-
-from .data import *
-
+from tests.data import (
+    OCDS_TITLES_COMBINED,
+    TEST_ROOT_TABLES,
+    awards_arrays,
+    awards_columns,
+    awards_combined_columns,
+    contracts_arrays,
+    contracts_columns,
+    contracts_combined_columns,
+    parties_arrays,
+    parties_columns,
+    parties_combined_columns,
+    planning_arrays,
+    planning_columns,
+    planning_combined_columns,
+    tenders_arrays,
+    tenders_columns,
+    tenders_combined_columns,
+)
 
 COLUMNS = {
     "tenders": tenders_columns,

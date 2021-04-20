@@ -1,4 +1,5 @@
 from jmespath import search
+
 from spoonbill.flatten import Flattener, FlattenOptions
 
 
@@ -19,9 +20,7 @@ def test_flatten(spec_analyzed, releases):
 
 def test_flatten_with_count(spec_analyzed, releases):
 
-    options = FlattenOptions(
-        **{"selection": {"tenders": {"split": True}}, "count": True}
-    )
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "count": True})
     flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in enumerate(flattener.flatten(releases)):
         for name, rows in flat.items():
@@ -39,10 +38,7 @@ def test_flatten_with_count(spec_analyzed, releases):
                     )
                     if additional:
                         assert "/tender/items/additionalClassificationsCount" in row
-                        assert (
-                            len(additional)
-                            == row["/tender/items/additionalClassificationsCount"]
-                        )
+                        assert len(additional) == row["/tender/items/additionalClassificationsCount"]
 
 
 def test_flatten_with_repeat(spec_analyzed, releases):
@@ -81,6 +77,4 @@ def test_flatten_with_unnest(spec_analyzed, releases):
                 item_id = search(f"[{count}].tender.items[0].id", releases)
                 if item_id:
                     assert field in row
-                    assert (
-                        search(f"[{count}].tender.items[0].id", releases) == row[field]
-                    )
+                    assert search(f"[{count}].tender.items[0].id", releases) == row[field]

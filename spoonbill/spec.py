@@ -1,10 +1,10 @@
 import logging
 from collections import OrderedDict
-from typing import Mapping, Sequence, List
-from dataclasses import dataclass, field, is_dataclass, asdict
+from dataclasses import asdict, dataclass, field, is_dataclass
+from typing import List, Mapping, Sequence
 
-from spoonbill.utils import get_root, combine_path, prepare_title, generate_table_name
 from spoonbill.common import DEFAULT_FIELDS
+from spoonbill.utils import combine_path, generate_table_name, get_root, prepare_title
 
 LOGGER = logging.getLogger("spoonbill")
 

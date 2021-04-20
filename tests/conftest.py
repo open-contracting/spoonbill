@@ -1,9 +1,12 @@
 import json
-import pytest
 import pathlib
+
+import pytest
+
 from spoonbill.flatten import FlattenOptions
 from spoonbill.stats import DataPreprocessor
-from .data import TEST_ROOT_TABLES, TEST_COMBINED_TABLES
+
+from .data import TEST_COMBINED_TABLES, TEST_ROOT_TABLES
 
 here = pathlib.Path(__file__).parent
 schema_path = here / "data" / "ocds-simplified-schema.json"
@@ -34,9 +37,7 @@ def flatten_options():
 
 @pytest.fixture
 def spec(schema):
-    return DataPreprocessor(
-        schema, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES
-    )
+    return DataPreprocessor(schema, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
 
 
 @pytest.fixture

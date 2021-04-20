@@ -1,12 +1,12 @@
-from itertools import chain
-from dataclasses import replace
+import codecs
+import json
+import logging
 from collections import OrderedDict
+from dataclasses import replace
+from itertools import chain
 from numbers import Number
 
 import ijson
-import json
-import codecs
-import logging
 
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
@@ -218,8 +218,7 @@ def recalculate_headers(root, abs_path, key, item, separator="/"):
     zero_cols = {
         col_p: col
         for col_p, col in root.combined_columns.items()
-        if col_p not in DEFAULT_FIELDS_COMBINED
-        and common_prefix(col_p, zero_prefix) == zero_prefix
+        if col_p not in DEFAULT_FIELDS_COMBINED and common_prefix(col_p, zero_prefix) == zero_prefix
     }
     new_cols = {}
     for col_i, _ in enumerate(item, 1):
