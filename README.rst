@@ -2,7 +2,7 @@
 Spoonbill
 *********
 
-Spoonbill is a library and command-line tool to convert OCDS data from JSON to Excel/CSV 
+Spoonbill is a library and command-line tool to convert OCDS data from JSON to Excel/CSV
 
 Installation
 ############
@@ -23,7 +23,7 @@ Features
 * Output tables selection
 * Same datatypes from different locations could be combined into one table
 
-  
+
 Usage
 ############
 

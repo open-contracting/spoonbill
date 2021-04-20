@@ -1,4 +1,5 @@
 import csv
+
 import openpyxl
 
 from spoonbill.writers import CSVWriter, XlsxWriter
@@ -35,9 +36,7 @@ def get_writers(workdir, tables, options):
 
 
 def prepare_tables(spec, options, inc_columns=None):
-    tables = {
-        name: table for name, table in spec.tables.items() if name in options.selection
-    }
+    tables = {name: table for name, table in spec.tables.items() if name in options.selection}
     if inc_columns:
         for name, table in tables.items():
             table.inc_column(inc_columns[name])

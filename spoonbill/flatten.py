@@ -1,18 +1,16 @@
-from dataclasses import dataclass, is_dataclass, field
-from typing import Mapping, Sequence, List
-from collections import defaultdict, deque
-from pathlib import Path
-
 import json
 import logging
+from collections import defaultdict, deque
+from dataclasses import dataclass, field, is_dataclass
+from pathlib import Path
+from typing import List, Mapping, Sequence
 
+from spoonbill.common import COMBINED_TABLES, JOINABLE, ROOT_TABLES
+from spoonbill.i18n import _
 from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file, generate_row_id, get_root, get_pointer
-from spoonbill.writers import XlsxWriter, CSVWriter
-from spoonbill.common import ROOT_TABLES, COMBINED_TABLES, JOINABLE
-from spoonbill.i18n import _
-
+from spoonbill.utils import generate_row_id, get_pointer, get_root, iter_file
+from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -125,9 +123,7 @@ class Flattener:
                     col = columns.get(col_id)
                     if not col:
                         LOGGER.warning(
-                            _(
-                                "Ingoring repeat column {} because it is not in table {}"
-                            ).format(col_id, name)
+                            _("Ingoring repeat column {} because it is not in table {}").format(col_id, name)
                         )
                         continue
                     for c_name in table.child_tables:
@@ -170,9 +166,7 @@ class Flattener:
                 table = self._path_cache.get(path)
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
-                    row_id = generate_row_id(
-                        ocid, record.get("id", ""), parent_key, top_level_id
-                    )
+                    row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
                     new_row = {
                         "rowID": row_id,
                         "id": top_level_id,
@@ -185,9 +179,7 @@ class Flattener:
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
-                    table = self._lookup_cache.get(pointer) or self._types_cache.get(
-                        pointer
-                    )
+                    table = self._lookup_cache.get(pointer) or self._types_cache.get(pointer)
                     if not table:
                         continue
                     item_type = table.types.get(pointer)
@@ -199,9 +191,7 @@ class Flattener:
                         repeat[pointer] = item
 
                     if isinstance(item, dict):
-                        to_flatten.append(
-                            (abs_pointer, pointer, key, record, item, repeat)
-                        )
+                        to_flatten.append((abs_pointer, pointer, key, record, item, repeat))
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
                             value = JOINABLE.join(item)
@@ -220,9 +210,7 @@ class Flattener:
                                 rows[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    abs_pointer = separator.join(
-                                        (abs_path, key, str(index))
-                                    )
+                                    abs_pointer = separator.join((abs_path, key, str(index)))
                                     to_flatten.append(
                                         (
                                             abs_pointer,
@@ -240,9 +228,7 @@ class Flattener:
                             if unnest and abs_pointer in unnest:
                                 rows[root.name][-1][abs_pointer] = item
                                 continue
-                        pointer = get_pointer(
-                            pointer, abs_path, key, split, separator, table.is_root
-                        )
+                        pointer = get_pointer(pointer, abs_path, key, split, separator, table.is_root)
                         rows[table.name][-1][pointer] = item
             yield rows
 
@@ -275,7 +261,6 @@ class FileAnalyzer:
             self.spec = DataPreprocessor(
                 schema, root_tables, combined_tables=combined_tables
             )
-        # TODO: detect package
         self.root_key = root_key
 
     def analyze_file(self, filename, with_preview=True):
@@ -284,9 +269,7 @@ class FileAnalyzer:
         :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
-        self.spec.process_items(
-            iter_file(path, self.root_key), with_preview=with_preview
-        )
+        self.spec.process_items(iter_file(path, self.root_key), with_preview=with_preview)
 
     def dump_to_file(self, filename):
         """Save analyzed information to file
@@ -309,22 +292,16 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(
-        self, workdir, options, tables, root_key="releases", csv=True, xlsx=True
-    ):
+    def __init__(self, workdir, options, tables, root_key="releases", csv=True, xlsx=True):
         self.flattener = Flattener(options, tables)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
         self.root_key = root_key
         self.writers = []
         if csv:
-            self.writers.append(
-                CSVWriter(self.workdir, self.flattener.tables, self.flattener.options)
-            )
+            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
         if xlsx:
-            self.writers.append(
-                XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options)
-            )
+            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
 
     def writerow(self, table, row):
         """Write row to output file"""

@@ -1,9 +1,9 @@
-from click.testing import CliRunner
-from spoonbill.cli import cli
-
-import shutil
 import pathlib
+import shutil
 
+from click.testing import CliRunner
+
+from spoonbill.cli import cli
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
@@ -58,9 +58,7 @@ def test_with_schema():
     with runner.isolated_filesystem():
         shutil.copyfile(FILENAME, "data.json")
         shutil.copyfile(SCHEMA, "schema.json")
-        result = runner.invoke(
-            cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"]
-        )
+        result = runner.invoke(cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"])
         assert result.exit_code == 0
 
 

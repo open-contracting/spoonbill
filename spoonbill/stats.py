@@ -1,30 +1,22 @@
-import json
 import logging
-from typing import List, Mapping
 from collections import deque
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
+from typing import List, Mapping
 
 import jsonref
 
-from spoonbill.spec import Table, Column, add_child_table
-from spoonbill.common import (
-    DEFAULT_FIELDS,
-    DEFAULT_FIELDS_COMBINED,
-    ARRAY,
-    JOINABLE,
-    JOINABLE_SEPARATOR,
-    TABLE_THRESHOLD,
-)
+from spoonbill.common import ARRAY, DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
+from spoonbill.i18n import _
+from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
-    common_prefix,
+    PYTHON_TO_JSON_TYPE,
     extract_type,
-    validate_type,
-    get_root,
-    get_matching_tables,
     generate_row_id,
+    get_matching_tables,
+    get_root,
     recalculate_headers,
     resolve_file_uri,
-    PYTHON_TO_JSON_TYPE,
+    validate_type,
 )
 
 PREVIEW_ROWS = 20
@@ -87,9 +79,7 @@ class DataPreprocessor:
                 for key, item in properties.items():
                     if item.get("deprecated"):
                         continue
-                    if hasattr(item, "__reference__") and item.__reference__.get(
-                        "deprecated"
-                    ):
+                    if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
                         continue
 
                     type_ = extract_type(item)
@@ -107,11 +97,9 @@ class DataPreprocessor:
                         if set(items_type) & {"array", "object"}:
                             if pointer not in self.current_table.path:
                                 # found child array, need to create child table
-                                child_table = add_child_table(
-                                    self.current_table, pointer, parent_key, key
-                                )
+                                child_table = add_child_table(self.current_table, pointer, parent_key, key)
                                 self.tables[child_table.name] = child_table
-                                self._lookup_cache = dict()
+                                self._lookup_cache = {}
                                 self.current_table = child_table
                                 self._table_by_path[pointer] = child_table
                             to_analyze.append((pointer, key, properties, items))
@@ -119,9 +107,7 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             type_ = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(
-                                pointer, item, type_, parent=prop, joinable=True
-                            )
+                            self.current_table.add_column(pointer, item, type_, parent=prop, joinable=True)
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
@@ -189,14 +175,10 @@ class DataPreprocessor:
                         table.inc_column(col_name)
 
                     # TODO: fields without ids??
-                    row_id = generate_row_id(
-                        ocid, record.get("id", ""), parent_key, top_level_id
-                    )
+                    row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
                     self.current_table = table
                     if count < PREVIEW_ROWS:
-                        self.add_preview_row(
-                            ocid, record.get("id"), row_id, parent.get("id"), parent_key
-                        )
+                        self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_key)
                 for key, item in record.items():
                     pointer = separator.join([path, key])
                     self.current_table = self.get_table(pointer)
@@ -205,14 +187,8 @@ class DataPreprocessor:
                     item_type = self.current_table.types.get(pointer)
 
                     # TODO: this validation should probably be smarter with arrays
-                    if (
-                        item_type
-                        and item_type != JOINABLE
-                        and not validate_type(item_type, item)
-                    ):
-                        LOGGER.debug(
-                            f"Mismatched type on {pointer} expected {item_type}"
-                        )
+                    if item_type and item_type != JOINABLE and not validate_type(item_type, item):
+                        LOGGER.debug(f"Mismatched type on {pointer} expected {item_type}")
                         continue
 
                     if isinstance(item, dict):
@@ -247,9 +223,7 @@ class DataPreprocessor:
                         else:
                             root = get_root(self.current_table)
                             if root.set_array(pointer, item):
-                                recalculate_headers(
-                                    root, abs_path, key, item, separator
-                                )
+                                recalculate_headers(root, abs_path, key, item, separator)
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
@@ -262,9 +236,7 @@ class DataPreprocessor:
                                                 parent.get("id"),
                                                 parent_key,
                                             )
-                                    abs_pointer = separator.join(
-                                        [abs_path, key, str(i)]
-                                    )
+                                    abs_pointer = separator.join([abs_path, key, str(i)])
                                     to_analyze.append(
                                         (
                                             abs_pointer,
@@ -321,17 +293,9 @@ class DataPreprocessor:
                 "table_threshold": data["table_threshold"],
             }
         except KeyError as e:
-            LOGGER.error(
-                _(
-                    "Failed to restore from mailformed data. Missing {} attribute"
-                ).format(e)
-            )
+            LOGGER.error(_("Failed to restore from mailformed data. Missing {} attribute").format(e))
             return
-        tables = {
-            name: Table(**table)
-            for name, table in data["tables"].items()
-            if table["is_root"]
-        }
+        tables = {name: Table(**table) for name, table in data["tables"].items() if table["is_root"]}
 
         for name, table in data["tables"].items():
             if not table["is_root"]:

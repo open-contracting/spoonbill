@@ -355,8 +355,7 @@ OCDS_TITLES_COMBINED = {
     "/milestones/dateModified": "Milestone Date Modified",
     "/milestones/status": "Milestone Status",
     "/awards/id": "Award Id",
-    "/awards/items/0/additionalClassifications/0/description": "Classification "
-    "Description",
+    "/awards/items/0/additionalClassifications/0/description": "Classification " "Description",
     "/awards/items/0/additionalClassifications/0/id": "Classification Id",
     "/awards/items/0/additionalClassifications/0/scheme": "Classification Scheme",
     "/awards/items/0/additionalClassifications/0/uri": "Classification Uri",
@@ -373,8 +372,7 @@ OCDS_TITLES_COMBINED = {
     "/awards/items/0/unit/uri": "Unit Uri",
     "/awards/items/0/unit/value/amount": "Value Amount",
     "/awards/items/0/unit/value/currency": "Value Currency",
-    "/awards/items/additionalClassifications/description": "Classification "
-    "Description",
+    "/awards/items/additionalClassifications/description": "Classification " "Description",
     "/awards/items/additionalClassifications/id": "Classification Id",
     "/awards/items/additionalClassifications/scheme": "Classification Scheme",
     "/awards/items/additionalClassifications/uri": "Classification Uri",
@@ -409,10 +407,8 @@ OCDS_TITLES_COMBINED = {
     "/contracts/implementation/transactions/0/payee/name": "Payee Organization " "Name",
     "/contracts/implementation/transactions/0/payer/id": "Payer Organization Id",
     "/contracts/implementation/transactions/0/payer/name": "Payer Organization " "Name",
-    "/contracts/implementation/transactions/0/source": "Transaction Information "
-    "Data Source",
-    "/contracts/implementation/transactions/0/uri": "Transaction Information "
-    "Linked Spending",
+    "/contracts/implementation/transactions/0/source": "Transaction Information " "Data Source",
+    "/contracts/implementation/transactions/0/uri": "Transaction Information " "Linked Spending",
     "/contracts/implementation/transactions/0/value/amount": "Value Amount",
     "/contracts/implementation/transactions/0/value/currency": "Value Currency",
     "/contracts/implementation/transactions/date": "Transaction Information Date",
@@ -421,14 +417,11 @@ OCDS_TITLES_COMBINED = {
     "/contracts/implementation/transactions/payee/name": "Payee Organization Name",
     "/contracts/implementation/transactions/payer/id": "Payer Organization Id",
     "/contracts/implementation/transactions/payer/name": "Payer Organization Name",
-    "/contracts/implementation/transactions/source": "Transaction Information "
-    "Data Source",
-    "/contracts/implementation/transactions/uri": "Transaction Information Linked "
-    "Spending",
+    "/contracts/implementation/transactions/source": "Transaction Information " "Data Source",
+    "/contracts/implementation/transactions/uri": "Transaction Information Linked " "Spending",
     "/contracts/implementation/transactions/value/amount": "Value Amount",
     "/contracts/implementation/transactions/value/currency": "Value Currency",
-    "/contracts/items/0/additionalClassifications/0/description": "Classification "
-    "Description",
+    "/contracts/items/0/additionalClassifications/0/description": "Classification " "Description",
     "/contracts/items/0/additionalClassifications/0/id": "Classification Id",
     "/contracts/items/0/additionalClassifications/0/scheme": "Classification " "Scheme",
     "/contracts/items/0/additionalClassifications/0/uri": "Classification Uri",
@@ -445,8 +438,7 @@ OCDS_TITLES_COMBINED = {
     "/contracts/items/0/unit/uri": "Unit Uri",
     "/contracts/items/0/unit/value/amount": "Value Amount",
     "/contracts/items/0/unit/value/currency": "Value Currency",
-    "/contracts/items/additionalClassifications/description": "Classification "
-    "Description",
+    "/contracts/items/additionalClassifications/description": "Classification " "Description",
     "/contracts/items/additionalClassifications/id": "Classification Id",
     "/contracts/items/additionalClassifications/scheme": "Classification Scheme",
     "/contracts/items/additionalClassifications/uri": "Classification Uri",
@@ -518,18 +510,14 @@ OCDS_TITLES_COMBINED = {
     "/planning/budget/projectID": "Budget Project Identifier",
     "/planning/budget/uri": "Budget Linked Information",
     "/planning/rationale": "Planning Rationale",
-    "/tender/additionalProcurementCategories": "Tender Additional Procurement "
-    "Categories",
-    "/tender/additionalProcurementCategories/0": "Tender Additional Procurement "
-    "Categories",
+    "/tender/additionalProcurementCategories": "Tender Additional Procurement " "Categories",
+    "/tender/additionalProcurementCategories/0": "Tender Additional Procurement " "Categories",
     "/tender/amendments/0/amendsReleaseID": "Amendment Amended Release " "(identifier)",
     "/tender/awardCriteria": "Tender Award Criteria",
     "/tender/awardCriteriaDetails": "Tender Award Criteria Details",
-    "/tender/awardPeriod/durationInDays": "Evaluation And Award Period Duration "
-    "(days)",
+    "/tender/awardPeriod/durationInDays": "Evaluation And Award Period Duration " "(days)",
     "/tender/awardPeriod/endDate": "Evaluation And Award Period End Date",
-    "/tender/awardPeriod/maxExtentDate": "Evaluation And Award Period Maximum "
-    "Extent",
+    "/tender/awardPeriod/maxExtentDate": "Evaluation And Award Period Maximum " "Extent",
     "/tender/awardPeriod/startDate": "Evaluation And Award Period Start Date",
     "/tender/contractPeriod/durationInDays": "Contract Period Duration (days)",
     "/tender/contractPeriod/endDate": "Contract Period End Date",
@@ -543,8 +531,7 @@ OCDS_TITLES_COMBINED = {
     "/tender/enquiryPeriod/startDate": "Enquiry Period Start Date",
     "/tender/hasEnquiries": "Tender Has Enquiries?",
     "/tender/id": "Tender Id",
-    "/tender/items/0/additionalClassifications/0/description": "Classification "
-    "Description",
+    "/tender/items/0/additionalClassifications/0/description": "Classification " "Description",
     "/tender/items/0/additionalClassifications/0/id": "Classification Id",
     "/tender/items/0/additionalClassifications/0/scheme": "Classification Scheme",
     "/tender/items/0/additionalClassifications/0/uri": "Classification Uri",
@@ -561,8 +548,7 @@ OCDS_TITLES_COMBINED = {
     "/tender/items/0/unit/uri": "Unit Uri",
     "/tender/items/0/unit/value/amount": "Value Amount",
     "/tender/items/0/unit/value/currency": "Value Currency",
-    "/tender/items/additionalClassifications/description": "Classification "
-    "Description",
+    "/tender/items/additionalClassifications/description": "Classification " "Description",
     "/tender/items/additionalClassifications/id": "Classification Id",
     "/tender/items/additionalClassifications/scheme": "Classification Scheme",
     "/tender/items/additionalClassifications/uri": "Classification Uri",
