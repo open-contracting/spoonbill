@@ -7,6 +7,7 @@ import pathlib
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
+ANALYZED = pathlib.Path("tests/data/analyzed.json").absolute()
 
 
 def test_no_filename():
@@ -60,4 +61,13 @@ def test_with_schema():
         result = runner.invoke(
             cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"]
         )
+        assert result.exit_code == 0
+
+
+def test_state_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
         assert result.exit_code == 0

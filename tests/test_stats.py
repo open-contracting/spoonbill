@@ -1,5 +1,7 @@
 from jmespath import search
+from json import load, dump
 from spoonbill.spec import Table, Column
+from spoonbill.stats import DataPreprocessor
 
 from .data import *
 
@@ -110,3 +112,16 @@ def test_analyze(spec, releases):
         assert table[f"/{array}/id"].hits == len(ids)
     # check joinable calculation
     assert parties["/parties/roles"].hits == len(search("[].parties[].roles", releases))
+
+
+def test_dump_restore(spec, releases, tmpdir):
+    spec.process_items(releases)
+    with open(tmpdir / "result.json", "w") as fd:
+        dump(spec.dump(), fd)
+
+    with open(tmpdir / "result.json") as fd:
+        data = load(fd)
+
+    spec2 = DataPreprocessor.restore(data)
+    for name, table in spec.tables.items():
+        assert table == spec2.tables[name]

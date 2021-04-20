@@ -260,15 +260,21 @@ class FileAnalyzer:
     def __init__(
         self,
         workdir,
-        schema,
+        schema=None,
+        state_file=None,
         root_tables=ROOT_TABLES,
         combined_tables=COMBINED_TABLES,
         root_key="releases",
     ):
         self.workdir = Path(workdir)
-        self.spec = DataPreprocessor(
-            schema, root_tables, combined_tables=combined_tables
-        )
+        if state_file:
+            with open(state_file) as fd:
+                data = json.load(fd)
+            self.spec = DataPreprocessor.restore(data)
+        else:
+            self.spec = DataPreprocessor(
+                schema, root_tables, combined_tables=combined_tables
+            )
         # TODO: detect package
         self.root_key = root_key
 

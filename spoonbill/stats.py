@@ -42,7 +42,7 @@ class DataPreprocessor:
     header_separator: str = "/"
     table_threshold: int = TABLE_THRESHOLD
     tables: Mapping[str, Table] = field(default_factory=dict)
-    current_table: Table = field(init=False)
+    current_table: Table = field(init=False, default=None)
     _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
     _table_by_path: Mapping[str, Table] = field(default_factory=dict, init=False)
 
@@ -63,6 +63,10 @@ class DataPreprocessor:
                 self._table_by_path[p] = table
 
     def __post_init__(self):
+        if not self.tables:
+            self.parse_schema()
+
+    def parse_schema(self):
         if isinstance(self.schema_dict, str):
             self.schema_dict = resolve_file_uri(self.schema_dict)
         self.schema_dict = jsonref.JsonRef.replace_refs(self.schema_dict)

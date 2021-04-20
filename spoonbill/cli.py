@@ -162,16 +162,16 @@ def cli(
 
     # TODO: is is a good way to get release/record schema
 
-    analyzer = FileAnalyzer(
-        workdir,
-        schema,
-        root_key=root_key,
-        root_tables=root_tables,
-        combined_tables=combined_tables,
-    )
     if state_file:
-        analyzer.restore_from_file(state_file)
+        analyzer = FileAnalyzer(workdir, state_file=state_file)
     else:
+        analyzer = FileAnalyzer(
+            workdir,
+            schema=schema,
+            root_key=root_key,
+            root_tables=root_tables,
+            combined_tables=combined_tables,
+        )
         analyzer.analyze_file(filename, with_preview=False)
         analyzer.dump_to_file(f"{filename}.analyzed.json")
 
