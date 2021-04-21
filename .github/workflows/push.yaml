@@ -11,8 +11,29 @@ on:
        - main
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.cfg') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Run pre-commit
+        run: |
+            pip install pre-commit
+            pre-commit autoupdate
+            pre-commit run --all-files
   tests:
     runs-on: ${{ matrix.os }}
+    needs: lint
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
