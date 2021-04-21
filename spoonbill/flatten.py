@@ -258,9 +258,7 @@ class FileAnalyzer:
                 data = json.load(fd)
             self.spec = DataPreprocessor.restore(data)
         else:
-            self.spec = DataPreprocessor(
-                schema, root_tables, combined_tables=combined_tables
-            )
+            self.spec = DataPreprocessor(schema, root_tables, combined_tables=combined_tables)
         self.root_key = root_key
 
     def analyze_file(self, filename, with_preview=True):
