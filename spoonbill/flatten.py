@@ -96,17 +96,19 @@ class Flattener:
             if count:
                 for array in table.arrays:
                     parts = array.split("/")
-                    title = f"{parts[-1]}Count"
+                    key = parts[-1]
+                    title = f"{key}Count"
                     parts[-1] = title
                     path = "/".join(parts)
-                    table.add_column(
+                    target = self._types_cache.get(array) or table
+                    target.add_column(
                         path,
-                        {"title": title},
+                        {"title": f"{key} count"},
                         "integer",
                         parent={},
                     )
                     if table.arrays[array] > 0:
-                        table.inc_column(path)
+                        target.inc_column(path)
 
             if unnest:
                 for col_id in unnest:
