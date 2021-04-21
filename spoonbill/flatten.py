@@ -1,16 +1,12 @@
-import json
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
-from pathlib import Path
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import COMBINED_TABLES, JOINABLE, ROOT_TABLES
+from spoonbill.common import JOINABLE
 from spoonbill.i18n import _
 from spoonbill.spec import Table
-from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import generate_row_id, get_pointer, get_root, iter_file
-from spoonbill.writers import CSVWriter, XlsxWriter
+from spoonbill.utils import generate_row_id, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -52,7 +48,6 @@ class FlattenOptions:
                 self.selection[name] = TableFlattenConfig(**table)
 
 
-@dataclass
 class Flattener:
     """Configurable data flattener
 
@@ -60,16 +55,15 @@ class Flattener:
     :param tables: Analyzed tables data
     """
 
-    options: FlattenOptions
-    tables: Mapping[str, Table]
+    def __init__(self, options: FlattenOptions, tables: Mapping[str, Table]):
+        if not is_dataclass(options):
+            options = FlattenOptions(**options)
+        self.options = options
+        self.tables = tables
 
-    _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
-    _types_cache: Mapping[str, Sequence[str]] = field(default_factory=dict, init=False)
-    _path_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
-
-    def __post_init__(self):
-        if not is_dataclass(self.options):
-            self.options = FlattenOptions(**self.options)
+        self._lookup_cache = {}
+        self._types_cache = {}
+        self._path_cache = {}
         self._init()
 
     def _init_table_cache(self, tables, table):
@@ -102,14 +96,17 @@ class Flattener:
             if count:
                 for array in table.arrays:
                     parts = array.split("/")
-                    parts[-1] = f"{parts[-1]}Count"
-                    title = parts[-1]
+                    title = f"{parts[-1]}Count"
+                    parts[-1] = title
+                    path = "/".join(parts)
                     table.add_column(
-                        "/".join(parts),
+                        path,
                         {"title": title},
                         "integer",
                         parent={},
                     )
+                    if table.arrays[array] > 0:
+                        table.inc_column(path)
 
             if unnest:
                 for col_id in unnest:
@@ -123,7 +120,7 @@ class Flattener:
                     col = columns.get(col_id)
                     if not col:
                         LOGGER.warning(
-                            _("Ingoring repeat column {} because it is not in table {}").format(col_id, name)
+                            _("Ignoring repeat column {} because it is not in table {}").format(col_id, name)
                         )
                         continue
                     for c_name in table.child_tables:
@@ -154,7 +151,7 @@ class Flattener:
         :return: Iterator over mapping between table name and list of rows for each release
         """
 
-        for release in releases:
+        for counter, release in enumerate(releases):
             rows = defaultdict(list)
             to_flatten = deque([("", "", "", {}, release, {})])
             separator = "/"
@@ -207,7 +204,8 @@ class Flattener:
                                     table.is_root,
                                 )
                                 abs_pointer += "Count"
-                                rows[table.name][-1][abs_pointer] = len(item)
+                                if abs_pointer in table:
+                                    rows[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
                                     abs_pointer = separator.join((abs_path, key, str(index)))
@@ -230,97 +228,4 @@ class Flattener:
                                 continue
                         pointer = get_pointer(pointer, abs_path, key, split, separator, table.is_root)
                         rows[table.name][-1][pointer] = item
-            yield rows
-
-
-class FileAnalyzer:
-    """Main utility for analyzing files
-
-    :param workdir: Working directory
-    :param schema: Json schema file to use with data
-    :param root_tables: Path configuration which should become root tables
-    :param combined_tables: Path configuration for tables with multiple sources
-    :param root_key: Field name to access records
-    """
-
-    def __init__(
-        self,
-        workdir,
-        schema=None,
-        state_file=None,
-        root_tables=ROOT_TABLES,
-        combined_tables=COMBINED_TABLES,
-        root_key="releases",
-    ):
-        self.workdir = Path(workdir)
-        if state_file:
-            with open(state_file) as fd:
-                data = json.load(fd)
-            self.spec = DataPreprocessor.restore(data)
-        else:
-            self.spec = DataPreprocessor(schema, root_tables, combined_tables=combined_tables)
-        self.root_key = root_key
-
-    def analyze_file(self, filename, with_preview=True):
-        """Analyze provided file
-        :param filename: Input filename
-        :param with_preview: Generate preview during analysis
-        """
-        path = self.workdir / filename
-        self.spec.process_items(iter_file(path, self.root_key), with_preview=with_preview)
-
-    def dump_to_file(self, filename):
-        """Save analyzed information to file
-
-        :param filename: Output filename in working directory
-        """
-        path = self.workdir / filename
-        with open(path, "w") as fd:
-            json.dump(self.spec.dump(), fd, default=str)
-
-
-class FileFlattener:
-    """Main utility for flattening files
-
-    :param workdir: Working directory
-    :param options: Flattening configuration
-    :param tables: Analyzed tables data
-    :param root_key: Field name to access records
-    :param csv: If True generate cvs files
-    :param xlsx: Generate combined xlsx table
-    """
-
-    def __init__(self, workdir, options, tables, root_key="releases", csv=True, xlsx=True):
-        self.flattener = Flattener(options, tables)
-        self.workdir = Path(workdir)
-        # TODO: detect package, where?
-        self.root_key = root_key
-        self.writers = []
-        if csv:
-            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
-        if xlsx:
-            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
-
-    def writerow(self, table, row):
-        """Write row to output file"""
-        for wr in self.writers:
-            wr.writerow(table, row)
-
-    def _close(self):
-        for wr in self.writers:
-            wr.close()
-
-    def flatten_file(self, filename):
-        """Flatten file
-
-        :param filename: Input filename in working directory
-        """
-        path = self.workdir / filename
-        for w in self.writers:
-            w.writeheaders()
-
-        for data in self.flattener.flatten(iter_file(path, self.root_key)):
-            for table, rows in data.items():
-                for row in rows:
-                    self.writerow(table, row)
-        self._close()
+            yield counter, rows
