@@ -26,6 +26,24 @@ class Column:
 
 @dataclass
 class Table:
+    """Table data holder
+    :param name: Table name
+    :param path: List of paths to gather data to this table
+    :param total_rows: Total available rows in this table
+    :param parent: Parent table, None if this table is root table
+    :param is_root: This table is root table
+    :param is_combined: This table contains data collected from different paths
+    :param columns: Columns extracted from schema for split version of this table
+    :param combined_columns: Columns extracted from schema for unsplit version of this table
+    :param additional_columns: Columns identified in dataset but not in schema
+    :param arrays: Table array columns and maximum items in each array
+    :param titles: All human friendly columns titles extracted from schema
+    :param child_tables: List of possible child tables
+    :param types: All paths matched to this table with corresponding object type on each path
+    :param preview_rows: Generated preview for split version of this table
+    :param preview_rows_combined: Generated preview for unsplit version of this table
+    """
+
     name: str
     path: [str]
     total_rows: int = 0
@@ -35,7 +53,6 @@ class Table:
     is_combined: bool = False
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
-    propagated_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     # max length not count
     arrays: Mapping[str, int] = field(default_factory=dict)
@@ -50,7 +67,6 @@ class Table:
     def __post_init__(self):
         for attr in (
             "columns",
-            "propagated_columns",
             "combined_columns",
             "additional_columns",
         ):
