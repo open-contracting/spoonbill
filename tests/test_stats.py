@@ -1,5 +1,6 @@
 from json import dump, load
 
+import pytest
 from jmespath import search
 
 from spoonbill.spec import Column, Table
@@ -101,7 +102,7 @@ def test_generate_titles(spec):
 
 # TODO: analyze combined tables
 def test_analyze(spec, releases):
-    spec.process_items(releases)
+    [count for count in spec.process_items(releases)]
     tenders = spec.tables["tenders"]
     parties = spec.tables["parties"]
     awards = spec.tables["awards"]
@@ -133,7 +134,8 @@ def test_analyze(spec, releases):
 
 
 def test_dump_restore(spec, releases, tmpdir):
-    spec.process_items(releases)
+    for _ in spec.process_items(releases):
+        pass
     with open(tmpdir / "result.json", "w") as fd:
         dump(spec.dump(), fd)
 
@@ -143,3 +145,7 @@ def test_dump_restore(spec, releases, tmpdir):
     spec2 = DataPreprocessor.restore(data)
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]
+
+    with pytest.raises(ValueError, match="Unable to restore"):
+        del data["schema"]
+        spec2 = DataPreprocessor.restore(data)
