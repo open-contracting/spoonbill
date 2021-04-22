@@ -28,6 +28,7 @@ class TableFlattenConfig:
     only: List[str] = field(default_factory=list)
     repeat: List[str] = field(default_factory=list)
     unnest: List[str] = field(default_factory=list)
+    name: str = ""
 
 
 @dataclass

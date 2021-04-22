@@ -30,7 +30,8 @@ class CSVWriter:
             opt = self.options.selection[name]
             headers = get_headers(table, opt)
             self.headers[name] = headers
-            fd = open(workdir / f"{name}.csv", "w")
+            table_name = opt.name or name
+            fd = open(workdir / f"{table_name}.csv", "w")
             writer = csv.DictWriter(fd, headers)
             self.fds.append(fd)
             self.writers[name] = writer

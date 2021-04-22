@@ -149,3 +149,24 @@ def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
         assert "Additionalidentifiers Count" in headers
+
+
+def test_writers_table_name_override(spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col)
+
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    path = workdir / "testname.csv"
+    assert read_xlsx_headers(xlsx, "testname")
+    assert read_csv_headers(path)
