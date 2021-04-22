@@ -120,11 +120,20 @@ def test_flatten_with_exclude(spec_analyzed, releases):
 
 
 def test_flatten_with_only(spec_analyzed, releases):
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": "tender_items"})
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
+    for row in all_rows["tenders"]:
+        assert row == ["/tender/id"]
 
-    assert "tender_items" not in all_rows
+    options = FlattenOptions(**{"selection": {"tenders": {"split": False, "only": ["/tender/id"]}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    for row in all_rows["tenders"]:
+        assert row == ["/tender/id"]
