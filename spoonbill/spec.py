@@ -131,8 +131,7 @@ class Table:
         if not combined_only:
             self.columns[path] = column
         if not self.is_root:
-            root_table = get_root(self)
-            root_table.add_column(
+            root.add_column(
                 path,
                 item,
                 item_type,
