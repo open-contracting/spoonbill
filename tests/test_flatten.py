@@ -108,6 +108,18 @@ def test_flatten_with_unnest(spec_analyzed, releases):
 
 
 def test_flatten_with_exclude(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": ["tenders_items"]})
+    flattener = Flattener(options, spec_analyzed.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    assert "tenders" in all_rows
+    assert "tenders_tende" in all_rows
+    assert "tenders_items" not in all_rows
+
+
+def test_flatten_with_only(spec_analyzed, releases):
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": "tender_items"})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
