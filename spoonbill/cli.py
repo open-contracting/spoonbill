@@ -80,10 +80,6 @@ def should_split(spec, table_name, split, threshold=5):
 @click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
 @click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated())
 @click.option(
-    "--reify",
-    help=_("For array, use one field value as the column name and another field value as the cell value"),
-)
-@click.option(
     "--repeat",
     help=_("Repeat a column from a parent sheet onto child tables"),
     type=CommaSeparated(),
@@ -110,7 +106,6 @@ def cli(
     unnest,
     combine,
     only,
-    reify,
     repeat,
     count,
     human,
@@ -142,8 +137,6 @@ def cli(
             click.echo(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
             profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
             schema = profile.record_package_schema()
-    if reify:
-        raise NotImplementedError(_("We are sorry but reify option is currently disabled"))
     title = schema.get("title", "").lower()
     if not title:
         raise ValueError(_("Incomplete schema, please make sure your data is correct"))
