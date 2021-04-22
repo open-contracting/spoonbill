@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS
-from spoonbill.utils import combine_path, generate_table_name, get_root, prepare_title
+from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_root, prepare_title
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -106,7 +106,6 @@ class Table:
         parent,
         combined_only=False,
         additional=False,
-        joinable=False,
     ):
         """Add new column to the table
 
@@ -116,13 +115,13 @@ class Table:
         :param parent: Parent object schema description
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
-        :param joinable: Mark this column as array of strings
         """
         title = prepare_title(item, parent)
-        column = Column(title, item_type, path)
         root = get_root(self)
-        # combined_path = combine_path(root, path) if not joinable else path
+        is_array = self.is_array(path)
         combined_path = combine_path(root, path)
+
+        column = Column(title, item_type, path)
         self.combined_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):
@@ -130,17 +129,26 @@ class Table:
 
         if not combined_only:
             self.columns[path] = column
+        if combined_only and is_array:
+            self.columns[combined_path] = Column(title, item_type, combined_path)
         if not self.is_root:
-            root.add_column(
+            self.parent.add_column(
                 path,
                 item,
                 item_type,
                 parent=parent,
                 combined_only=True,
-                joinable=joinable,
             )
+
         if additional:
             self.additional_columns[path] = column
+
+    def is_array(self, path):
+        """Check if provided path is inside any tables arrays"""
+        for array in get_root(self).arrays:
+            if common_prefix(array, path) == array:
+                return array
+        return False
 
     def inc_column(self, header, combined=False):
         """Increment data counter in column

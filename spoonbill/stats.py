@@ -124,7 +124,7 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             type_ = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, item, type_, parent=prop, joinable=True)
+                            self.current_table.add_column(pointer, item, type_, parent=prop)
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
@@ -239,7 +239,7 @@ class DataPreprocessor:
                         else:
                             root = get_root(self.current_table)
                             if root.set_array(pointer, item):
-                                recalculate_headers(root, abs_path, key, item, separator)
+                                recalculate_headers(root, abs_path, key, item, self.table_threshold, separator)
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
@@ -280,6 +280,9 @@ class DataPreprocessor:
                         self.current_table.inc_column(pointer)
                         root.inc_column(abs_pointer, combined=True)
                         if with_preview and count < PREVIEW_ROWS:
+                            array = root.is_array(pointer)
+                            if array and root.arrays[array] < self.table_threshold:
+                                root.preview_rows[-1][abs_pointer] = item
                             self.current_table.preview_rows[-1][pointer] = item
                             root.preview_rows_combined[-1][abs_pointer] = item
             yield count

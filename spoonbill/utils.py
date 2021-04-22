@@ -200,13 +200,16 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, abs_path, key, item, separator="/"):
+def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
+
+    Also deletes combined columns from tables columns if array becomes bigger than threshold
 
     :param root: Table for which headers should be rebuild
     :param abs_path: Full jsonpath to array
     :param key: Array field name
     :param item: Array items
+    :param max_items: Maximum elements in array before it should be split into table
     :param separator: header path separator
     """
     head = OrderedDict()
@@ -214,6 +217,7 @@ def recalculate_headers(root, abs_path, key, item, separator="/"):
     cols = head
     base_prefix = separator.join((abs_path, key))
     zero_prefix = separator.join((base_prefix, "0"))
+    should_split = len(item) > max_items
 
     zero_cols = {
         col_p: col
@@ -237,6 +241,10 @@ def recalculate_headers(root, abs_path, key, item, separator="/"):
         else:
             if col_p not in cols:
                 cols[col_p] = col
+    if should_split:
+        for col_path in chain(zero_cols, new_cols):
+            root.columns.pop(col_path, "")
+
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
 

@@ -56,6 +56,16 @@ def test_set_array(root_table):
     assert items == 10
 
 
+def test_is_array(root_table):
+    assert root_table.is_array("/tender/items")
+    assert root_table.is_array("/tender/items/id")
+    assert root_table.is_array("/tender/items/0/id")
+    assert root_table.is_array("/tender/items/additionalClassifications")
+    assert not root_table.is_array("/tender/id")
+    assert not root_table.is_array("/tender/title")
+    assert not root_table.is_array("/tender/submissionMethod")
+
+
 def test_add_child_table(root_table):
     data = root_table.dump()
     assert not data["parent"]
