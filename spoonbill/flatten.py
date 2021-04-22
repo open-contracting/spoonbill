@@ -20,6 +20,7 @@ class TableFlattenConfig:
     :param headers: User edited headers to override automatically extracted
     :param unnest: List of columns to output from child to parent table
     :param repeat: List of columns to clone in child tables
+    :param only: List of columns to output
     """
 
     split: bool
@@ -34,13 +35,15 @@ class TableFlattenConfig:
 @dataclass
 class FlattenOptions:
 
-    """Whole flattening process configuration
+    """Flattening configuration
 
     :param selection: List of selected tables to extract from data
     :param count: Include number of rows in child table in each parent table
+    :param exclude: List of tables to exclude from export
     """
 
     selection: Mapping[str, TableFlattenConfig]
+    exclude: List[str] = field(default_factory=list)
     count: bool = False
 
     def __post_init__(self):
@@ -50,7 +53,17 @@ class FlattenOptions:
 
 
 class Flattener:
-    """Configurable data flattener
+    """Data flattener
+
+    In order to export data correctly Flattener requires previously analyzed tables data.
+    During the process flattener could add columns not based on schema analysis, such as
+    `itemsCount`.
+    In every generated row, depending on table type, flattener will always few add augenerated columns.
+    For root table:
+    * rowID
+    * id
+    * ocid
+    For child tables this list well be extended with `parentID` column.
 
     :param options: Flattening options
     :param tables: Analyzed tables data
@@ -86,7 +99,6 @@ class Flattener:
             self._lookup_cache[path] = table
 
     def _init_options(self, tables):
-        """"""
         for table in tables.values():
             name = table.name
             count = self.options.count
@@ -141,6 +153,9 @@ class Flattener:
             split = self.options.selection[name].split
             if split:
                 for c_name in table.child_tables:
+                    if c_name in self.options.exclude:
+                        continue
+
                     c_table = self.tables[c_name]
                     self.options.selection[c_name] = TableFlattenConfig(split=True)
                     self._init_table_cache(tables, c_table)
