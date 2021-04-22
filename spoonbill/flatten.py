@@ -108,7 +108,6 @@ class Flattener:
             unnest = options.unnest
             split = options.split
             repeat = options.repeat
-            only = options.only
 
             if count:
                 for array in table.arrays:
@@ -146,11 +145,6 @@ class Flattener:
                         child_table = self.tables.get(c_name)
                         child_table.columns[col_id] = col
                         child_table.titles[col_id] = title
-            if only:
-                if split:
-                    table.columns = {c_id: c for c_id, c in table.columns.items() if c_id in only}
-                else:
-                    table.combined_columns = {c_id: c for c_id, c in table.combined_columns.items() if c_id in only}
 
     def _only(self, table, only, split):
         table.types = {c_id: c for c_id, c in table.types.items() if c_id in only}
