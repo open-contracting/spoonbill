@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS
-from spoonbill.utils import combine_path, generate_table_name, get_root, prepare_title
+from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_root, prepare_title
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -26,6 +26,24 @@ class Column:
 
 @dataclass
 class Table:
+    """Table data holder
+    :param name: Table name
+    :param path: List of paths to gather data to this table
+    :param total_rows: Total available rows in this table
+    :param parent: Parent table, None if this table is root table
+    :param is_root: This table is root table
+    :param is_combined: This table contains data collected from different paths
+    :param columns: Columns extracted from schema for split version of this table
+    :param combined_columns: Columns extracted from schema for unsplit version of this table
+    :param additional_columns: Columns identified in dataset but not in schema
+    :param arrays: Table array columns and maximum items in each array
+    :param titles: All human friendly columns titles extracted from schema
+    :param child_tables: List of possible child tables
+    :param types: All paths matched to this table with corresponding object type on each path
+    :param preview_rows: Generated preview for split version of this table
+    :param preview_rows_combined: Generated preview for unsplit version of this table
+    """
+
     name: str
     path: [str]
     total_rows: int = 0
@@ -35,7 +53,6 @@ class Table:
     is_combined: bool = False
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
-    propagated_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     # max length not count
     arrays: Mapping[str, int] = field(default_factory=dict)
@@ -50,7 +67,6 @@ class Table:
     def __post_init__(self):
         for attr in (
             "columns",
-            "propagated_columns",
             "combined_columns",
             "additional_columns",
         ):
@@ -90,7 +106,6 @@ class Table:
         parent,
         combined_only=False,
         additional=False,
-        joinable=False,
     ):
         """Add new column to the table
 
@@ -100,13 +115,13 @@ class Table:
         :param parent: Parent object schema description
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
-        :param joinable: Mark this column as array of strings
         """
         title = prepare_title(item, parent)
-        column = Column(title, item_type, path)
         root = get_root(self)
-        # combined_path = combine_path(root, path) if not joinable else path
+        is_array = self.is_array(path)
         combined_path = combine_path(root, path)
+
+        column = Column(title, item_type, path)
         self.combined_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):
@@ -114,18 +129,26 @@ class Table:
 
         if not combined_only:
             self.columns[path] = column
+        if combined_only and is_array:
+            self.columns[combined_path] = Column(title, item_type, combined_path)
         if not self.is_root:
-            root_table = get_root(self)
-            root_table.add_column(
+            self.parent.add_column(
                 path,
                 item,
                 item_type,
                 parent=parent,
                 combined_only=True,
-                joinable=joinable,
             )
+
         if additional:
             self.additional_columns[path] = column
+
+    def is_array(self, path):
+        """Check if provided path is inside any tables arrays"""
+        for array in get_root(self).arrays:
+            if common_prefix(array, path) == array:
+                return array
+        return False
 
     def inc_column(self, header, combined=False):
         """Increment data counter in column

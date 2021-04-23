@@ -29,12 +29,15 @@ class XlsxWriter:
         self.tables = tables
         self.options = options
         self.col_index = collections.defaultdict(dict)
+        self.names = {}
 
     def writeheaders(self):
         """Write headers to output file"""
         for name, table in self.tables.items():
             opt = self.options.selection[name]
-            sheet = self.workbook.add_worksheet(name)
+            table_name = opt.name or name
+            self.names[name] = table_name
+            sheet = self.workbook.add_worksheet(table_name)
             headers = get_headers(table, opt)
             for col_index, col_name in enumerate(headers):
                 self.col_index[name][col_name] = col_index
@@ -48,7 +51,8 @@ class XlsxWriter:
 
     def writerow(self, table, row):
         """Write row to output file"""
-        sheet = self.workbook.get_worksheet_by_name(table)
+        table_name = self.names.get(table, table)
+        sheet = self.workbook.get_worksheet_by_name(table_name)
 
         for column, value in row.items():
             col_index = self.col_index[table][column]

@@ -24,6 +24,9 @@ def test_default():
         shutil.copyfile(FILENAME, "data.json")
         result = runner.invoke(cli, ["data.json"])
         assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Dumped analyzed data" in result.output
+        assert "Done. Flattened 6 objects" in result.output
 
 
 def test_with_selections():
@@ -32,6 +35,9 @@ def test_with_selections():
         shutil.copyfile(FILENAME, "data.json")
         result = runner.invoke(cli, ["--selection", "tenders", "data.json"])
         assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Dumped analyzed data" in result.output
+        assert "Done. Flattened 6 objects" in result.output
 
 
 def test_with_combine():
@@ -40,6 +46,10 @@ def test_with_combine():
         shutil.copyfile(FILENAME, "data.json")
         result = runner.invoke(cli, ["--combine", "documents", "data.json"])
         assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Dumped analyzed data" in result.output
+        assert "Going to export tables: tenders,awards,contracts,planning,parties,documents" in result.output
+        assert "Done. Flattened 6 objects" in result.output
 
 
 def test_table_typo():
@@ -60,6 +70,10 @@ def test_with_schema():
         shutil.copyfile(SCHEMA, "schema.json")
         result = runner.invoke(cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"])
         assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Dumped analyzed data" in result.output
+        assert "Done. Flattened 6 objects" in result.output
+        assert "Going to export tables: tenders" in result.output
 
 
 def test_state_file():
@@ -69,3 +83,7 @@ def test_state_file():
         shutil.copyfile(ANALYZED, "analyzed.json")
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
         assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Restoring from provided state file" in result.output
+        assert "Going to export tables: tenders,awards,contracts,planning,parties" in result.output
+        assert "Done. Flattened 6 objects" in result.output

@@ -1,6 +1,5 @@
 import logging
 from collections import deque
-from dataclasses import dataclass, field
 from typing import List, Mapping
 
 import jsonref
@@ -23,20 +22,41 @@ PREVIEW_ROWS = 20
 LOGGER = logging.getLogger("spoonbill")
 
 
-@dataclass
 class DataPreprocessor:
-    schema_dict: Mapping
-    root_tables: Mapping[str, List]
-    combined_tables: Mapping[str, List] = field(default_factory=dict)
+    """Data analyzer
 
-    # better to keep '/' to be more like jsonpointers
-    # TODO: do we need this to be configurable at all???
-    header_separator: str = "/"
-    table_threshold: int = TABLE_THRESHOLD
-    tables: Mapping[str, Table] = field(default_factory=dict)
-    current_table: Table = field(init=False, default=None)
-    _lookup_cache: Mapping[str, Table] = field(default_factory=dict, init=False)
-    _table_by_path: Mapping[str, Table] = field(default_factory=dict, init=False)
+    Process provided schema and based on this data extracts information fromm iterable dataset
+
+    :param schema: Dataset schema
+    :param root_tables: Paths which should become root tables
+    :param combined_tables: List of tables with data from different locations
+    :param tables: Do not parse schema and use this tables data
+    :param table_threshold: Maximum array length before system recommends it to separated to child table
+    """
+
+    def __init__(
+        self,
+        schema: Mapping,
+        root_tables: Mapping[str, List],
+        combined_tables: Mapping[str, List] = None,
+        tables: Mapping[str, Table] = None,
+        table_threshold=TABLE_THRESHOLD,
+        header_separator="/",
+    ):
+        self.schema = schema
+        self.root_tables = root_tables
+        self.combined_tables = combined_tables or {}
+        self.tables = tables or {}
+        self.table_threshold = table_threshold
+
+        self.header_separator = header_separator
+        self.total_items = 0
+        self.current_table = None
+
+        self._lookup_cache = {}
+        self._table_by_path = {}
+        if not self.tables:
+            self.parse_schema()
 
     def __getitem__(self, table):
         return self.tables[table]
@@ -54,19 +74,16 @@ class DataPreprocessor:
             for p in path:
                 self._table_by_path[p] = table
 
-    def __post_init__(self):
-        if not self.tables:
-            self.parse_schema()
-
     def parse_schema(self):
-        if isinstance(self.schema_dict, str):
-            self.schema_dict = resolve_file_uri(self.schema_dict)
-        self.schema_dict = jsonref.JsonRef.replace_refs(self.schema_dict)
+        """Extract all available information from schema"""
+        if isinstance(self.schema, str):
+            self.schema = resolve_file_uri(self.schema)
+        self.schema = jsonref.JsonRef.replace_refs(self.schema)
         self.init_tables(self.root_tables)
         if self.combined_tables:
             self.init_tables(self.combined_tables, is_combined=True)
         separator = self.header_separator
-        to_analyze = deque([("", "", {}, self.schema_dict)])
+        to_analyze = deque([("", "", {}, self.schema)])
 
         # TODO: check if recursion is better for field ordering
         while to_analyze:
@@ -107,7 +124,7 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             type_ = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, item, type_, parent=prop, joinable=True)
+                            self.current_table.add_column(pointer, item, type_, parent=prop)
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
@@ -192,7 +209,6 @@ class DataPreprocessor:
                         continue
 
                     if isinstance(item, dict):
-
                         to_analyze.append(
                             (
                                 separator.join([abs_path, key]),
@@ -223,7 +239,7 @@ class DataPreprocessor:
                         else:
                             root = get_root(self.current_table)
                             if root.set_array(pointer, item):
-                                recalculate_headers(root, abs_path, key, item, separator)
+                                recalculate_headers(root, abs_path, key, item, self.table_threshold, separator)
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
@@ -264,13 +280,18 @@ class DataPreprocessor:
                         self.current_table.inc_column(pointer)
                         root.inc_column(abs_pointer, combined=True)
                         if with_preview and count < PREVIEW_ROWS:
+                            array = root.is_array(pointer)
+                            if array and root.arrays[array] < self.table_threshold:
+                                root.preview_rows[-1][abs_pointer] = item
                             self.current_table.preview_rows[-1][pointer] = item
                             root.preview_rows_combined[-1][abs_pointer] = item
+            yield count
+        self.total_items = count
 
     def dump(self):
         """Dump table objects to python dictionary"""
         return {
-            "schema_dict": self.schema_dict,
+            "schema": self.schema,
             "root_tables": self.root_tables,
             "combined_tables": self.combined_tables,
             "header_separator": self.header_separator,
@@ -286,15 +307,15 @@ class DataPreprocessor:
         """
         try:
             spec = {
-                "schema_dict": data["schema_dict"],
+                "schema": data["schema"],
                 "root_tables": data["root_tables"],
                 "combined_tables": data["combined_tables"],
                 "header_separator": data["header_separator"],
                 "table_threshold": data["table_threshold"],
             }
         except KeyError as e:
-            LOGGER.error(_("Failed to restore from mailformed data. Missing {} attribute").format(e))
-            return
+            LOGGER.error(_("Failed to restore from malformed data. Missing {} attribute").format(e))
+            raise ValueError(_("Unable to restore, invalid input data"))
         tables = {name: Table(**table) for name, table in data["tables"].items() if table["is_root"]}
 
         for name, table in data["tables"].items():

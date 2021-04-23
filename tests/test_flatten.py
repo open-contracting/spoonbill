@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from jmespath import search
 
 from spoonbill.flatten import Flattener, FlattenOptions
@@ -30,7 +32,7 @@ def test_flatten(spec_analyzed, releases):
     )
     flattener = Flattener(options, spec_analyzed.tables)
     count = {"tenders": 0, "parties": 0}
-    for flat in flattener.flatten(releases):
+    for _count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
                 assert "id" in row
@@ -47,7 +49,7 @@ def test_flatten_with_count(spec_analyzed, releases):
 
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "count": True})
     flattener = Flattener(options, spec_analyzed.tables)
-    for count, flat in enumerate(flattener.flatten(releases)):
+    for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             if name == "tenders":
                 for row in rows:
@@ -73,7 +75,7 @@ def test_flatten_with_repeat(spec_analyzed, releases):
         }
     )
     flattener = Flattener(options, spec_analyzed.tables)
-    for count, flat in enumerate(flattener.flatten(releases)):
+    for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             if name == "tenders":
                 continue
@@ -93,7 +95,7 @@ def test_flatten_with_unnest(spec_analyzed, releases):
         }
     )
     flattener = Flattener(options, spec_analyzed.tables)
-    for count, flat in enumerate(flattener.flatten(releases)):
+    for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
                 if name != "tenders":
@@ -103,3 +105,35 @@ def test_flatten_with_unnest(spec_analyzed, releases):
                 if item_id:
                     assert field in row
                     assert search(f"[{count}].tender.items[0].id", releases) == row[field]
+
+
+def test_flatten_with_exclude(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": ["tenders_items"]})
+    flattener = Flattener(options, spec_analyzed.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    assert "tenders" in all_rows
+    assert "tenders_tende" in all_rows
+    assert "tenders_items" not in all_rows
+
+
+def test_flatten_with_only(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    for row in all_rows["tenders"]:
+        assert row == ["/tender/id"]
+
+    options = FlattenOptions(**{"selection": {"tenders": {"split": False, "only": ["/tender/id"]}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    for row in all_rows["tenders"]:
+        assert row == ["/tender/id"]

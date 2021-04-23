@@ -30,7 +30,13 @@ class CSVWriter:
             opt = self.options.selection[name]
             headers = get_headers(table, opt)
             self.headers[name] = headers
-            fd = open(workdir / f"{name}.csv", "w")
+            table_name = opt.name or name
+            try:
+                path = workdir / f"{table_name}.csv"
+                fd = open(path, "w")
+            except (IOError, OSError) as e:
+                LOGGER.error(_("Failed to open file {} with error {}").format(path, e))
+                return
             writer = csv.DictWriter(fd, headers)
             self.fds.append(fd)
             self.writers[name] = writer
@@ -39,7 +45,10 @@ class CSVWriter:
         """Write headers to output file"""
         for name, writer in self.writers.items():
             headers = self.headers[name]
-            writer.writerow(headers)
+            try:
+                writer.writerow(headers)
+            except ValueError as err:
+                LOGGER.error(_("Failed to headers with error {}").format(err))
 
     def writerow(self, table, row):
         """Write row to output file"""

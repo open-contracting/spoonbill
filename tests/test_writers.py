@@ -1,6 +1,9 @@
 from pathlib import Path
 
-from spoonbill.flatten import FlattenOptions
+from spoonbill import FileFlattener
+from spoonbill.flatten import Flattener, FlattenOptions
+
+from .conftest import releases_path
 
 # from .data import *
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
@@ -118,3 +121,52 @@ def test_writers_pretty_headers(spec, tmpdir):
 
     assert "PARTY" in xlsx_headers
     assert "PARTY" in csv_headers
+
+
+def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "tenders": {"split": True, "pretty_headers": True},
+                "parties": {"split": False, "pretty_headers": True},
+            },
+            "count": True,
+        }
+    )
+
+    workdir = Path(tmpdir)
+    flattener = FileFlattener(workdir, options, spec_analyzed.tables, root_key="releases", csv=True, xlsx=True)
+    xlsx = workdir / "result.xlsx"
+    for _ in flattener.flatten_file(releases_path):
+        pass
+    sheet = "tenders"
+    path = workdir / f"{sheet}.csv"
+    for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
+        assert "Items Count" in headers
+        assert "Tenderers Count" in headers
+
+    sheet = "parties"
+    path = workdir / f"{sheet}.csv"
+    for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
+        assert "Additionalidentifiers Count" in headers
+
+
+def test_writers_table_name_override(spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col)
+
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    path = workdir / "testname.csv"
+    assert read_xlsx_headers(xlsx, "testname")
+    assert read_csv_headers(path)
