@@ -259,3 +259,60 @@ def test_flatten_should_split_with_child(spec, releases, options):
     for item in items:
         assert "/tender/items/id" in item
         assert "/tender/items/description" in item
+
+
+def test_flatten_fields_compare(spec_analyzed, releases):
+    options = FlattenOptions(
+        **{
+            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
+        }
+    )
+    flattener = Flattener(options, spec_analyzed.tables)
+    counters = {}
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                for key, value in row.items():
+                    if "/" in key:
+                        if key not in counters:
+                            counters[key] = 0
+                        query = key.replace("/", "[].") + "[]"
+                        search_result = search(query, releases)
+
+                        if len(search_result) == 8:
+                            search_result.reverse()
+                            assert value == search_result[counters[key] - 1]
+                        elif len(search_result) == 2 and value is not search_result[counters[key]]:
+                            search_result.reverse()
+                            assert value == search_result[counters[key]]
+                        else:
+                            assert value == search_result[counters[key]]
+
+                        counters[key] += 1
+
+
+def test_flatten_joinable_arrays(spec_analyzed, releases):
+    options = FlattenOptions(
+        **{
+            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
+        }
+    )
+    flattener = Flattener(options, spec_analyzed.tables)
+    fields = ["submissionMethod", "roles"]
+    counters = {}
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                for key, value in row.items():
+                    if any(field in key for field in fields):
+                        if key not in counters:
+                            counters[key] = 0
+                        query = key.replace("/", "[].") + "[]"
+                        search_result = search(query, releases)
+
+                        if len(search_result) == 8:
+                            search_result.reverse()
+                            assert value == search_result[counters[key] - 1]
+                        else:
+                            assert value == search_result[counters[key]]
+                        counters[key] += 1
