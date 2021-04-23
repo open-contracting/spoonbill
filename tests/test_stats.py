@@ -45,6 +45,7 @@ ARRAYS_COLUMNS = {
     "contracts": contracts_arrays,
     "planning": planning_arrays,
 }
+ADDITIONAL_COLUMNS = ["/parties/test"]
 
 
 def test_parse_schema(schema, spec):
@@ -143,3 +144,73 @@ def test_dump_restore(spec, releases, tmpdir):
     spec2 = DataPreprocessor.restore(data)
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]
+
+
+def test_analyze_preview_rows(spec, releases):
+    spec.process_items(releases)
+    commodities_path = ["tenders", "parties", "awards", "contracts", "planning"]
+    commodities = [spec.tables.get(i) for i in commodities_path]
+    counters = {}
+    # Compare values of input file and preview_rows
+    for commodity in commodities:
+        for row in commodity.preview_rows:
+            for key, value in row.items():
+                if "/" in key:
+                    if key not in counters:
+                        counters[key] = 0
+                    # Check headers are present in tables
+                    header = key
+                    for char in header:
+                        if char.isdigit():
+                            header = header.replace(char, "0")
+                    assert header in COMBINED_COLUMNS[commodity.name] or header in ADDITIONAL_COLUMNS
+                    # Query formatting
+                    query = "".join(["" if char.isdigit() or char == "." else char for char in key]).replace("//", "/")
+                    query = query.replace("//", "/").replace("/", "[].") + "[]"
+                    search_result = search(query, releases)
+
+                    if len(search_result) == 8:
+                        search_result.reverse()
+                        assert value == search_result[counters[key] - 1]
+                    elif len(search_result) == 2 and value is not search_result[counters[key]]:
+                        search_result.reverse()
+                        assert value == search_result[counters[key]]
+                    else:
+                        assert value == search_result[counters[key]]
+
+                    counters[key] += 1
+
+
+def test_analyze_preview_rows_combined(spec, releases):
+    spec.process_items(releases)
+    commodities_path = ["tenders", "parties", "awards", "contracts", "planning"]
+    commodities = [spec.tables.get(i) for i in commodities_path]
+    counters = {}
+    # Compare values of input file and preview_rows
+    for commodity in commodities:
+        for row in commodity.preview_rows_combined:
+            for key, value in row.items():
+                if "/" in key:
+                    if key not in counters:
+                        counters[key] = 0
+                    # Check headers are present in tables
+                    header = key
+                    for char in header:
+                        if char.isdigit():
+                            header = header.replace(char, "0")
+                    assert header in COMBINED_COLUMNS[commodity.name] or header in ADDITIONAL_COLUMNS
+                    # Query formatting
+                    query = "".join(["" if char.isdigit() or char == "." else char for char in key]).replace("//", "/")
+                    query = query.replace("//", "/").replace("/", "[].") + "[]"
+                    search_result = search(query, releases)
+
+                    if len(search_result) == 8:
+                        search_result.reverse()
+                        assert value == search_result[counters[key] - 1]
+                    elif len(search_result) == 2 and value is not search_result[counters[key]]:
+                        search_result.reverse()
+                        assert value == search_result[counters[key]]
+                    else:
+                        assert value == search_result[counters[key]]
+
+                    counters[key] += 1
