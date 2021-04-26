@@ -206,7 +206,6 @@ def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
                     for num, line in enumerate(csv_reader):
                         if num == counter[name]:
                             clean_line = {k: v for (k, v) in line.items() if v != ""}
-                            print(clean_line)
                             assert dict(clean_line) == str_row
                 counter[name] += 1
 
@@ -243,6 +242,5 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                 line = dict(zip(line_columns, line_values))
                 # Cleaning empty cells
                 line = {k: v for (k, v) in line.items() if v}
-                if "/tender/hasEnquiries" not in row:
-                    assert line == row
+                assert line == row
                 counter[name] += 1
