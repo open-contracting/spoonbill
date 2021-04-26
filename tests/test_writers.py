@@ -1,8 +1,13 @@
+import csv
 from pathlib import Path
 from unittest.mock import call, patch
 
+import openpyxl
+
 from spoonbill import FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
+from spoonbill.writers.csv import CSVWriter
+from spoonbill.writers.xlsx import XlsxWriter
 
 from .conftest import releases_path
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
@@ -276,3 +281,74 @@ def test_writers_open_fail(open_, log, spec, tmpdir):
     tables = prepare_tables(spec, options)
     get_writers(workdir, tables, options)
     log.assert_has_calls([call("Failed to open file {} with error {}".format(str(tmpdir / "testname.csv"), "test"))])
+
+
+def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
+    flattener = Flattener(flatten_options, spec_analyzed.tables)
+    tables = prepare_tables(spec_analyzed, flatten_options)
+    workdir = Path(tmpdir)
+    writer = CSVWriter(workdir, tables, flatten_options)
+    writer.writeheaders()
+
+    # Writing CSV files
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                writer.writerow(name, row)
+    writer.close()
+
+    # Reading CSV files
+    counter = {}
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            if name not in counter:
+                counter[name] = 0
+            for row in rows:
+                str_row = {k: str(v) for (k, v) in row.items()}
+                file = name + ".csv"
+                path = workdir / file
+                with open(path, newline="") as csv_file:
+                    csv_reader = csv.DictReader(csv_file)
+                    for num, line in enumerate(csv_reader):
+                        if num == counter[name]:
+                            clean_line = {k: v for (k, v) in line.items() if v != ""}
+                            print(clean_line)
+                            assert dict(clean_line) == str_row
+                counter[name] += 1
+
+
+def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
+    flattener = Flattener(flatten_options, spec_analyzed.tables)
+    tables = prepare_tables(spec_analyzed, flatten_options)
+    workdir = Path(tmpdir)
+    writer = XlsxWriter(workdir, tables, flatten_options)
+    writer.writeheaders()
+
+    # Writing XLSX file
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                writer.writerow(name, row)
+    writer.close()
+
+    # Reading XLSX files
+    counter = {}
+    path = workdir / "result.xlsx"
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            if name not in counter:
+                counter[name] = 2
+            xlsx_reader = openpyxl.load_workbook(path)
+            sheet = xlsx_reader[name]
+            header_values = [cell.value for cell in sheet[1]]
+            header_columns = [cell.column_letter for cell in sheet[1]]
+            headers = dict(zip(header_columns, header_values))
+            for row in rows:
+                line_values = [cell.value for cell in sheet[counter[name]]]
+                line_columns = [headers[cell.column_letter] for cell in sheet[counter[name]]]
+                line = dict(zip(line_columns, line_values))
+                # Cleaning empty cells
+                line = {k: v for (k, v) in line.items() if v}
+                if "/tender/hasEnquiries" not in row:
+                    assert line == row
+                counter[name] += 1
