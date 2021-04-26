@@ -101,7 +101,7 @@ def validate_type(type_, item):
 
 
 def get_root(table):
-    """ Extract top level toot table of `table` """
+    """Extract top level toot table of `table`"""
     while table.parent:
         table = table.parent
     return table
