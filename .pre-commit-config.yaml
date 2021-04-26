@@ -8,13 +8,13 @@ repos:
     hooks:
     - id: isort
 -   repo: https://github.com/ambv/black
-    rev: 20.8b1
+    rev: 21.4b0
     hooks:
     - id: black
       args:
         - --line-length=119
 -   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.0
+    rev: 3.9.1
     hooks:
     - id: flake8
 -   repo: https://github.com/pre-commit/pre-commit-hooks
