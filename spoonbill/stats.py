@@ -194,7 +194,7 @@ class DataPreprocessor:
                     # TODO: fields without ids??
                     row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
                     self.current_table = table
-                    if count < PREVIEW_ROWS:
+                    if with_preview and count < PREVIEW_ROWS:
                         self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_key)
                 for key, item in record.items():
                     pointer = separator.join([path, key])
@@ -243,7 +243,7 @@ class DataPreprocessor:
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    if count < PREVIEW_ROWS:
+                                    if with_preview and count < PREVIEW_ROWS:
                                         if pointer in self.current_table.path:
                                             self.add_preview_row(
                                                 ocid,
