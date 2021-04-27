@@ -349,7 +349,12 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                 # Cleaning empty cells
                 line = {k: v for (k, v) in line.items() if v}
 
-                assert line == row
+                if "/tender/hasEnquiries" in row:
+                    str_row = {k: v for (k, v) in row.items()}
+                    str_row["/tender/hasEnquiries"] = str(row["/tender/hasEnquiries"])
+                    assert line == str_row
+                else:
+                    assert line == row
                 counter[name] += 1
 
 
