@@ -156,6 +156,8 @@ def test_writers_table_name_override(spec, tmpdir):
         **{
             "selection": {
                 "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+                "tenders": {"split": True, "pretty_headers": True, "name": "my_tenders"},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": "pretty_items"},
             }
         }
     )
@@ -167,6 +169,8 @@ def test_writers_table_name_override(spec, tmpdir):
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
-    path = workdir / "testname.csv"
-    assert read_xlsx_headers(xlsx, "testname")
-    assert read_csv_headers(path)
+    for name in ("testname", "my_tenders", "pretty_items"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
