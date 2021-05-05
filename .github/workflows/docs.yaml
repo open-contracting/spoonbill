@@ -18,9 +18,9 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+        key: ${{ runner.os }}-${{ secrets.CACHE_NAME }}-${{ hashFiles('**/setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-${{ secrets.CACHE_NAME }}-
     - name: Install
       run: |
             pip install .[docs]
