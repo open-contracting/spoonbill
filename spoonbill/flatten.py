@@ -171,6 +171,7 @@ class Flattener:
                         continue
 
                     c_table = self.tables[c_name]
+
                     self.options.selection[c_name] = TableFlattenConfig(split=True)
                     self._init_table_cache(tables, c_table)
         self.tables = tables
@@ -192,6 +193,7 @@ class Flattener:
 
             while to_flatten:
                 abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
+
                 table = self._path_cache.get(path)
                 if table:
                     # Strict match /tender /parties etc., so this is a new row

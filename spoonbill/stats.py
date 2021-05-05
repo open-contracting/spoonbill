@@ -240,8 +240,18 @@ class DataPreprocessor:
                                 )
                         else:
                             root = get_root(self.current_table)
+                            if pointer not in root.arrays:
+                                # TODO: do we need to mark this table as additional
+                                child_table = add_child_table(self.current_table, pointer, parent_key, key)
+                                self.current_table.types[pointer] = ["array"]
+                                self.tables[child_table.name] = child_table
+                                self._lookup_cache[pointer] = child_table
+                                self._table_by_path[pointer] = child_table
+                                # self.current_table = child_table
                             if root.set_array(pointer, item):
-                                recalculate_headers(root, abs_path, key, item, self.table_threshold, separator)
+                                recalculate_headers(
+                                    root, pointer, abs_path, key, item, self.table_threshold, separator
+                                )
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
@@ -270,14 +280,14 @@ class DataPreprocessor:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
-
-                        if pointer not in self.current_table.columns:
+                        if abs_pointer not in root.combined_columns:
                             self.current_table.add_column(
                                 pointer,
                                 {"title": key},
                                 PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
                                 parent=record,
                                 additional=True,
+                                abs_path=abs_pointer,
                             )
                         self.current_table.inc_column(pointer)
                         root.inc_column(abs_pointer, combined=True)

@@ -106,6 +106,7 @@ class Table:
         parent,
         combined_only=False,
         additional=False,
+        abs_path=None,
     ):
         """Add new column to the table
 
@@ -119,33 +120,28 @@ class Table:
         title = prepare_title(item, parent)
         root = get_root(self)
         is_array = self.is_array(path)
+        column = Column(title, item_type, path)
         combined_path = combine_path(root, path)
 
-        column = Column(title, item_type, path)
+        if additional:
+            self.additional_columns[path] = column
+            if is_array:
+                combined_path = abs_path
         self.combined_columns[combined_path] = Column(title, item_type, combined_path)
-
         for p in (path, combined_path):
             self.titles[p] = title
-
         if not combined_only:
             self.columns[path] = column
         if combined_only and is_array:
             self.columns[combined_path] = Column(title, item_type, combined_path)
         if not self.is_root:
             self.parent.add_column(
-                path,
-                item,
-                item_type,
-                parent=parent,
-                combined_only=True,
+                path, item, item_type, parent=parent, combined_only=True, additional=additional, abs_path=abs_path
             )
-
-        if additional:
-            self.additional_columns[path] = column
 
     def is_array(self, path):
         """Check if provided path is inside any tables arrays"""
-        for array in get_root(self).arrays:
+        for array in sorted(get_root(self).arrays, reverse=True):
             if common_prefix(array, path) == array:
                 return array
         return False
@@ -172,7 +168,7 @@ class Table:
         :param item: Array from data
         :return: True if array is bigger than previously found and length was updated
         """
-        count = self.arrays[header] or 0
+        count = self.arrays.get(header, 0)
         length = len(item)
         if length > count:
             self.arrays[header] = length
