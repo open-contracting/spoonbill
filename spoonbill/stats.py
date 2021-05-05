@@ -32,6 +32,7 @@ class DataPreprocessor:
     :param combined_tables: List of tables with data from different locations
     :param tables: Do not parse schema and use this tables data
     :param table_threshold: Maximum array length before system recommends it to separated to child table
+    :param total_items: Total objects processed
     """
 
     def __init__(
@@ -41,6 +42,7 @@ class DataPreprocessor:
         combined_tables: Mapping[str, List] = None,
         tables: Mapping[str, Table] = None,
         table_threshold=TABLE_THRESHOLD,
+        total_items=0,
         header_separator="/",
     ):
         self.schema = schema
@@ -50,7 +52,7 @@ class DataPreprocessor:
         self.table_threshold = table_threshold
 
         self.header_separator = header_separator
-        self.total_items = 0
+        self.total_items = total_items
         self.current_table = None
 
         self._lookup_cache = {}
@@ -297,6 +299,7 @@ class DataPreprocessor:
             "header_separator": self.header_separator,
             "tables": {name: table.dump() for name, table in self.tables.items()},
             "table_threshold": self.table_threshold,
+            "total_items": self.total_items,
         }
 
     @classmethod
@@ -312,6 +315,7 @@ class DataPreprocessor:
                 "combined_tables": data["combined_tables"],
                 "header_separator": data["header_separator"],
                 "table_threshold": data["table_threshold"],
+                "total_items": data["total_items"],
             }
         except KeyError as e:
             LOGGER.error(_("Failed to restore from malformed data. Missing {} attribute").format(e))

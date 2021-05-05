@@ -145,7 +145,16 @@ def test_dump_restore(spec, releases, tmpdir):
     spec2 = DataPreprocessor.restore(data)
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]
-
+    for key in (
+        "schema",
+        "root_tables",
+        "combined_tables",
+        "header_separator",
+        "tables",
+        "table_threshold",
+        "total_items",
+    ):
+        assert key in spec2.__dict__
     with pytest.raises(ValueError, match="Unable to restore"):
         del data["schema"]
         spec2 = DataPreprocessor.restore(data)
