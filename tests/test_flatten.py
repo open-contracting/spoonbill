@@ -103,6 +103,7 @@ def test_flatten_with_unnest(spec_analyzed, releases):
                     continue
                 item_id = search(f"[{count}].tender.items[0].id", releases)
                 if item_id:
+
                     assert field in row
                     assert search(f"[{count}].tender.items[0].id", releases) == row[field]
 
@@ -115,7 +116,6 @@ def test_flatten_with_exclude(spec_analyzed, releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert "tenders" in all_rows
-    assert "tenders_tende" in all_rows
     assert "tenders_items" not in all_rows
 
 

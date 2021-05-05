@@ -2,6 +2,7 @@ import csv
 from pathlib import Path
 
 import openpyxl
+import pytest
 
 from spoonbill import FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
@@ -9,8 +10,7 @@ from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
 from .conftest import releases_path
-
-# from .data import *
+from .data import TEST_RENAME_OPTIONS
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -161,6 +161,8 @@ def test_writers_table_name_override(spec, tmpdir):
         **{
             "selection": {
                 "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+                "tenders": {"split": True, "pretty_headers": True, "name": "my_tenders"},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": "pretty_items"},
             }
         }
     )
@@ -172,9 +174,11 @@ def test_writers_table_name_override(spec, tmpdir):
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
-    path = workdir / "testname.csv"
-    assert read_xlsx_headers(xlsx, "testname")
-    assert read_csv_headers(path)
+    for name in ("testname", "my_tenders", "pretty_items"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
 
 
 def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
@@ -286,4 +290,30 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     path = workdir / "result.xlsx"
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
-        assert not xlsx_reader[name]
+        with pytest.raises(KeyError) as exception:
+            xlsx_reader[name]
+        exception.match(f"Worksheet {name} does not exist.")
+
+
+def test_rename_child_tables(spec_analyzed, releases, tmpdir):
+    options = FlattenOptions(**TEST_RENAME_OPTIONS)
+    old_names = ["tenders_items", "tenders_items_addit", "tenders_tende"]
+    new_names = ["Tenders", "Tender Tenderers", "Tender Items"]
+    flattener = Flattener(options, spec_analyzed.tables)
+    tables = prepare_tables(spec_analyzed, options)
+    workdir = Path(tmpdir)
+    writer = CSVWriter(workdir, tables, options)
+    writer.writeheaders()
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                writer.writerow(name, row)
+    writer.close()
+
+    for name in old_names:
+        path = workdir / f"{name}.csv"
+        assert not path.is_file()
+
+    for name in new_names:
+        path = workdir / f"{name}.csv"
+        assert path.is_file()

@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import JOINABLE
+from spoonbill.common import JOINABLE, TABLE_THRESHOLD
 from spoonbill.i18n import _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_pointer, get_root
@@ -88,6 +88,7 @@ class Flattener:
         name = table.name
         options = self.options.selection[name]
         split = options.split
+
         tables[name] = table
 
         for p in table.path:
@@ -162,6 +163,7 @@ class Flattener:
                 continue
             options = self.options.selection[name]
             split = options.split
+
             if options.only:
                 self._only(table, options.only, split)
             self._init_table_cache(tables, table)
@@ -171,8 +173,11 @@ class Flattener:
                         continue
 
                     c_table = self.tables[c_name]
-                    self.options.selection[c_name] = TableFlattenConfig(split=True)
-                    self._init_table_cache(tables, c_table)
+
+                    if c_table.total_rows >= TABLE_THRESHOLD or options.repeat or options.unnest:
+                        self.options.selection[c_name] = TableFlattenConfig(split=True)
+                        self._init_table_cache(tables, c_table)
+
         self.tables = tables
         self._init_options(self.tables)
 
