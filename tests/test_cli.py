@@ -25,8 +25,8 @@ def test_default():
         result = runner.invoke(cli, ["data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_with_selections():
@@ -36,8 +36,8 @@ def test_with_selections():
         result = runner.invoke(cli, ["--selection", "tenders", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_with_combine():
@@ -47,9 +47,9 @@ def test_with_combine():
         result = runner.invoke(cli, ["--combine", "documents", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
+        assert "Dumping analyzed data" in result.output
         assert "Going to export tables: tenders,awards,contracts,planning,parties,documents" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_table_typo():
@@ -71,8 +71,8 @@ def test_with_schema():
         result = runner.invoke(cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
         assert "Going to export tables: tenders" in result.output
 
 
@@ -86,4 +86,4 @@ def test_state_file():
         assert "Input file is release package" in result.output
         assert "Restoring from provided state file" in result.output
         assert "Going to export tables: tenders,awards,contracts,planning,parties" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output

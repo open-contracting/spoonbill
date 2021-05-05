@@ -40,33 +40,39 @@ def common_prefix(path, subpath, separator="/"):
     '/tender'
     >>> common_prefix('/tender/items/id', '/tender/items/description')
     '/tender/items'
+    >>> common_prefix('/tender/items/0/additionalClassifications/0/id', '/tender/items/0')
+    '/tender/items/0'
     """
-    paths = path.split(separator)
-    subpaths = subpath.split(separator)
-    common = [chunk for chunk in paths if chunk in subpaths]
+    paths = [path.split(separator), subpath.split(separator)]
+    s1 = min(paths)
+    s2 = max(paths)
+    common = s1
+    for i, path in enumerate(s1):
+        if path != s2[i]:
+            common = s1[:i]
+            break
     return separator.join(common)
 
 
-def iter_file(filename, root):
+def iter_file(fd, root):
     """Iterate over `root` array in file provided by `filename` using ijson
 
-    :param str filename: Path to file
+    :param bytes fd: File descriptor
     :param str root: Array field name inside file
-    :return: Array items iterator
+    :return: Iterator of bytes read and item as a tuple
 
-    >>> [r for r in iter_file('tests/data/ocds-sample-data.json', 'records')]
+    >>> [r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'records')]
     []
-    >>> len([r for r in iter_file('tests/data/ocds-sample-data.json', 'releases')])
+    >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    with open(filename, "rb") as fd:
-        reader = ijson.items(fd, f"{root}.item")
-        for item in reader:
-            yield item
+    reader = ijson.items(fd, f"{root}.item")
+    for item in reader:
+        yield item
 
 
 def extract_type(item):
-    """Exrtact item possible types from jsonschema definition.
+    """Extract item possible types from jsonschema definition.
     >>> extract_type({'type': 'string'})
     ['string']
     >>> extract_type(None)
@@ -226,7 +232,7 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
+def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
@@ -270,7 +276,6 @@ def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
     if should_split:
         for col_path in chain(zero_cols, new_cols):
             root.columns.pop(col_path, "")
-
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
 

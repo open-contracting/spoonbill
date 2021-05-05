@@ -16,8 +16,10 @@ from spoonbill.utils import resolve_file_uri
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("spoonbill")
 CURRENT_SCHEMA_TAG = "1__1__5"
-PROGRESS_LABEL = _("Processed {}")
-FLATTENED_LABEL = _("Flattened {}")
+
+# TODO: check i18n
+ANALYZED_LABEL = _("  Processed {} objects")
+FLATTENED_LABEL = _("  Flattened {} objects")
 
 
 class CommaSeparated(click.ParamType):
@@ -111,13 +113,15 @@ def cli(
     human,
 ):
     """Spoonbill cli entry point"""
-    # TODO: decect_format is reading file from disk, may by slow
+    click.echo(_("Detecting input file format"))
+    # TODO: handle line separated json
+    # TODO: handle single release/record
     (
         input_format,
         _is_concatenated,
         _is_array,
     ) = detect_format(filename)
-    click.echo(_("Input file is {}").format(input_format))
+    click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
     is_package = "package" in input_format
     if not is_package:
         # TODO: fix this
@@ -128,13 +132,13 @@ def cli(
     if "release" in input_format:
         root_key = "releases"
         if not schema:
-            click.echo(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
+            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
             profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
             schema = profile.release_package_schema()
     else:
         root_key = "records"
         if not schema:
-            click.echo(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
+            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
             profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
             schema = profile.record_package_schema()
     title = schema.get("title", "").lower()
@@ -153,10 +157,10 @@ def cli(
     combined_tables = get_selected_tables(COMBINED_TABLES, combine)
 
     if state_file:
-        click.echo(_("Restoring from provided state file"))
+        click.secho(_("Restoring from provided state file"), bold=True)
         analyzer = FileAnalyzer(workdir, state_file=state_file)
     else:
-        click.echo(_("State file not supplied, starting to analyze input file"))
+        click.secho(_("State file not supplied, going to analyze input file first"), bold=True)
         analyzer = FileAnalyzer(
             workdir,
             schema=schema,
@@ -164,21 +168,30 @@ def cli(
             root_tables=root_tables,
             combined_tables=combined_tables,
         )
+        click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
+        total = path.stat().st_size
+        progress = 0
         # Progress bar not showing with small files
         # https://github.com/pallets/click/pull/1296/files
-        # TODO: how to know number of items in file??
-        with click.progressbar(analyzer.analyze_file(filename, with_preview=False), label="Processed") as bar:
-            for count in bar:
-                bar.label = PROGRESS_LABEL.format(count)
+        with click.progressbar(width=0, show_percent=True, show_pos=True, length=total) as bar:
+            for read, count in analyzer.analyze_file(filename, with_preview=True):
+                bar.label = ANALYZED_LABEL.format(click.style(str(count), fg="cyan"))
+                bar.update(read - progress)
+                progress = read
+        click.secho(
+            _("Done processing. Analyzed objects: {}").format(click.style(str(count + 1), fg="red")), fg="green"
+        )
         state_file = pathlib.Path(f"{filename}.analyzed.json")
+        state_file_path = workdir / state_file
+        click.echo(_("Dumping analyzed data to '{}'").format(click.style(str(state_file_path.absolute()), fg="cyan")))
         analyzer.dump_to_file(state_file)
-        click.echo(_("Dumped analyzed data to '{}'").format(state_file.absolute()))
 
+    click.echo(_("Flattening file: {}").format(click.style(str(path), fg="cyan")))
     options = {"selection": {}, "count": count}
     for name in selection:
         table = analyzer.spec[name]
         if table.total_rows == 0:
-            click.echo(_("Ignoring empty table {}").format(name))
+            click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
         unnest = [col for col in unnest if col in table]
         options["selection"][name] = {
@@ -188,13 +201,16 @@ def cli(
         }
     options = FlattenOptions(**options)
     all_tables = chain(options.selection.keys(), combined_tables.keys())
-    click.echo(_("Going to export tables: {}").format(",".join(all_tables)))
+    click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
     flattener = FileFlattener(workdir, options, analyzer.spec.tables, root_key=root_key, csv=csv, xlsx=xlsx)
+    click.echo(_("Flattening input file"))
     with click.progressbar(
         flattener.flatten_file(filename),
-        label="Flattened",
-        length=analyzer.spec.total_items,
+        length=analyzer.spec.total_items + 1,
+        width=0,
+        show_percent=True,
+        show_pos=True,
     ) as bar:
         for count in bar:
-            bar.label = FLATTENED_LABEL.format(count)
-    click.echo(_("Done. Flattened {} objects").format(count + 1))
+            bar.label = FLATTENED_LABEL.format(click.style(str(count + 1), fg="cyan"))
+    click.secho(_("Done flattening. Flattened objects: {}").format(click.style(str(count + 1), fg="red")), fg="green")
