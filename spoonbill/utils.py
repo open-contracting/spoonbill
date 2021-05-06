@@ -260,7 +260,7 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
         col_prefix = separator.join((base_prefix, str(col_i)))
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
-            new_cols[col_id] = replace(col, id=col_id)
+            new_cols[col_id] = replace(col, id=col_id, hits=0)
 
     head_updated = False
     for col_p, col in root.combined_columns.items():
@@ -278,7 +278,7 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
         if not should_split:
-            root.columns[col_path] = col
+            root.columns[col_path] = root.columns.get(col_path) or col
 
 
 def resolve_file_uri(file_path):
