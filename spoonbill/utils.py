@@ -249,15 +249,14 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
     cols = head
     base_prefix = separator.join((abs_path, key))
     zero_prefix = separator.join((base_prefix, "0"))
-    should_split = len(item) > max_items
-
+    should_split = len(item) >= max_items
     zero_cols = {
         col_p: col
         for col_p, col in root.combined_columns.items()
         if col_p not in DEFAULT_FIELDS_COMBINED and common_prefix(col_p, zero_prefix) == zero_prefix
     }
     new_cols = {}
-    for col_i, _ in enumerate(item, 1):
+    for col_i, _ in enumerate(item[1:], 1):
         col_prefix = separator.join((base_prefix, str(col_i)))
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
@@ -278,6 +277,8 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
             root.columns.pop(col_path, "")
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
+        if not should_split:
+            root.columns[col_path] = col
 
 
 def resolve_file_uri(file_path):

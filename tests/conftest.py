@@ -106,6 +106,14 @@ def root_table():
                     "/tender/items/0/id",
                     Column(title="Tender Item id", type="string", id="/tender/items/0/id"),
                 ),
+                (
+                    "/tender/items/0/additionalClassifications/0/id",
+                    Column(
+                        title="Tender Item Classification id",
+                        type="string",
+                        id="/tender/items/0/additionalClassifications/0/id",
+                    ),
+                ),
             ]
         ),
         arrays={"/tender/items": 0, "/tender/items/additionalClassifications": 0},

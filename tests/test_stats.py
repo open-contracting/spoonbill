@@ -5,6 +5,7 @@ from jmespath import search
 
 from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
+from spoonbill.utils import recalculate_headers
 from tests.data import (
     OCDS_TITLES_COMBINED,
     TEST_ROOT_TABLES,
@@ -158,3 +159,76 @@ def test_dump_restore(spec, releases, tmpdir):
     with pytest.raises(ValueError, match="Unable to restore"):
         del data["schema"]
         spec2 = DataPreprocessor.restore(data)
+
+
+def test_recalculate_headers(root_table, releases):
+    items = releases[0]["tender"]["items"]
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    for key in (
+        "/tender/items/0/id",
+        "/tender/items/0/additionalClassifications/0/id",
+    ):
+        assert key in root_table.combined_columns
+        assert key in root_table.columns
+
+    for key in ("/tender/items/1/id", "/tender/items/1/additionalClassifications/0/id"):
+        assert key not in root_table.combined_columns
+        assert key not in root_table.columns
+    items = items * 2
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    for key in (
+        "/tender/items/0/id",
+        "/tender/items/0/additionalClassifications/0/id",
+        "/tender/items/1/id",
+        "/tender/items/1/additionalClassifications/0/id",
+    ):
+        assert key in root_table.combined_columns
+        assert key in root_table.columns
+    for key in ("/tender/items/2/id", "/tender/items/2/additionalClassifications/0/id"):
+        assert key not in root_table.combined_columns
+        assert key not in root_table.columns
+
+    items = [
+        {
+            "description": "Cycle path construction work",
+            "id": "45233162-2",
+            "scheme": "CPV",
+            "uri": "http://cpv.data.ac.uk/code-45233162.html",
+        }
+    ] * 2
+    recalculate_headers(
+        root_table, "/tender/items/additionalClassifications", "/tender/items/0", "additionalClassifications", items, 5
+    )
+    for key in (
+        "/tender/items/0/id",
+        "/tender/items/0/additionalClassifications/0/id",
+        "/tender/items/0/additionalClassifications/1/id",
+        "/tender/items/1/id",
+        "/tender/items/1/additionalClassifications/0/id",
+    ):
+        assert key in root_table.combined_columns
+        assert key in root_table.columns
+    for key in (
+        "/tender/items/0/additionalClassifications/2/id",
+        "/tender/items/1/additionalClassifications/1/id",
+        "/tender/items/2/additionalClassifications/1/id",
+    ):
+        assert key not in root_table.combined_columns
+        assert key not in root_table.columns
+
+    items = releases[0]["tender"]["items"] * 5
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    for key in (
+        "/tender/items/0/id",
+        "/tender/items/0/additionalClassifications/0/id",
+        "/tender/items/1/id",
+        "/tender/items/1/additionalClassifications/0/id",
+        "/tender/items/2/id",
+        "/tender/items/2/additionalClassifications/0/id",
+        "/tender/items/3/id",
+        "/tender/items/3/additionalClassifications/0/id",
+        "/tender/items/4/id",
+        "/tender/items/4/additionalClassifications/0/id",
+    ):
+        assert key in root_table.combined_columns
+        assert key not in root_table.columns
