@@ -30,12 +30,20 @@ class XlsxWriter:
         self.options = options
         self.col_index = collections.defaultdict(dict)
         self.names = {}
+        self.names_counter = {}
 
     def writeheaders(self):
         """Write headers to output file"""
         for name, table in self.tables.items():
             opt = self.options.selection[name]
             table_name = opt.name or name
+
+            if table_name not in self.names_counter:
+                self.names_counter[table_name] = 0
+            else:
+                self.names_counter[table_name] += 1
+                table_name += str(self.names_counter[table_name])
+
             self.names[name] = table_name
             sheet = self.workbook.add_worksheet(table_name)
             headers = get_headers(table, opt)

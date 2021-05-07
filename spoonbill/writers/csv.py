@@ -26,11 +26,19 @@ class CSVWriter:
         self.tables = tables
         self.options = options
         self.headers = {}
+        self.names_counter = {}
         for name, table in self.tables.items():
             opt = self.options.selection[name]
             headers = get_headers(table, opt)
             self.headers[name] = headers
             table_name = opt.name or name
+
+            if table_name not in self.names_counter:
+                self.names_counter[table_name] = 0
+            else:
+                self.names_counter[table_name] += 1
+                table_name += str(self.names_counter[table_name])
+
             try:
                 path = workdir / f"{table_name}.csv"
                 fd = open(path, "w")

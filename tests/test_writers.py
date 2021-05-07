@@ -11,6 +11,8 @@ from spoonbill.writers.xlsx import XlsxWriter
 
 from .conftest import releases_path
 from .data import TEST_RENAME_OPTIONS
+
+# from .data import *
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -21,7 +23,6 @@ def test_writer_init(spec, tmpdir, flatten_options):
     workdir = Path(tmpdir)
     get_writers(workdir, tables, flatten_options)
     path = workdir / "result.xlsx"
-
     assert path.is_file()
     for name in flatten_options.selection:
         path = workdir / f"{name}.csv"
@@ -60,11 +61,9 @@ def test_writers_pretty_headers(spec, tmpdir):
     for name, table in tables.items():
         for col in table:
             table.inc_column(col)
-
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
-
     for name in options.selection:
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
@@ -76,7 +75,6 @@ def test_writers_pretty_headers(spec, tmpdir):
                 title = "item id"
             assert title in xlsx_headers
             assert title in csv_headers
-
     options = FlattenOptions(
         **{
             "selection": {
@@ -98,32 +96,26 @@ def test_writers_pretty_headers(spec, tmpdir):
             }
         }
     )
-
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
-
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
     xlsx_headers = read_xlsx_headers(xlsx, sheet)
     csv_headers = read_csv_headers(path)
     assert "TENDER" in xlsx_headers
     assert "TENDER" in csv_headers
-
     sheet = "tenders_items"
     path = workdir / f"{sheet}.csv"
     xlsx_headers = read_xlsx_headers(xlsx, sheet)
     csv_headers = read_csv_headers(path)
     assert "item id" in xlsx_headers
     assert "item id" in csv_headers
-
     xlsx = workdir / "result.xlsx"
     sheet = "parties"
     path = workdir / f"{sheet}.csv"
-
     xlsx_headers = read_xlsx_headers(xlsx, sheet)
     csv_headers = read_csv_headers(path)
-
     assert "PARTY" in xlsx_headers
     assert "PARTY" in csv_headers
 
@@ -138,7 +130,6 @@ def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
             "count": True,
         }
     )
-
     workdir = Path(tmpdir)
     flattener = FileFlattener(workdir, options, spec_analyzed.tables, root_key="releases", csv=True, xlsx=True)
     xlsx = workdir / "result.xlsx"
@@ -149,7 +140,6 @@ def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
         assert "Items Count" in headers
         assert "Tenderers Count" in headers
-
     sheet = "parties"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
@@ -170,7 +160,6 @@ def test_writers_table_name_override(spec, tmpdir):
     for name, table in tables.items():
         for col in table:
             table.inc_column(col)
-
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
@@ -187,14 +176,12 @@ def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
     workdir = Path(tmpdir)
     writer = CSVWriter(workdir, tables, flatten_options)
     writer.writeheaders()
-
     # Writing CSV files
     for _count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
                 writer.writerow(name, row)
     writer.close()
-
     # Reading CSV files
     counter = {}
     for _count, flat in flattener.flatten(releases):
@@ -220,14 +207,12 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
     workdir = Path(tmpdir)
     writer = XlsxWriter(workdir, tables, flatten_options)
     writer.writeheaders()
-
     # Writing XLSX file
     for _count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
                 writer.writerow(name, row)
     writer.close()
-
     # Reading XLSX files
     counter = {}
     path = workdir / "result.xlsx"
@@ -246,7 +231,6 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                 line = dict(zip(line_columns, line_values))
                 # Cleaning empty cells
                 line = {k: v for (k, v) in line.items() if v}
-
                 if "/tender/hasEnquiries" in row:
                     str_row = {k: v for (k, v) in row.items()}
                     str_row["/tender/hasEnquiries"] = str(row["/tender/hasEnquiries"])
@@ -268,7 +252,6 @@ def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir):
             for row in rows:
                 writer.writerow(name, row)
     writer.close()
-
     for name in test_arrays:
         path = workdir / f"{name}.csv"
         assert not path.is_file()
@@ -286,7 +269,6 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
             for row in rows:
                 writer.writerow(name, row)
     writer.close()
-
     path = workdir / "result.xlsx"
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
@@ -309,11 +291,34 @@ def test_rename_child_tables(spec_analyzed, releases, tmpdir):
             for row in rows:
                 writer.writerow(name, row)
     writer.close()
-
     for name in old_names:
         path = workdir / f"{name}.csv"
         assert not path.is_file()
-
     for name in new_names:
         path = workdir / f"{name}.csv"
         assert path.is_file()
+
+
+def test_name_duplicate(spec, tmpdir):
+    duplicate_name = "test"
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": duplicate_name},
+                "tenders": {"split": True, "pretty_headers": True, "name": duplicate_name},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": duplicate_name},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col)
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in ("test", "test1", "test2"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
