@@ -317,6 +317,7 @@ def test_name_duplicate(spec, tmpdir):
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
+
     for name in ("test", "test1", "test2"):
         path = workdir / f"{name}.csv"
         assert path.is_file()
