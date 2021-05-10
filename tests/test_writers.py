@@ -174,3 +174,54 @@ def test_writers_table_name_override(spec, tmpdir):
         assert path.is_file()
         assert read_xlsx_headers(xlsx, name)
         assert read_csv_headers(path)
+
+
+def test_abbreviations(spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "tenders_items_class": {"split": False},
+                "parties_ids": {"split": False},
+                "transactions": {"split": False},
+            }
+        }
+    )
+    new_names = ["tenders_items_class", "parties_ids", "transactions"]
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col)
+
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in new_names:
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
+
+
+def test_name_duplicate(spec, tmpdir):
+    duplicate_name = "test"
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": duplicate_name},
+                "tenders": {"split": True, "pretty_headers": True, "name": duplicate_name},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": duplicate_name},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col)
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in ("test", "test1", "test2"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
