@@ -1,17 +1,17 @@
 import csv
 import logging
+from collections import defaultdict
 
 from spoonbill.i18n import _
 from spoonbill.utils import get_headers
+from spoonbill.writers.base_writer import BaseWriter
 
 LOGGER = logging.getLogger("spoonbill")
 
 
-class CSVWriter:
+class CSVWriter(BaseWriter):
     """Writer class with output to csv files
-
     For each table will be created corresponding csv file
-
     :param workdir: Working directory
     :param tables: Tables data
     :options: Flattening options
@@ -26,11 +26,15 @@ class CSVWriter:
         self.tables = tables
         self.options = options
         self.headers = {}
+        self.names_counter = defaultdict(int)
         for name, table in self.tables.items():
             opt = self.options.selection[name]
             headers = get_headers(table, opt)
             self.headers[name] = headers
             table_name = opt.name or name
+
+            table_name = self.name_check(table_name)
+
             try:
                 path = workdir / f"{table_name}.csv"
                 fd = open(path, "w")

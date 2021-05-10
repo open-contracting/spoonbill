@@ -218,6 +218,31 @@ def test_abbreviations(spec, tmpdir):
         assert read_csv_headers(path)
 
 
+def test_name_duplicate(spec, tmpdir):
+    duplicate_name = "test"
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": duplicate_name},
+                "tenders": {"split": True, "pretty_headers": True, "name": duplicate_name},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": duplicate_name},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in ("test", "test1", "test2"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
+
+
 @patch("spoonbill.LOGGER.error")
 def test_writers_invalid_table(log, spec, tmpdir):
     options = FlattenOptions(
