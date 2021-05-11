@@ -8,7 +8,7 @@ from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
 from spoonbill import FileAnalyzer, FileFlattener
-from spoonbill.common import COMBINED_TABLES, ROOT_TABLES
+from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import _
 from spoonbill.utils import resolve_file_uri
@@ -41,7 +41,7 @@ def get_selected_tables(base, selection):
     return {name: tab for name, tab in base.items() if name in selection}
 
 
-def should_split(spec, table_name, split, threshold=5):
+def should_split(spec, table_name, split, threshold=TABLE_THRESHOLD):
     table = spec.tables[table_name]
     if table_name in split:
         return True
@@ -62,6 +62,12 @@ def should_split(spec, table_name, split, threshold=5):
     default="",
 )
 @click.option(
+    "--threshold",
+    help=_("Maximum number of elements in array before its spitted into table"),
+    type=int,
+    default=TABLE_THRESHOLD,
+)
+@click.option(
     "--state-file",
     help=_("Uri to previously generated state file"),
     type=click.Path(exists=True),
@@ -80,16 +86,15 @@ def should_split(spec, table_name, split, threshold=5):
     default="",
 )
 @click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
-@click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated())
+@click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated(), default="")
 @click.option(
     "--repeat",
     help=_("Repeat a column from a parent sheet onto child tables"),
     type=CommaSeparated(),
+    default="",
 )
 @click.option(
-    "--count",
-    help=_("For each array field, add a count column to the parent table"),
-    is_flag=True,
+    "--count", help=_("For each array field, add a count column to the parent table"), is_flag=True, default=False
 )
 @click.option(
     "--human",
@@ -102,6 +107,7 @@ def cli(
     schema,
     selection,
     split,
+    threshold,
     state_file,
     xlsx,
     csv,
@@ -194,10 +200,14 @@ def cli(
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
         unnest = [col for col in unnest if col in table]
+        only = [col for col in only if col in table]
+        repeat = [col for col in repeat if col in table]
         options["selection"][name] = {
             "split": should_split(analyzer.spec, name, split),
             "pretty_headers": human,
             "unnest": unnest,
+            "only": only,
+            "repeat": repeat,
         }
     options = FlattenOptions(**options)
     all_tables = chain(options.selection.keys(), combined_tables.keys())
