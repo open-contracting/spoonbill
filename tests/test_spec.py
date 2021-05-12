@@ -23,7 +23,7 @@ def test_inc_column(root_table):
     assert root_table.combined_columns["ocid"].hits == 1
 
     root_table.inc_column("/tender/items/0/id", combined=True)
-    assert root_table["/tender/items/0/id"].hits == 0
+    assert root_table["/tender/items/0/id"].hits == 1
     assert root_table.combined_columns["/tender/items/0/id"].hits == 1
 
 
