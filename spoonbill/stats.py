@@ -226,7 +226,7 @@ class DataPreprocessor:
                             if with_preview and count < PREVIEW_ROWS:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.preview_rows[-1][pointer] = value
-                        elif self.current_table.is_root:
+                        elif self.current_table.is_root or self.current_table.is_combined:
                             abs_pointer = separator.join([abs_path, key])
                             for value in item:
                                 to_analyze.append(
@@ -247,10 +247,10 @@ class DataPreprocessor:
                                 self.tables[child_table.name] = child_table
                                 self._lookup_cache[pointer] = child_table
                                 self._table_by_path[pointer] = child_table
-                                # self.current_table = child_table
                             if root.set_array(pointer, item):
+                                self.current_table.should_split = len(item) >= self.table_threshold
                                 recalculate_headers(
-                                    root, pointer, abs_path, key, item, self.table_threshold, separator
+                                    root, pointer, abs_path, key, item, self.current_table.should_split, separator
                                 )
 
                             for i, value in enumerate(item):

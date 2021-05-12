@@ -122,6 +122,7 @@ def test_analyze(spec, releases):
         path = f"/tender/items/{index}/id"
         items = search(f"[].tender.items[{index}].id", releases)
         assert len(items) == tenders.combined_columns[path].hits
+        assert len(items) == tenders.columns[path].hits
     items_ids = [i["id"] for item in tender_items for i in item]
     assert len(items_ids) == spec.tables["tenders_items"].total_rows
 
@@ -163,7 +164,7 @@ def test_dump_restore(spec, releases, tmpdir):
 
 def test_recalculate_headers(root_table, releases):
     items = releases[0]["tender"]["items"]
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, False)
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",
@@ -175,7 +176,7 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.combined_columns
         assert key not in root_table.columns
     items = items * 2
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, False)
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",
@@ -197,7 +198,12 @@ def test_recalculate_headers(root_table, releases):
         }
     ] * 2
     recalculate_headers(
-        root_table, "/tender/items/additionalClassifications", "/tender/items/0", "additionalClassifications", items, 5
+        root_table,
+        "/tender/items/additionalClassifications",
+        "/tender/items/0",
+        "additionalClassifications",
+        items,
+        False,
     )
     for key in (
         "/tender/items/0/id",
@@ -217,7 +223,7 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.columns
 
     items = releases[0]["tender"]["items"] * 5
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, 5)
+    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, True)
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",

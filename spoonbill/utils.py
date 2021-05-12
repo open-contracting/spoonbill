@@ -232,7 +232,7 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/"):
+def recalculate_headers(root, path, abs_path, key, item, should_split, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
@@ -241,7 +241,7 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
     :param abs_path: Full jsonpath to array
     :param key: Array field name
     :param item: Array items
-    :param max_items: Maximum elements in array before it should be split into table
+    :param should_split: True if array should be separated into child table
     :param separator: header path separator
     """
     head = OrderedDict()
@@ -249,7 +249,7 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
     cols = head
     base_prefix = separator.join((abs_path, key))
     zero_prefix = separator.join((base_prefix, "0"))
-    should_split = len(item) >= max_items
+
     zero_cols = {
         col_p: col
         for col_p, col in root.combined_columns.items()
@@ -277,6 +277,7 @@ def recalculate_headers(root, path, abs_path, key, item, max_items, separator="/
             root.columns.pop(col_path, "")
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
+        root.titles[col_path] = col.title
         if not should_split:
             root.columns[col_path] = root.columns.get(col_path) or col
 
@@ -303,7 +304,8 @@ def get_headers(table, options):
     :param options: Flattening options
     :return: Mapping between column and its header
     """
-    split = options.split
+    is_root = table.is_root
+    split = options.split if is_root else table.should_split
     headers = {c: c for c in table.available_rows(split=split)}
     if options.pretty_headers:
         for c in headers:

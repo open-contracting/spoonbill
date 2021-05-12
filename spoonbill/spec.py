@@ -33,6 +33,7 @@ class Table:
     :param parent: Parent table, None if this table is root table
     :param is_root: This table is root table
     :param is_combined: This table contains data collected from different paths
+    :param should_split: This table should be separated as child table
     :param columns: Columns extracted from schema for split version of this table
     :param combined_columns: Columns extracted from schema for unsplit version of this table
     :param additional_columns: Columns identified in dataset but not in schema
@@ -51,6 +52,7 @@ class Table:
     parent: object = field(default_factory=dict)
     is_root: bool = False
     is_combined: bool = False
+    should_split: bool = False
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
@@ -154,6 +156,9 @@ class Table:
         """
         if combined:
             self.combined_columns[header].hits += 1
+            if self.is_array(header):
+                if header in self.columns:
+                    self.columns[header].hits += 1
             return
         self.columns[header].hits += 1
         if header in self.combined_columns:
