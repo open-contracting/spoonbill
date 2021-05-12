@@ -314,9 +314,3 @@ def get_headers(table, options):
         for c, h in options.headers.items():
             headers[c] = h
     return headers
-
-
-def get_pointer(pointer, abs_path, key, split, separator="/", is_root=True):
-    if split or is_root:
-        return pointer
-    return separator.join((abs_path, key))

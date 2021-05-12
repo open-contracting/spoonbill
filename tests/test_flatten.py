@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import pytest
 from jmespath import search
 
 from spoonbill.flatten import Flattener, FlattenOptions
@@ -107,16 +108,27 @@ def test_flatten_with_unnest(spec_analyzed, releases):
                     assert search(f"[{count}].tender.items[0].id", releases) == row[field]
 
 
-def test_flatten_with_exclude(spec_analyzed, releases):
+def test_flatten_with_exclude(spec, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": ["tenders_items"]})
-    flattener = Flattener(options, spec_analyzed.tables)
+    flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert "tenders" in all_rows
-    assert "tenders_tende" in all_rows
     assert "tenders_items" not in all_rows
+
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    flattener = Flattener(options, spec.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+    assert "tenders" in all_rows
+    assert "tenders_items" in all_rows
 
 
 def test_flatten_with_only(spec_analyzed, releases):
@@ -144,7 +156,7 @@ def test_flatten_with_only(spec_analyzed, releases):
         assert not set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
 
 
-def test_flatten_split_tables(spec_analyzed, releases):
+def test_flatten_should_not_split(spec_analyzed, releases):
     options = FlattenOptions(**{"selection": {"tenders": {"split": False}}})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
@@ -154,11 +166,18 @@ def test_flatten_split_tables(spec_analyzed, releases):
     assert "tender_items" not in all_rows
     assert "tenders_items_addit" not in all_rows
     tenders = all_rows["tenders"]
-    assert "/tender/items/0/id" in tenders
-    assert "/tender/items/0/description" in tenders
-    assert "/tender/items/1/id" in tenders
-    assert "/tender/items/1/description" in tenders
 
+    for tender, release in zip(tenders, releases):
+        items = release.get("tender", {}).get("items")
+        if release.get("tender", {}).get("items"):
+            assert "/tender/items/0/id" in tender
+            assert "/tender/items/0/description" in tender
+            if len(items) > 1:
+                assert "/tender/items/1/id" in tender
+                assert "/tender/items/1/description" in tender
+
+
+def test_flatten_should_not_split_with_split(spec_analyzed, releases):
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
@@ -168,26 +187,47 @@ def test_flatten_split_tables(spec_analyzed, releases):
     assert "tender_items" not in all_rows
     assert "tenders_items_addit" not in all_rows
     tenders = all_rows["tenders"]
-    assert "/tender/items/0/id" in tenders
-    assert "/tender/items/0/description" in tenders
-    assert "/tender/items/1/id" in tenders
-    assert "/tender/items/1/description" in tenders
 
-    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 5
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
-    flattener = Flattener(options, spec_analyzed.tables)
+    for tender, release in zip(tenders, releases):
+        items = release.get("tender", {}).get("items")
+        if items:
+            assert "/tender/items/0/id" in tender
+            assert "/tender/items/0/description" in tender
+            assert "/tender/items/0/additionalClassifications/0/description"
+            if len(items) > 1:
+                assert "/tender/items/1/id" in tender
+                assert "/tender/items/1/description" in tender
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        FlattenOptions(**{"selection": {"tenders": {"split": True}, "tenders_items": {"split": False}}}),
+        FlattenOptions(**{"selection": {"tenders": {"split": True}}}),
+    ],
+)
+def test_flatten_should_split_with_child(spec, releases, options):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
+    flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
-    assert "tender_items" in all_rows
+
+    assert "tenders_items" in all_rows
     assert "tenders_items_addit" not in all_rows
     tenders = all_rows["tenders"]
-    assert "/tender/items/0/id" not in tenders
-    assert "/tender/items/0/description" not in tenders
-    assert "/tender/items/1/id" not in tenders
-    assert "/tender/items/1/description" not in tenders
+
+    for tender, release in zip(tenders, releases):
+        if release.get("tender", {}).get("items"):
+            assert "/tender/items/0/id" not in tender
+            assert "/tender/items/0/description" not in tender
+            assert "/tender/items/1/id" not in tender
+            assert "/tender/items/1/description" not in tender
 
     items = all_rows["tenders_items"]
-    assert "/tender/items/id" in items
-    assert "/tender/items/description" in items
+    for item in items:
+        assert "/tender/items/id" in item
+        assert "/tender/items/description" in item
