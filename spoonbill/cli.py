@@ -202,6 +202,27 @@ def cli(
         unnest = [col for col in unnest if col in table]
         only = [col for col in only if col in table]
         repeat = [col for col in repeat if col in table]
+        if unnest:
+            click.echo(
+                _("Unnesting columns {} for table {}").format(
+                    click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
+                )
+            )
+        only = [col for col in only if col in table]
+        if only:
+            click.echo(
+                _("Using only columns {} for table {}").format(
+                    click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
+                )
+            )
+        repeat = [col for col in repeat if col in table]
+        if repeat:
+            click.echo(
+                _("Repeating columns {} in all child table of {}").format(
+                    click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
+                )
+            )
+
         options["selection"][name] = {
             "split": should_split(analyzer.spec, name, split),
             "pretty_headers": human,
