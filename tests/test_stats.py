@@ -86,7 +86,7 @@ def test_get_table(spec, releases):
     assert table.name == "tenders_items"
 
     table = spec.get_table("/tender/items/additionalClassifications/id")
-    assert table.name == "tenders_items_addit"
+    assert table.name == "tenders_items_class"
 
     table = spec.get_table("/planning")
     assert table.name == "planning"
