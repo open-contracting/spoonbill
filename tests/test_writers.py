@@ -37,7 +37,11 @@ def test_headers_filtering(spec, tmpdir, flatten_options):
         assert csv_headers[0] == ID_FIELDS[name]
 
 
-def test_writers_pretty_headers(spec, tmpdir):
+def test_writers_pretty_headers(spec, tmpdir, releases):
+    # increase items count for force split
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(
         **{
             "selection": {
@@ -51,21 +55,22 @@ def test_writers_pretty_headers(spec, tmpdir):
             }
         }
     )
-    tables = prepare_tables(spec, options)
-    for name, table in tables.items():
-        for col in table:
-            table.inc_column(col)
+    tables = {
+        "tenders": spec.tables["tenders"],
+        "parties": spec.tables["parties"],
+        "tenders_items": spec.tables["tenders_items"],
+    }
 
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
 
-    for name in options.selection:
+    for name, opts in options.selection.items():
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
         table = tables[name]
-        for col in tables[name]:
+        for col in tables[name].available_rows(opts.split):
             title = table.titles.get(col)
             if col == "/tender/items/id":
                 title = "item id"
@@ -123,19 +128,26 @@ def test_writers_pretty_headers(spec, tmpdir):
     assert "PARTY" in csv_headers
 
 
-def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
+def test_writers_flatten_count(spec, tmpdir, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(
         **{
             "selection": {
                 "tenders": {"split": True, "pretty_headers": True},
                 "parties": {"split": False, "pretty_headers": True},
+                "tenders_items": {
+                    "split": False,
+                    "pretty_headers": True,
+                },
             },
             "count": True,
         }
     )
 
     workdir = Path(tmpdir)
-    flattener = FileFlattener(workdir, options, spec_analyzed.tables, root_key="releases", csv=True, xlsx=True)
+    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True, xlsx=True)
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass
