@@ -19,6 +19,17 @@ PYTHON_TO_JSON_TYPE = {
 }
 LOGGER = logging.getLogger("spoonbill")
 
+ABBREVIATION_KEY = {
+    "additionalIdentifiers": "ids",
+    "additionalClassifications": "class",
+    "documents": "docs",
+}
+
+ABBREVIATION_TABLE_NAME = {
+    "contracts_implementation": "implementation",
+    "contracts_implementation_transactions": "transactions",
+}
+
 
 def common_prefix(path, subpath, separator="/"):
     """Given two paths, returns the longest common sub-path.
@@ -165,14 +176,29 @@ def generate_table_name(parent_table, parent_key, key):
     >>> generate_table_name('tenders', 'tender', 'items')
     'tenders_items'
     >>> generate_table_name('tenders', 'items', 'additionalClassifications')
-    'tenders_items_addit'
+    'tenders_items_class'
     >>> generate_table_name('parties', 'parties', 'roles')
     'parties_roles'
     """
+
+    if key in ABBREVIATION_KEY:
+        key = ABBREVIATION_KEY[key]
+
     if parent_key in parent_table:
-        return f"{parent_table}_{key[:5]}"
+        table_name = f"{parent_table}_{key}"
     else:
-        return f"{parent_table}_{parent_key[:5]}_{key[:5]}"
+        table_name = f"{parent_table}_{parent_key}_{key}"
+
+    if table_name in ABBREVIATION_TABLE_NAME:
+        table_name = ABBREVIATION_TABLE_NAME[table_name]
+
+    if len(table_name) >= 31:
+        if parent_key in parent_table:
+            table_name = f"{parent_table}_{key[:5]}"
+        else:
+            table_name = f"{parent_table}_{parent_key[:5]}_{key[:5]}"
+
+    return table_name
 
 
 def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):

@@ -70,7 +70,7 @@ def test_add_child_table(root_table):
     data = root_table.dump()
     assert not data["parent"]
     child = add_child_table(root_table, "/tender/tenderers", "", "tenderers")
-    assert child.name == "tenders_tende"
+    assert child.name == "tenders_tenderers"
     assert child.name in root_table.child_tables
     assert child.total_rows == 0
     data = child.dump()
