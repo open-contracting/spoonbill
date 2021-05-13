@@ -314,3 +314,9 @@ def get_headers(table, options):
         for c, h in options.headers.items():
             headers[c] = h
     return headers
+
+
+def read_lines(path):
+    """Read file as lines"""
+    with open(path) as fd:
+        return fd.readlines()

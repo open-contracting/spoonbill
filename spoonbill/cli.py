@@ -11,7 +11,7 @@ from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import _
-from spoonbill.utils import resolve_file_uri
+from spoonbill.utils import read_lines, resolve_file_uri
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("spoonbill")
@@ -31,6 +31,12 @@ class CommaSeparated(click.ParamType):
         if not value:
             return []
         return [v.lower() for v in value.split(",")]
+
+
+def read_option_file(option, option_file):
+    if option_file:
+        option = read_lines(option_file)
+    return option
 
 
 def get_selected_tables(base, selection):
@@ -79,19 +85,37 @@ def should_split(spec, table_name, split, threshold=TABLE_THRESHOLD):
     default=True,
     is_flag=True,
 )
+@click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
 @click.option(
     "--unnest",
-    help=_("Output column to parent table"),
+    help=_("Extract columns form child tables to parent table"),
     type=CommaSeparated(),
     default="",
 )
-@click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
+@click.option(
+    "--unnest-file",
+    help=_("Same as --unnest, but read columns from a file"),
+    type=click.Path(exists=True),
+    required=False,
+)
 @click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated(), default="")
+@click.option(
+    "--only-file",
+    help=_("Same as --only, but read columns from a file"),
+    type=click.Path(exists=True),
+    required=False,
+)
 @click.option(
     "--repeat",
     help=_("Repeat a column from a parent sheet onto child tables"),
     type=CommaSeparated(),
     default="",
+)
+@click.option(
+    "--repeat-file",
+    help=_("Same as --repeat, but read columns from a file"),
+    type=click.Path(exists=True),
+    required=False,
 )
 @click.option(
     "--count", help=_("For each array field, add a count column to the parent table"), is_flag=True, default=False
@@ -111,10 +135,13 @@ def cli(
     state_file,
     xlsx,
     csv,
-    unnest,
     combine,
+    unnest,
+    unnest_file,
     only,
+    only_file,
     repeat,
+    repeat_file,
     count,
     human,
 ):
@@ -193,21 +220,33 @@ def cli(
         analyzer.dump_to_file(state_file)
 
     click.echo(_("Flattening file: {}").format(click.style(str(path), fg="cyan")))
+
+    if unnest and unnest_file:
+        raise click.UsageError(_("Conflicting options: unnest and unnest-file"))
+    if repeat and repeat_file:
+        raise click.UsageError(_("Conflicting options: repeat and repeat-file"))
+    if only and only_file:
+        raise click.UsageError(_("Conflicting options: only and only-file"))
+
     options = {"selection": {}, "count": count}
+    unnest = read_option_file(unnest, unnest_file)
+    repeat = read_option_file(repeat, repeat_file)
+    only = read_option_file(only, only_file)
+
     for name in selection:
         table = analyzer.spec[name]
         if table.total_rows == 0:
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
+
         unnest = [col for col in unnest if col in table]
-        only = [col for col in only if col in table]
-        repeat = [col for col in repeat if col in table]
         if unnest:
             click.echo(
                 _("Unnesting columns {} for table {}").format(
                     click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
                 )
             )
+
         only = [col for col in only if col in table]
         if only:
             click.echo(
@@ -215,6 +254,7 @@ def cli(
                     click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
                 )
             )
+
         repeat = [col for col in repeat if col in table]
         if repeat:
             click.echo(
