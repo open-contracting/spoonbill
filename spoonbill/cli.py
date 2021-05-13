@@ -47,15 +47,8 @@ def get_selected_tables(base, selection):
     return {name: tab for name, tab in base.items() if name in selection}
 
 
-def should_split(spec, table_name, split, threshold=TABLE_THRESHOLD):
-    table = spec.tables[table_name]
-    if table_name in split:
-        return True
-    return any((i > threshold for i in table.arrays.values()))
-
-
 # TODO: we could provide two commands: flatten and analyze
-# TODO: generated state-file + overridden options could lead to unexpected bugs, raise error?
+# TODO: generated state-file + schema how to validate
 
 
 @click.command(help=_("CLI tool to flatten OCDS datasets"))
@@ -270,7 +263,7 @@ def cli(
             )
 
         options["selection"][name] = {
-            "split": should_split(analyzer.spec, name, split),
+            "split": split or analyzer.spec[name].should_split,
             "pretty_headers": human,
             "unnest": unnest,
             "only": only,
