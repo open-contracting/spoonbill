@@ -11,6 +11,7 @@ requires = [
     "xlsxwriter",
     "requests",
     "click",
+    "click_logging",
     "ocdskit",
     "ocdsextensionregistry",
     'dataclasses;python_version<"3.7"',

@@ -4,6 +4,7 @@ import pathlib
 from itertools import chain
 
 import click
+import click_logging
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -13,10 +14,11 @@ from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import _
 from spoonbill.utils import read_lines, resolve_file_uri
 
-logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("spoonbill")
-CURRENT_SCHEMA_TAG = "1__1__5"
+click_logging.basic_config(LOGGER)
 
+
+CURRENT_SCHEMA_TAG = "1__1__5"
 # TODO: check i18n
 ANALYZED_LABEL = _("  Processed {} objects")
 FLATTENED_LABEL = _("  Flattened {} objects")
@@ -123,6 +125,7 @@ def get_selected_tables(base, selection):
     help=_("Language for headings"),
     type=click.Choice(["en", "es", "fr", "it"], case_sensitive=False),
 )
+@click_logging.simple_verbosity_option(LOGGER)
 @click.argument("filename", type=click.Path(exists=True))
 def cli(
     filename,
