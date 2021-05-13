@@ -37,6 +37,8 @@ setup(
         "test": test_requires,
         "docs": docs_requires,
     },
+    package_data={"spoonbill": ["locale/*/*/*.mo", "locale/*/*/*.po"]},
+    include_package_data=True,
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
