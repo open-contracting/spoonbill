@@ -125,6 +125,11 @@ def should_split(spec, table_name, split, threshold=TABLE_THRESHOLD):
     help=_("Use the schema's title properties for column headings"),
     is_flag=True,
 )
+@click.option(
+    "--language",
+    help=_("Language for headings"),
+    type=click.Choice(["en", "es", "fr", "it"], case_sensitive=False),
+)
 @click.argument("filename", type=click.Path(exists=True))
 def cli(
     filename,
@@ -144,6 +149,7 @@ def cli(
     repeat_file,
     count,
     human,
+    language,
 ):
     """Spoonbill cli entry point"""
     click.echo(_("Detecting input file format"))
