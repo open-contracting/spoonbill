@@ -209,12 +209,12 @@ def cli(
         # Progress bar not showing with small files
         # https://github.com/pallets/click/pull/1296/files
         with click.progressbar(width=0, show_percent=True, show_pos=True, length=total) as bar:
-            for read, count in analyzer.analyze_file(filename, with_preview=True):
-                bar.label = ANALYZED_LABEL.format(click.style(str(count), fg="cyan"))
+            for read, number in analyzer.analyze_file(filename, with_preview=True):
+                bar.label = ANALYZED_LABEL.format(click.style(str(number), fg="cyan"))
                 bar.update(read - progress)
                 progress = read
         click.secho(
-            _("Done processing. Analyzed objects: {}").format(click.style(str(count + 1), fg="red")), fg="green"
+            _("Done processing. Analyzed objects: {}").format(click.style(str(number + 1), fg="red")), fg="green"
         )
         state_file = pathlib.Path(f"{filename}.analyzed.json")
         state_file_path = workdir / state_file
