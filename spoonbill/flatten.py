@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import JOINABLE
+from spoonbill.common import JOINABLE, ROOT_TABLES
 from spoonbill.i18n import _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_pointer, get_root
@@ -260,4 +260,15 @@ class Flattener:
                                 continue
                         pointer = get_pointer(pointer, abs_path, key, split, separator, table.is_root)
                         rows[table.name][-1][pointer] = item
+
+            if "parties" in rows:
+                for value in ROOT_TABLES["buyer"]:
+                    self.tables.get("parties").add_column(
+                        path=value,
+                        item={"title": f"Buyer {(value.split('/')).pop()}", "type": "string", "id": value},
+                        item_type="string",
+                        parent=release,
+                    )
+                    rows["parties"][0][value] = release["buyer"][(value.split("/")).pop()]
+
             yield counter, rows

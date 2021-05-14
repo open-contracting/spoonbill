@@ -4,6 +4,7 @@ import logging
 import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException
 
+from spoonbill.common import ROOT_TABLES
 from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
@@ -55,7 +56,10 @@ class XlsxWriter:
         sheet = self.workbook.get_worksheet_by_name(table_name)
 
         for column, value in row.items():
-            col_index = self.col_index[table][column]
+            if any(field in column for field in ROOT_TABLES["buyer"]):
+                col_index = len(self.col_index[table])
+            else:
+                col_index = self.col_index[table][column]
             try:
                 sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:

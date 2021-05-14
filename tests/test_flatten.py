@@ -137,3 +137,12 @@ def test_flatten_with_only(spec_analyzed, releases):
             all_rows[name].extend(rows)
     for row in all_rows["tenders"]:
         assert row == ["/tender/id"]
+
+
+def test_flatten_buyer(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"parties": {"split": False}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            assert rows[0]["/parties/buyer/id"]
+            assert rows[0]["/parties/buyer/name"]

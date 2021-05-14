@@ -1,6 +1,7 @@
 import csv
 import logging
 
+from spoonbill.common import ROOT_TABLES
 from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
@@ -53,6 +54,10 @@ class CSVWriter:
     def writerow(self, table, row):
         """Write row to output file"""
         try:
+            for field in ROOT_TABLES["buyer"]:
+                if self.writers["parties"] and field in row:
+                    self.writers["parties"].fieldnames[field] = f"Buyer {(field.split('/')).pop()}"
+
             self.writers[table].writerow(row)
         except ValueError as err:
             LOGGER.error(_("Failed to write row {} with error {}").format(row["rowID"], err))
