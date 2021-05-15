@@ -3,11 +3,10 @@ from json import dump, load
 import pytest
 from jmespath import search
 
-from spoonbill.spec import Column, Table
+from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import recalculate_headers
 from tests.data import (
-    OCDS_TITLES_COMBINED,
     TEST_ROOT_TABLES,
     awards_arrays,
     awards_columns,
@@ -62,13 +61,11 @@ def test_parse_schema(schema, spec):
             assert isinstance(col, Column)
             assert col.hits == 0
             assert col.id == col_id
-            assert col.title == OCDS_TITLES_COMBINED[col_id]
 
         for col_id in COMBINED_COLUMNS[name]:
             col = table.combined_columns[col_id]
             assert col.hits == 0
             assert col.id == col_id
-            assert col.title == OCDS_TITLES_COMBINED[col_id]
 
         for col_id in ARRAYS_COLUMNS[name]:
             col = table.arrays[col_id]
@@ -93,12 +90,6 @@ def test_get_table(spec, releases):
     assert table.name == "planning"
     table = spec.get_table("/parties")
     assert table.name == "parties"
-
-
-def test_generate_titles(spec):
-    for table in spec.tables.values():
-        for path, title in table.titles.items():
-            assert OCDS_TITLES_COMBINED[path] == title
 
 
 # TODO: analyze combined tables
@@ -171,12 +162,12 @@ def test_recalculate_headers(root_table, releases):
     ):
         assert key in root_table.combined_columns
         assert key in root_table.columns
-
     for key in ("/tender/items/1/id", "/tender/items/1/additionalClassifications/0/id"):
         assert key not in root_table.combined_columns
         assert key not in root_table.columns
     items = items * 2
     recalculate_headers(root_table, "/tender/items", "/tender", "items", items, False)
+
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",
