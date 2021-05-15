@@ -241,7 +241,7 @@ def cli(
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
 
-        unnest = [col for col in unnest if col in table]
+        unnest = [col for col in unnest if col in table.combined_columns]
         if unnest:
             click.echo(
                 _("Unnesting columns {} for table {}").format(
@@ -261,7 +261,7 @@ def cli(
         if repeat:
             click.echo(
                 _("Repeating columns {} in all child table of {}").format(
-                    click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
+                    click.style(",".join(repeat), fg="cyan"), click.style(name, fg="cyan")
                 )
             )
 

@@ -5,7 +5,6 @@ from spoonbill import FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
 
 from .conftest import releases_path
-
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -202,7 +201,7 @@ def test_abbreviations(spec, tmpdir):
     tables = prepare_tables(spec, options)
     for name, table in tables.items():
         for col in table:
-            table.inc_column(col)
+            table.inc_column(col, col)
 
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
