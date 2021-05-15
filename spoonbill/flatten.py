@@ -6,7 +6,7 @@ from typing import List, Mapping, Sequence
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE
 from spoonbill.i18n import _
 from spoonbill.spec import Table
-from spoonbill.utils import generate_row_id, get_matching_tables, get_root
+from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -101,9 +101,10 @@ class Flattener:
         split = options.split
         only = options.only
 
-        if split and c_table.should_split:
-            options = TableFlattenConfig(split=True)
-            self.options.selection[c_table.name] = options
+        if split and c_table.roll_up:
+            if c_table.name not in self.options.selection:
+                options = TableFlattenConfig(split=True)
+                self.options.selection[c_table.name] = options
             self._init_table_cache(self.tables, c_table)
         else:
             # use parent table
@@ -163,20 +164,25 @@ class Flattener:
                     parts[-1] = title
                     path = "/".join(parts)
                     target = self._types_cache.get(array) or table
-                    target.add_column(
-                        path,
-                        {"title": f"{key} count"},
-                        "integer",
-                        parent={},
-                    )
-                    if table.arrays[array] > 0:
-                        target.inc_column(path)
-
+                    combined = split and table.should_split
+                    if combined:
+                        # add count columns only if table is rolled up
+                        # in other way it could be frustrating
+                        # e.g. it may generate columns for whole array (/tender/items/200/additionalClassificationsCount)
+                        target.add_column(
+                            path,
+                            {"title": f"{key} count"},
+                            "integer",
+                            parent={},
+                            additional=True,
+                            combined_only=not combined,
+                            propagate=False,
+                        )
+                        target.inc_column(path, path)
             if unnest:
                 for col_id in unnest:
                     col = table.combined_columns[col_id]
                     table.columns[col_id] = col
-
             if repeat:
                 for col_id in repeat:
                     columns = table.columns if split else table.combined_columns
@@ -205,32 +211,6 @@ class Flattener:
         table.columns = columns
         table.combined_columns = columns
         table.types = not_columns
-
-    def get_pointer(self, pointer, abs_path, key, split, separator="/", is_root=True, index=None):
-        if abs_path and is_root and index:
-            return separator.join((abs_path, key, index))
-        if not split:
-            return separator.join((abs_path, key))
-        if split:
-            if pointer not in self._lookup_cache:
-                return separator.join((abs_path, key))
-            return pointer
-        return separator.join((abs_path, key))
-
-    def get_table(self, path):
-        """Get best matching table for `path`
-
-        :param path: Path to find corresponding table
-        :return: Best matching table
-        """
-        if path in self._lookup_cache:
-            return self._lookup_cache[path]
-        candidates = get_matching_tables(self.tables, path)
-        if not candidates:
-            return
-        table = candidates[0]
-        self._lookup_cache[path] = table
-        return table
 
     def flatten(self, releases):
         """Flatten releases
@@ -285,22 +265,26 @@ class Flattener:
                             value = JOINABLE.join(item)
                             rows[table.name][-1][pointer] = value
                         else:
-                            if self.options.count:
-                                abs_pointer = self.get_pointer(
+                            if self.options.count and pointer not in table.path and split and table.should_split:
+                                abs_pointer = get_pointer(
+                                    table,
+                                    abs_pointer,
                                     pointer,
-                                    abs_path,
-                                    key,
                                     split,
-                                    separator,
-                                    table.is_root,
+                                    separator=separator,
                                 )
                                 abs_pointer += "Count"
                                 if abs_pointer in table:
                                     rows[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    abs_pointer = self.get_pointer(
-                                        pointer, abs_path, key, split, separator, table.is_root, index=str(index)
+                                    abs_pointer = get_pointer(
+                                        table,
+                                        separator.join((abs_path, key)),
+                                        pointer,
+                                        split,
+                                        separator=separator,
+                                        index=str(index),
                                     )
                                     to_flatten.append(
                                         (
@@ -319,6 +303,6 @@ class Flattener:
                             if unnest and abs_pointer in unnest:
                                 rows[root.name][-1][abs_pointer] = item
                                 continue
-                        pointer = self.get_pointer(pointer, abs_path, key, split, separator, table.is_root)
+                        pointer = get_pointer(table, abs_pointer, pointer, split, separator=separator)
                         rows[table.name][-1][pointer] = item
             yield counter, rows

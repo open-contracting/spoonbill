@@ -12,6 +12,7 @@ from spoonbill.utils import (
     extract_type,
     generate_row_id,
     get_matching_tables,
+    get_pointer,
     get_root,
     recalculate_headers,
     resolve_file_uri,
@@ -67,11 +68,6 @@ class DataPreprocessor:
         """Initialize root tables with default fields"""
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
-            for col in DEFAULT_FIELDS:
-                column = Column(col, "string", col)
-                table.columns[col] = column
-                table.combined_columns[col] = column
-                table.titles[col] = col
             self.tables[name] = table
             for p in path:
                 self._table_by_path[p] = table
@@ -116,11 +112,7 @@ class DataPreprocessor:
                         if set(items_type) & {"array", "object"}:
                             if pointer not in self.current_table.path:
                                 # found child array, need to create child table
-                                child_table = add_child_table(self.current_table, pointer, parent_key, key)
-                                self.tables[child_table.name] = child_table
-                                self._lookup_cache = {}
-                                self.current_table = child_table
-                                self._table_by_path[pointer] = child_table
+                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
                             to_analyze.append((pointer, key, properties, items))
                         else:
                             # This means we in array of strings, so this becomes a single joinable column
@@ -134,6 +126,12 @@ class DataPreprocessor:
             else:
                 # TODO: not sure what to do here
                 continue
+
+    def _add_table(self, table, pointer):
+        self.tables[table.name] = table
+        self.current_table = table
+        for cache in self._lookup_cache, self._table_by_path:
+            cache[pointer] = table
 
     def get_table(self, path):
         """Get best matching table for `path`
@@ -165,10 +163,9 @@ class DataPreprocessor:
         if parent_table:
             defaults["parentTable"] = parent_table
         self.current_table.preview_rows.append(defaults)
-        if self.current_table.is_root:
-            self.current_table.preview_rows_combined.append(
-                {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
-            )
+        self.current_table.preview_rows_combined.append(
+            {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
+        )
 
     def process_items(self, releases, with_preview=True):
         """Analyze releases
@@ -189,12 +186,13 @@ class DataPreprocessor:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
                 table = self._table_by_path.get(path)
                 if table:
-                    table.inc()
-                    for col_name in DEFAULT_FIELDS:
-                        table.inc_column(col_name)
-
                     # TODO: fields without ids??
                     row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
+                    table.inc()
+
+                    for col_name in DEFAULT_FIELDS:
+                        table.inc_column(col_name, col_name)
+
                     self.current_table = table
                     if with_preview and count < PREVIEW_ROWS:
                         self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_key)
@@ -222,10 +220,11 @@ class DataPreprocessor:
                         )
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
-                            self.current_table.inc_column(pointer)
+                            abs_pointer = separator.join([abs_path, key])
+                            self.current_table.inc_column(abs_pointer, pointer)
                             if with_preview and count < PREVIEW_ROWS:
                                 value = JOINABLE_SEPARATOR.join(item)
-                                self.current_table.preview_rows[-1][pointer] = value
+                                self.current_table.set_preview_path(abs_pointer, pointer, value, self.table_threshold)
                         elif self.current_table.is_root or self.current_table.is_combined:
                             abs_pointer = separator.join([abs_path, key])
                             for value in item:
@@ -239,18 +238,19 @@ class DataPreprocessor:
                                     )
                                 )
                         else:
-                            root = get_root(self.current_table)
-                            if pointer not in root.arrays:
-                                # TODO: do we need to mark this table as additional
-                                child_table = add_child_table(self.current_table, pointer, parent_key, key)
+                            parent_table = self.current_table.parent
+                            if pointer not in parent_table.arrays:
                                 self.current_table.types[pointer] = ["array"]
-                                self.tables[child_table.name] = child_table
-                                self._lookup_cache[pointer] = child_table
-                                self._table_by_path[pointer] = child_table
-                            if root.set_array(pointer, item):
-                                self.current_table.should_split = len(item) >= self.table_threshold
+                                # TODO: do we need to mark this table as additional
+                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key))
+
+                            if parent_table.set_array(pointer, item):
+                                should_split = len(item) >= self.table_threshold
+                                if should_split:
+                                    parent_table.should_split = True
+                                    self.current_table.roll_up = True
                                 recalculate_headers(
-                                    root, pointer, abs_path, key, item, self.current_table.should_split, separator
+                                    parent_table, pointer, abs_path, key, item, should_split, separator
                                 )
 
                             for i, value in enumerate(item):
@@ -289,14 +289,9 @@ class DataPreprocessor:
                                 additional=True,
                                 abs_path=abs_pointer,
                             )
-                        self.current_table.inc_column(pointer)
-                        root.inc_column(abs_pointer, combined=True)
+                        self.current_table.inc_column(abs_pointer, pointer)
                         if with_preview and count < PREVIEW_ROWS:
-                            array = root.is_array(pointer)
-                            if array and root.arrays[array] < self.table_threshold:
-                                root.preview_rows[-1][abs_pointer] = item
-                            self.current_table.preview_rows[-1][pointer] = item
-                            root.preview_rows_combined[-1][abs_pointer] = item
+                            self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
         self.total_items = count
 

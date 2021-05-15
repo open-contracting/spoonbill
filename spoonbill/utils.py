@@ -248,7 +248,7 @@ def recalculate_headers(root, path, abs_path, key, item, should_split, separator
     tail = OrderedDict()
     cols = head
     base_prefix = separator.join((abs_path, key))
-    zero_prefix = separator.join((base_prefix, "0"))
+    zero_prefix = get_pointer(root, separator.join((base_prefix, "0")), path, True)
 
     zero_cols = {
         col_p: col
@@ -257,7 +257,7 @@ def recalculate_headers(root, path, abs_path, key, item, should_split, separator
     }
     new_cols = {}
     for col_i, _ in enumerate(item[1:], 1):
-        col_prefix = separator.join((base_prefix, str(col_i)))
+        col_prefix = get_pointer(root, separator.join((base_prefix, str(col_i))), path, True)
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
@@ -304,8 +304,8 @@ def get_headers(table, options):
     :param options: Flattening options
     :return: Mapping between column and its header
     """
-    is_root = table.is_root
-    split = options.split if is_root else table.should_split
+    split = options.split and table.roll_up
+    # split = options.split if is_root else table.should_split
     headers = {c: c for c in table.available_rows(split=split)}
     if options.pretty_headers:
         for c in headers:
@@ -320,3 +320,34 @@ def read_lines(path):
     """Read file as lines"""
     with open(path) as fd:
         return fd.readlines()
+
+
+def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
+    """Combine path and abs_path in order to fit table columns
+
+    For example /tender/items/0/id should be /tender/items/0/id for tenders table
+    but /tender/items/id for tenders_items table
+    """
+    array = table.is_array(path)
+    if index and array:
+        return separator.join((abs_path, index))
+    if table.is_root:
+        return abs_path
+
+    if array:
+        paths = abs_path.split(separator)
+        prefix = ""
+
+        for index, pth in enumerate(paths, 1):
+            if pth.isdigit():
+                continue
+            if not pth:
+                continue
+            prefix = separator.join((prefix, pth))
+            if prefix == array:
+                break
+        pointer = separator.join(paths[index:])
+        if pointer:
+            return separator.join((prefix, pointer))
+        return prefix
+    return path
