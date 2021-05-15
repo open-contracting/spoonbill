@@ -240,9 +240,10 @@ class DataPreprocessor:
                         else:
                             parent_table = self.current_table.parent
                             if pointer not in parent_table.arrays:
+                                LOGGER.warning(_("Detected additional table: {}").format(pointer))
                                 self.current_table.types[pointer] = ["array"]
                                 # TODO: do we need to mark this table as additional
-                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key))
+                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
 
                             if parent_table.set_array(pointer, item):
                                 should_split = len(item) >= self.table_threshold
@@ -278,9 +279,15 @@ class DataPreprocessor:
                         root = get_root(self.current_table)
                         abs_pointer = separator.join((abs_path, key))
                         if self.current_table.is_combined:
+                            LOGGER.debug(
+                                _("Path %s is targeted to combined table %s") % (pointer, self.current_table.name)
+                            )
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
+                            LOGGER.warning(
+                                _("Detected additional column: {} in {} table").format(abs_pointer, root.name)
+                            )
                             self.current_table.add_column(
                                 pointer,
                                 {"title": key},
