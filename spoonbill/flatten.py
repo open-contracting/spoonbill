@@ -198,6 +198,7 @@ class Flattener:
                         if child_table:
                             # if false means table isnt rolled up
                             child_table.columns[col_id] = col
+                            child_table.combined_columns[col_id] = col
                             child_table.titles[col_id] = title
 
     def _only(self, table, only, split):
@@ -239,6 +240,8 @@ class Flattener:
                         "parentID": parent.get("id"),
                         "ocid": ocid,
                     }
+                    if table.is_root:
+                        repeat = {}
                     if repeat:
                         new_row.update(repeat)
                     rows[table.name].append(new_row)
