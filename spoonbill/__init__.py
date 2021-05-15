@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES
@@ -6,6 +7,8 @@ from spoonbill.flatten import Flattener
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter
+
+LOGGER = logging.getLogger("spoonbill")
 
 
 class FileAnalyzer:
@@ -42,9 +45,10 @@ class FileAnalyzer:
         :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
-        items = iter_file(path, self.root_key)
-        for count in self.spec.process_items(items, with_preview=with_preview):
-            yield count
+        with open(path, "rb") as fd:
+            items = iter_file(fd, self.root_key)
+            for count in self.spec.process_items(items, with_preview=with_preview):
+                yield fd.tell(), count
 
     def dump_to_file(self, filename):
         """Save analyzed information to file
@@ -95,13 +99,13 @@ class FileFlattener:
         path = self.workdir / filename
         for w in self.writers:
             w.writeheaders()
-
-        items = iter_file(path, self.root_key)
-        for count, data in self.flattener.flatten(items):
-            for table, rows in data.items():
-                for row in rows:
-                    self.writerow(table, row)
-            yield count
+        with open(path, "rb") as fd:
+            items = iter_file(fd, self.root_key)
+            for count, data in self.flattener.flatten(items):
+                for table, rows in data.items():
+                    for row in rows:
+                        self.writerow(table, row)
+                yield count
         self._close()
 
 

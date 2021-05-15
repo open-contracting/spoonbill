@@ -3,10 +3,10 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import JOINABLE
+from spoonbill.common import DEFAULT_FIELDS, JOINABLE
 from spoonbill.i18n import _
 from spoonbill.spec import Table
-from spoonbill.utils import generate_row_id, get_pointer, get_root
+from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -26,7 +26,6 @@ class TableFlattenConfig:
     split: bool
     pretty_headers: bool = False
     headers: Mapping[str, str] = field(default_factory=dict)
-    only: List[str] = field(default_factory=list)
     repeat: List[str] = field(default_factory=list)
     unnest: List[str] = field(default_factory=list)
     only: List[str] = field(default_factory=list)
@@ -35,7 +34,6 @@ class TableFlattenConfig:
 
 @dataclass
 class FlattenOptions:
-
     """Flattening configuration
 
     :param selection: List of selected tables to extract from data
@@ -79,7 +77,61 @@ class Flattener:
         self._lookup_cache = {}
         self._types_cache = {}
         self._path_cache = {}
-        self._init()
+
+        # init cache and filter only selected tables
+        self.tables = {}
+        for name, table in tables.items():
+            if name not in self.options.selection:
+                continue
+            options = self.options.selection[name]
+            split = options.split
+            only = options.only
+            if only:
+                self._only(table, only, split)
+            self._init_table_cache(self.tables, table)
+            for c_name in table.child_tables:
+                if c_name in self.options.exclude:
+                    continue
+
+                c_table = tables[c_name]
+                self._init_child_tables(tables, table, c_table, options)
+        self._init_options(self.tables)
+
+    def _init_child_tables(self, tables, table, c_table, options):
+        split = options.split
+        only = options.only
+
+        if split and c_table.roll_up:
+            if c_table.name not in self.options.selection:
+                options = TableFlattenConfig(split=True)
+                self.options.selection[c_table.name] = options
+            self._init_table_cache(self.tables, c_table)
+        else:
+            # use parent table
+            self._init_cache(self._types_cache, c_table.types, table, only=only)
+            self._init_cache(self._lookup_cache, c_table.combined_columns, table, only=only)
+        if c_table.child_tables:
+            for c_name in c_table.child_tables:
+                if c_name in self.options.exclude:
+                    continue
+                cc_table = tables[c_name]
+                self._init_child_tables(tables, table, cc_table, options)
+
+    def _init_cache(self, cache, paths, table, only=None):
+        for path in paths:
+            if path not in DEFAULT_FIELDS:
+                if not only or (only and path in only):
+                    cache[path] = table
+
+    def _cache_path(self, table):
+        self._init_cache(self._path_cache, table.path, table)
+
+    def _cache_types(self, table):
+        self._init_cache(self._types_cache, table.types, table)
+
+    def _cache_cols(self, table, split):
+        cols = table if split else table.combined_columns
+        self._init_cache(self._lookup_cache, cols, table)
 
     def _init_table_cache(self, tables, table):
         if table.total_rows == 0:
@@ -90,14 +142,9 @@ class Flattener:
         split = options.split
         tables[name] = table
 
-        for p in table.path:
-            self._path_cache[p] = table
-        for path in table.types:
-            self._types_cache[path] = table
-
-        cols = table if split else table.combined_columns
-        for path in cols:
-            self._lookup_cache[path] = table
+        self._cache_path(table)
+        self._cache_types(table)
+        self._cache_cols(table, split)
 
     def _init_options(self, tables):
         for table in tables.values():
@@ -117,20 +164,25 @@ class Flattener:
                     parts[-1] = title
                     path = "/".join(parts)
                     target = self._types_cache.get(array) or table
-                    target.add_column(
-                        path,
-                        {"title": f"{key} count"},
-                        "integer",
-                        parent={},
-                    )
-                    if table.arrays[array] > 0:
-                        target.inc_column(path)
-
+                    combined = split and table.should_split
+                    if combined:
+                        # add count columns only if table is rolled up
+                        # in other way it could be frustrating
+                        # e.g. it may generate columns for whole array (/tender/items/200/additionalClassificationsCount)
+                        target.add_column(
+                            path,
+                            {"title": f"{key} count"},
+                            "integer",
+                            parent={},
+                            additional=True,
+                            combined_only=not combined,
+                            propagate=False,
+                        )
+                        target.inc_column(path, path)
             if unnest:
                 for col_id in unnest:
                     col = table.combined_columns[col_id]
                     table.columns[col_id] = col
-
             if repeat:
                 for col_id in repeat:
                     columns = table.columns if split else table.combined_columns
@@ -143,38 +195,23 @@ class Flattener:
                         continue
                     for c_name in table.child_tables:
                         child_table = self.tables.get(c_name)
-                        child_table.columns[col_id] = col
-                        child_table.titles[col_id] = title
+                        if child_table:
+                            # if false means table isnt rolled up
+                            child_table.columns[col_id] = col
+                            child_table.combined_columns[col_id] = col
+                            child_table.titles[col_id] = title
 
     def _only(self, table, only, split):
-        table.types = {c_id: c for c_id, c in table.types.items() if c_id in only}
-
+        only = only + DEFAULT_FIELDS
+        columns = table.columns
         if split:
-            table.columns = {c_id: c for c_id, c in table.columns.items() if c_id in only}
-            return
-        table.combined_columns = {c_id: c for c_id, c in table.combined_columns.items() if c_id in only}
-
-    def _init(self):
-        # init cache and filter only selected tables
-        tables = {}
-        for name, table in self.tables.items():
-            if name not in self.options.selection:
-                continue
-            options = self.options.selection[name]
-            split = options.split
-            if options.only:
-                self._only(table, options.only, split)
-            self._init_table_cache(tables, table)
-            if split:
-                for c_name in table.child_tables:
-                    if c_name in self.options.exclude:
-                        continue
-
-                    c_table = self.tables[c_name]
-                    self.options.selection[c_name] = TableFlattenConfig(split=True)
-                    self._init_table_cache(tables, c_table)
-        self.tables = tables
-        self._init_options(self.tables)
+            columns = table.combined_columns
+        not_columns = {c_id: c for c_id, c in table.types.items() if c_id not in columns}
+        columns = {c_id: c for c_id, c in columns.items() if c_id in only}
+        not_columns.update(columns)
+        table.columns = columns
+        table.combined_columns = columns
+        table.types = not_columns
 
     def flatten(self, releases):
         """Flatten releases
@@ -192,6 +229,7 @@ class Flattener:
 
             while to_flatten:
                 abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
+
                 table = self._path_cache.get(path)
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
@@ -202,17 +240,21 @@ class Flattener:
                         "parentID": parent.get("id"),
                         "ocid": ocid,
                     }
+                    if table.is_root:
+                        repeat = {}
                     if repeat:
                         new_row.update(repeat)
                     rows[table.name].append(new_row)
 
                 for key, item in record.items():
                     pointer = separator.join((path, key))
+                    abs_pointer = separator.join((abs_path, key))
+
                     table = self._lookup_cache.get(pointer) or self._types_cache.get(pointer)
                     if not table:
                         continue
+
                     item_type = table.types.get(pointer)
-                    abs_pointer = separator.join((abs_path, key))
                     options = self.options.selection[table.name]
                     split = options.split
 
@@ -226,21 +268,27 @@ class Flattener:
                             value = JOINABLE.join(item)
                             rows[table.name][-1][pointer] = value
                         else:
-                            if self.options.count:
+                            if self.options.count and pointer not in table.path and split and table.should_split:
                                 abs_pointer = get_pointer(
+                                    table,
+                                    abs_pointer,
                                     pointer,
-                                    abs_path,
-                                    key,
                                     split,
-                                    separator,
-                                    table.is_root,
+                                    separator=separator,
                                 )
                                 abs_pointer += "Count"
                                 if abs_pointer in table:
                                     rows[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    abs_pointer = separator.join((abs_path, key, str(index)))
+                                    abs_pointer = get_pointer(
+                                        table,
+                                        separator.join((abs_path, key)),
+                                        pointer,
+                                        split,
+                                        separator=separator,
+                                        index=str(index),
+                                    )
                                     to_flatten.append(
                                         (
                                             abs_pointer,
@@ -258,6 +306,6 @@ class Flattener:
                             if unnest and abs_pointer in unnest:
                                 rows[root.name][-1][abs_pointer] = item
                                 continue
-                        pointer = get_pointer(pointer, abs_path, key, split, separator, table.is_root)
+                        pointer = get_pointer(table, abs_pointer, pointer, split, separator=separator)
                         rows[table.name][-1][pointer] = item
             yield counter, rows
