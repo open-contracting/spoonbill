@@ -55,7 +55,10 @@ class CSVWriter:
         try:
             self.writers[table].writerow(row)
         except ValueError as err:
-            LOGGER.error(_("Failed to write row {} with error {}").format(row["rowID"], err))
+            LOGGER.error(_("Operation produced invalid path. This a software bug, please send issue to developers"))
+            LOGGER.error(_("Failed to write row {} with error {}").format(row.get("rowID"), err))
+        except KeyError:
+            LOGGER.error(_("Invalid table {}").format(table))
 
     def close(self):
         """Finish work"""

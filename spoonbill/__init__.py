@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES
@@ -6,6 +7,8 @@ from spoonbill.flatten import Flattener
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter
+
+LOGGER = logging.getLogger("spoonbill")
 
 
 class FileAnalyzer:

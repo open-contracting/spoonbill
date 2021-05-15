@@ -1,11 +1,11 @@
 from pathlib import Path
+from unittest.mock import call, patch
 
 from spoonbill import FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
 
 from .conftest import releases_path
 
-# from .data import *
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -136,7 +136,7 @@ def test_writers_flatten_count(spec, tmpdir, releases):
         **{
             "selection": {
                 "tenders": {"split": True, "pretty_headers": True},
-                "parties": {"split": False, "pretty_headers": True},
+                "parties": {"split": True, "pretty_headers": True},
                 "tenders_items": {
                     "split": False,
                     "pretty_headers": True,
@@ -176,7 +176,7 @@ def test_writers_table_name_override(spec, tmpdir):
     tables = prepare_tables(spec, options)
     for name, table in tables.items():
         for col in table:
-            table.inc_column(col)
+            table.inc_column(col, col)
 
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
@@ -212,3 +212,52 @@ def test_abbreviations(spec, tmpdir):
         assert path.is_file()
         assert read_xlsx_headers(xlsx, name)
         assert read_csv_headers(path)
+
+
+@patch("spoonbill.LOGGER.error")
+def test_writers_invalid_table(log, spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+
+    workdir = Path(tmpdir)
+    writers = get_writers(workdir, tables, options)
+    for writer in writers:
+        writer.writerow("test", {})
+    log.assert_has_calls([call("Invalid table test"), call("Invalid table test")])
+
+
+@patch("spoonbill.LOGGER.error")
+def test_writers_invalid_row(log, spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+
+    workdir = Path(tmpdir)
+    writers = get_writers(workdir, tables, options)
+    for writer in writers:
+        writer.writerow("parties", {"/test/test": "test"})
+    log.assert_has_calls(
+        [
+            call("Operation produced invalid path. This a software bug, please send issue to developers"),
+            call("Failed to write row None with error dict contains fields not in fieldnames: '/test/test'"),
+            call("Operation produced invalid path. This a software bug, please send issue to developers"),
+            call("Failed to write column /test/test to xlsx sheet parties"),
+        ]
+    )
