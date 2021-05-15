@@ -46,10 +46,38 @@ def test_flatten(spec_analyzed, releases):
                     count[name] += 1
 
 
-def test_flatten_with_count(spec_analyzed, releases):
+def test_flattener_generate_count_columns(spec, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
+    options = FlattenOptions(**{"selection": {"tenders": {"split": False}}, "count": True})
+    flattener = Flattener(options, spec.tables)
+    tenders = flattener.tables["tenders"]
+    assert "/tender/itemsCount" not in tenders
+    for index in range(tenders.arrays["/tender/items/additionalClassifications"]):
+        assert f"/tender/items/{index}/additionalClassificationsCount" not in tenders
 
+    options = FlattenOptions(
+        **{"selection": {"tenders": {"split": True}, "tenders_items": {"split": False}}, "count": True}
+    )
+    flattener = Flattener(options, spec.tables)
+    tenders = flattener.tables["tenders"]
+    tenders_items = flattener.tables["tenders_items"]
+    assert "/tender/itemsCount" in tenders
+    for index in range(tenders.arrays["/tender/items/additionalClassifications"]):
+        assert f"/tender/items/{index}/additionalClassificationsCount" not in tenders
+    assert "/tender/items/additionalClassificationsCount" in tenders_items
+
+
+def test_flatten_with_counters(spec, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    releases[0]["tender"]["items"][0]["additionalClassifications"] = (
+        releases[0]["tender"]["items"][0]["additionalClassifications"] * 6
+    )
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "count": True})
-    flattener = Flattener(options, spec_analyzed.tables)
+    flattener = Flattener(options, spec.tables)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             if name == "tenders":
