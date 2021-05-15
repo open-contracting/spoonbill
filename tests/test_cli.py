@@ -137,7 +137,7 @@ def test_repeat_file():
         result = runner.invoke(cli, ["--repeat-file", "only", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Repeating columns /tender/title in all child table of tenders" in result.output
+        assert "Repeating columns /tender/id,/tender/title in all child table of tenders" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
 
 

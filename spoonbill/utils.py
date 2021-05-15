@@ -319,7 +319,7 @@ def get_headers(table, options):
 def read_lines(path):
     """Read file as lines"""
     with open(path) as fd:
-        return fd.readlines()
+        return [line.strip() for line in fd.readlines()]
 
 
 def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
