@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
-from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer, get_root, prepare_title
+from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -88,7 +88,7 @@ class Table:
                     self.columns[col] = Column(col, "string", col)
                 if col not in self.combined_columns:
                     self.combined_columns[col] = Column(col, "string", col)
-                self.titles[col] = col
+                self.titles[col] = _(col)
 
     def _counter(self, split, cond):
         cols = self.columns if split else self.combined_columns
@@ -112,9 +112,7 @@ class Table:
     def add_column(
         self,
         path,
-        item,
         item_type,
-        parent,
         *,
         combined_only=False,
         propagate=True,
@@ -130,7 +128,7 @@ class Table:
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
         """
-        title = prepare_title(item, parent)
+        title = _(path)
         is_array = self.is_array(path)
         combined_path = combine_path(self, path)
         if not combined_only:
@@ -150,9 +148,7 @@ class Table:
         if not self.is_root and propagate:
             self.parent.add_column(
                 path,
-                item,
                 item_type,
-                parent=parent,
                 combined_only=combined_only,
                 additional=additional,
                 abs_path=abs_path,

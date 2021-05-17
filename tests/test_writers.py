@@ -159,7 +159,7 @@ def test_writers_flatten_count(spec, tmpdir, releases):
     sheet = "parties"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Additionalidentifiers Count" in headers
+        assert "Additional Identifiers Count" in headers
 
 
 def test_writers_table_name_override(spec, tmpdir):

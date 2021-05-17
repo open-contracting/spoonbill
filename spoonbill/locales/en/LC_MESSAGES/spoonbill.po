@@ -1,65 +1,1542 @@
-# English translations for PACKAGE package.
+# English translations for PROJECT.
 # Copyright (C) 2021 ORGANIZATION
-# yshalenyk <data@open-contracting.org>, 2021.
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-04-15 14:41+0300\n"
-"PO-Revision-Date: 2021-04-15 15:04+0300\n"
-"Last-Translator: yshalenyk <data@open-contracting.org>\n"
-"Language-Team: English\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Generated-By: pygettext.py 1.5\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2021-05-17 17:11+0300\n"
+"PO-Revision-Date: 2021-05-17 17:16+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.0\n"
 
-#: spoonbill/cli.py:25
+#: spoonbill/cli.py:23
+msgid "  Processed {} objects"
+msgstr ""
+
+#: spoonbill/cli.py:24
+msgid "  Flattened {} objects"
+msgstr "  Flattened {} objects"
+
+#: spoonbill/cli.py:47
+msgid "Wrong selection, table '{}' does not exist"
+msgstr "Wrong selection, table '{}' does not exist"
+
+#: spoonbill/cli.py:56
 msgid "CLI tool to flatten OCDS datasets"
 msgstr "CLI tool to flatten OCDS datasets"
 
-#: spoonbill/cli.py:26
+#: spoonbill/cli.py:57
 msgid "Schema file uri"
 msgstr "Schema file uri"
 
-#: spoonbill/cli.py:29
+#: spoonbill/cli.py:58
+msgid "List of tables to extract"
+msgstr "List of tables to extract"
+
+#: spoonbill/cli.py:61
+msgid "List of tables to split into multiple sheets"
+msgstr "List of tables to split into multiple sheets"
+
+#: spoonbill/cli.py:67
+msgid "Maximum number of elements in array before its spitted into table"
+msgstr "Maximum number of elements in array before its spitted into table"
+
+#: spoonbill/cli.py:73
 msgid "Uri to previously generated state file"
 msgstr "Uri to previously generated state file"
 
-#: spoonbill/cli.py:32
+#: spoonbill/cli.py:76
 msgid "Path to result xlsx file"
 msgstr "Path to result xlsx file"
 
-#: spoonbill/cli.py:35
+#: spoonbill/cli.py:79
 msgid "Path to directory for output csv files"
 msgstr "Path to directory for output csv files"
 
-#: spoonbill/cli.py:39
-msgid "Output column to parent table"
-msgstr "Output column to parent table"
-
-#: spoonbill/cli.py:40
+#: spoonbill/cli.py:83
 msgid "Combine same objects to single table"
 msgstr "Combine same objects to single table"
 
-#: spoonbill/cli.py:41
+#: spoonbill/cli.py:86
+msgid "Extract columns form child tables to parent table"
+msgstr "Extract columns form child tables to parent table"
+
+#: spoonbill/cli.py:92
+msgid "Same as --unnest, but read columns from a file"
+msgstr "Same as --unnest, but read columns from a file"
+
+#: spoonbill/cli.py:96
 msgid "Specify which fields to output"
 msgstr "Specify which fields to output"
 
-#: spoonbill/cli.py:44
-msgid ""
-"For array, use one field value as the column name and another field value as "
-"the cell value"
-msgstr ""
-"For array, use one field value as the column name and another field value as "
-"the cell value"
+#: spoonbill/cli.py:99
+msgid "Same as --only, but read columns from a file"
+msgstr "Same as --only, but read columns from a file"
 
-#: spoonbill/cli.py:49
+#: spoonbill/cli.py:105
 msgid "Repeat a column from a parent sheet onto child tables"
 msgstr "Repeat a column from a parent sheet onto child tables"
 
-#: spoonbill/cli.py:52
+#: spoonbill/cli.py:111
+msgid "Same as --repeat, but read columns from a file"
+msgstr "Same as --repeat, but read columns from a file"
+
+#: spoonbill/cli.py:116
 msgid "For each array field, add a count column to the parent table"
 msgstr "For each array field, add a count column to the parent table"
+
+#: spoonbill/cli.py:120
+msgid "Use the schema's title properties for column headings"
+msgstr "Use the schema's title properties for column headings"
+
+#: spoonbill/cli.py:125
+msgid "Language for headings"
+msgstr "Language for headings"
+
+#: spoonbill/cli.py:151
+msgid "Detecting input file format"
+msgstr "Detecting input file format"
+
+#: spoonbill/cli.py:159
+msgid "Input file is {}"
+msgstr "Input file is {}"
+
+#: spoonbill/cli.py:170 spoonbill/cli.py:176
+msgid "No schema provided, using version {}"
+msgstr "No schema provided, using version {}"
+
+#: spoonbill/cli.py:181
+msgid "Incomplete schema, please make sure your data is correct"
+msgstr "Incomplete schema, please make sure your data is correct"
+
+#: spoonbill/cli.py:195
+msgid "Restoring from provided state file"
+msgstr "Restoring from provided state file"
+
+#: spoonbill/cli.py:198
+msgid "State file not supplied, going to analyze input file first"
+msgstr "State file not supplied, going to analyze input file first"
+
+#: spoonbill/cli.py:206
+msgid "Processing file: {}"
+msgstr "Processing file: {}"
+
+#: spoonbill/cli.py:217
+msgid "Done processing. Analyzed objects: {}"
+msgstr "Done processing. Analyzed objects: {}"
+
+#: spoonbill/cli.py:221
+msgid "Dumping analyzed data to '{}'"
+msgstr "Dumping analyzed data to '{}'"
+
+#: spoonbill/cli.py:224
+msgid "Flattening file: {}"
+msgstr "Flattening file: {}"
+
+#: spoonbill/cli.py:227
+msgid "Conflicting options: unnest and unnest-file"
+msgstr ""
+
+#: spoonbill/cli.py:229
+msgid "Conflicting options: repeat and repeat-file"
+msgstr ""
+
+#: spoonbill/cli.py:231
+msgid "Conflicting options: only and only-file"
+msgstr ""
+
+#: spoonbill/cli.py:241
+msgid "Ignoring empty table {}"
+msgstr ""
+
+#: spoonbill/cli.py:247
+msgid "Unnesting columns {} for table {}"
+msgstr ""
+
+#: spoonbill/cli.py:255
+msgid "Using only columns {} for table {}"
+msgstr ""
+
+#: spoonbill/cli.py:263
+msgid "Repeating columns {} in all child table of {}"
+msgstr ""
+
+#: spoonbill/cli.py:277
+msgid "Going to export tables: {}"
+msgstr ""
+
+#: spoonbill/cli.py:279
+msgid "Flattening input file"
+msgstr ""
+
+#: spoonbill/cli.py:289
+msgid "Done flattening. Flattened objects: {}"
+msgstr ""
+
+#: spoonbill/flatten.py:191
+msgid "Ignoring repeat column {} because it is not in table {}"
+msgstr ""
+
+#: spoonbill/stats.py:243
+msgid "Detected additional table: {}"
+msgstr ""
+
+#: spoonbill/stats.py:283
+#, python-format
+msgid "Path %s is targeted to combined table %s"
+msgstr ""
+
+#: spoonbill/stats.py:289
+msgid "Detected additional column: {} in {} table"
+msgstr ""
+
+#: spoonbill/stats.py:331
+msgid "Failed to restore from malformed data. Missing {} attribute"
+msgstr ""
+
+#: spoonbill/stats.py:332
+msgid "Unable to restore, invalid input data"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/ocid"
+msgstr "OCID"
+
+#: spoonbill/locales/schema.json:1
+msgid "/id"
+msgstr "ID"
+
+#: spoonbill/locales/schema.json:1
+msgid "/date"
+msgstr "Date"
+
+#: spoonbill/locales/schema.json:1
+msgid "/tag"
+msgstr "Tag"
+
+#: spoonbill/locales/schema.json:1
+msgid "/initiationType"
+msgstr "initiationType"
+
+#: spoonbill/locales/schema.json:1
+msgid "/partiesCount"
+msgstr "Parties Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/awardsCount"
+msgstr "Awards Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contractsCount"
+msgstr "Countracts Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/language"
+msgstr "LANG"
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcessesCount"
+msgstr "Related Processes Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/id"
+msgstr "RelatedProcesses ID"
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/relationship"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/identifier"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/relatedProcesses/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/awardID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/itemsCount"
+msgstr "Items Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/dateSigned"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documentsCount"
+msgstr "Documents Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcessesCount"
+msgstr "Related Processes Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestonesCount"
+msgstr "Milestones Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendmentsCount"
+msgstr "Amendments Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/rationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/rationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/amendsReleaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/amendsReleaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/amendments/releaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/amendments/releaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/type"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/type"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/code"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/code"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/dueDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/dueDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/dateMet"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/dateMet"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/milestones/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/milestones/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/relationship"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/identifier"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/relatedProcesses/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactionsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestonesCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/type"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/code"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/dueDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/dateMet"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/milestones/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/source"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/payee/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/payee/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/payer/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/payer/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/implementation/transactions/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/additionalClassificationsCount"
+msgstr "Additional Classifications Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/quantity"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/unit/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/additionalClassifications/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/additionalClassifications/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/additionalClassifications/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/additionalClassifications/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/classification/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/classification/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/classification/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/items/classification/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/period/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/period/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/period/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/contracts/period/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/suppliersCount"
+msgstr "Suppliers Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/itemsCount"
+msgstr "Items Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendmentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/rationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/amendsReleaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/amendments/releaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/contractPeriod/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/contractPeriod/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/contractPeriod/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/contractPeriod/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/additionalClassificationsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/quantity"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/unit/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/additionalClassifications/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/additionalClassifications/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/additionalClassifications/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/additionalClassifications/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/classification/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/classification/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/classification/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/items/classification/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/suppliers/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/suppliers/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/awards/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/id"
+msgstr "Tender ID"
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/itemsCount"
+msgstr "Items Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/procurementMethod"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/procurementMethodDetails"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/procurementMethodRationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/mainProcurementCategory"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/additionalProcurementCategories"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardCriteria"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardCriteriaDetails"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/submissionMethod"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/submissionMethodDetails"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/hasEnquiries"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/eligibilityCriteria"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/numberOfTenderers"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderersCount"
+msgstr "Tenderers Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestonesCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendmentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/date"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/rationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/amendsReleaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/amendments/releaseID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/type"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/code"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/dueDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/dateMet"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/milestones/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderers/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderers/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/contractPeriod/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/contractPeriod/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/contractPeriod/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/contractPeriod/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardPeriod/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardPeriod/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardPeriod/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/awardPeriod/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/enquiryPeriod/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/enquiryPeriod/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/enquiryPeriod/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/enquiryPeriod/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderPeriod/startDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderPeriod/endDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderPeriod/maxExtentDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/tenderPeriod/durationInDays"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/minValue/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/minValue/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/additionalClassificationsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/quantity"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/value/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/unit/value/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/additionalClassifications/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/additionalClassifications/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/additionalClassifications/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/additionalClassifications/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/classification/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/classification/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/classification/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/items/classification/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/procuringEntity/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/tender/procuringEntity/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/rationale"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documentsCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestonesCount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/type"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/code"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/dueDate"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/dateMet"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/milestones/status"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/documentType"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/title"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/datePublished"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/dateModified"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/format"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/documents/language"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/description"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/project"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/projectID"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/amount/amount"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/planning/budget/amount/currency"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/buyer/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/buyer/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/additionalIdentifiersCount"
+msgstr "Additional Identifiers Count"
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/roles"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/contactPoint/name"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/contactPoint/email"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/contactPoint/telephone"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/contactPoint/faxNumber"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/contactPoint/url"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/address/streetAddress"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/address/locality"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/address/region"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/address/postalCode"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/address/countryName"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/additionalIdentifiers/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/additionalIdentifiers/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/additionalIdentifiers/legalName"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/additionalIdentifiers/uri"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/identifier/scheme"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/identifier/id"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/identifier/legalName"
+msgstr ""
+
+#: spoonbill/locales/schema.json:1
+msgid "/parties/identifier/uri"
+msgstr ""
+
+#: spoonbill/writers/csv.py:38
+msgid "Failed to open file {} with error {}"
+msgstr ""
+
+#: spoonbill/writers/csv.py:51
+msgid "Failed to headers with error {}"
+msgstr ""
+
+#: spoonbill/writers/csv.py:58 spoonbill/writers/xlsx.py:66
+msgid ""
+"Operation produced invalid path. This a software bug, please send issue "
+"to developers"
+msgstr ""
+
+#: spoonbill/writers/csv.py:59
+msgid "Failed to write row {} with error {}"
+msgstr ""
+
+#: spoonbill/writers/csv.py:61 spoonbill/writers/xlsx.py:58
+msgid "Invalid table {}"
+msgstr ""
+
+#: spoonbill/writers/xlsx.py:48
+msgid "Failed to write header {} to xlsx sheet {} with error {}"
+msgstr ""
+
+#: spoonbill/writers/xlsx.py:68
+msgid "Failed to write column {} to xlsx sheet {}"
+msgstr ""
+
+#: spoonbill/writers/xlsx.py:73
+msgid "Failed to write column {} to xlsx sheet {} with error {}"
+msgstr ""

@@ -11,7 +11,7 @@ from ocdskit.util import detect_format
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
-from spoonbill.i18n import _
+from spoonbill.i18n import set_locale
 from spoonbill.utils import read_lines, resolve_file_uri
 
 LOGGER = logging.getLogger("spoonbill")
@@ -19,7 +19,6 @@ click_logging.basic_config(LOGGER)
 
 
 CURRENT_SCHEMA_TAG = "1__1__5"
-# TODO: check i18n
 ANALYZED_LABEL = _("  Processed {} objects")
 FLATTENED_LABEL = _("  Flattened {} objects")
 
@@ -123,7 +122,8 @@ def get_selected_tables(base, selection):
 @click.option(
     "--language",
     help=_("Language for headings"),
-    type=click.Choice(["en", "es", "fr", "it"], case_sensitive=False),
+    default="en",
+    type=click.Choice(["en", "es"]),
 )
 @click_logging.simple_verbosity_option(LOGGER)
 @click.argument("filename", type=click.Path(exists=True))
@@ -148,6 +148,7 @@ def cli(
     language,
 ):
     """Spoonbill cli entry point"""
+    set_locale(language)
     click.echo(_("Detecting input file format"))
     # TODO: handle line separated json
     # TODO: handle single release/record

@@ -38,7 +38,7 @@ setup(
         "test": test_requires,
         "docs": docs_requires,
     },
-    package_data={"spoonbill": ["locale/*/*/*.mo", "locale/*/*/*.po"]},
+    package_data={"spoonbill": ["locales/*/*/*.mo", "locales/*/*/*.po"]},
     include_package_data=True,
     classifiers=[
         "License :: OSI Approved :: BSD License",
@@ -48,5 +48,10 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    entry_points={"console_scripts": ["spoonbill = spoonbill.cli:cli"]},
+    entry_points={
+        "console_scripts": ["spoonbill = spoonbill.cli:cli"],
+        "babel.extractors": [
+            "sp_schema = spoonbill.i18n:extract_schema_po",
+        ],
+    },
 )
