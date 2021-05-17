@@ -205,7 +205,7 @@ class DataPreprocessor:
 
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
-                        LOGGER.debug(f"Mismatched type on {pointer} expected {item_type}")
+                        LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
                         continue
 
                     if isinstance(item, dict):
