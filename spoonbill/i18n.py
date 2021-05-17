@@ -57,6 +57,7 @@ def extract_schema_po(fileobj, keywords, comment_tags, options):
                         items_type = extract_type(items)
                         if set(items_type) & {"array", "object"}:
                             todo.append((items, pointer, key))
+                            yield pointer + "Count"
                         else:
                             yield pointer
                     else:
