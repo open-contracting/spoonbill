@@ -5,7 +5,6 @@ from typing import List, Mapping
 import jsonref
 
 from spoonbill.common import ARRAY, DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
-from spoonbill.i18n import _
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
@@ -97,16 +96,16 @@ class DataPreprocessor:
                     if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
                         continue
 
-                    type_ = extract_type(item)
+                    typeset = extract_type(item)
                     pointer = separator.join([path, key])
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
 
-                    self.current_table.types[pointer] = type_
-                    if "object" in type_:
+                    self.current_table.types[pointer] = typeset
+                    if "object" in typeset:
                         to_analyze.append((pointer, key, properties, item))
-                    elif "array" in type_:
+                    elif "array" in typeset:
                         items = item["items"]
                         items_type = extract_type(items)
                         if set(items_type) & {"array", "object"}:
@@ -116,13 +115,13 @@ class DataPreprocessor:
                             to_analyze.append((pointer, key, properties, items))
                         else:
                             # This means we in array of strings, so this becomes a single joinable column
-                            type_ = ARRAY.format(items_type)
+                            typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, item, type_, parent=prop)
+                            self.current_table.add_column(pointer, typeset)
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
-                        self.current_table.add_column(pointer, item, type_, parent=prop)
+                        self.current_table.add_column(pointer, typeset)
             else:
                 # TODO: not sure what to do here
                 continue
@@ -290,9 +289,7 @@ class DataPreprocessor:
                             )
                             self.current_table.add_column(
                                 pointer,
-                                {"title": key},
                                 PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
-                                parent=record,
                                 additional=True,
                                 abs_path=abs_pointer,
                             )

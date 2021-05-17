@@ -4,7 +4,6 @@ from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE
-from spoonbill.i18n import _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
 
@@ -159,9 +158,7 @@ class Flattener:
             if count:
                 for array in table.arrays:
                     parts = array.split("/")
-                    key = parts[-1]
-                    title = f"{key}Count"
-                    parts[-1] = title
+                    parts[-1] = f"{parts[-1]}Count"
                     path = "/".join(parts)
                     target = self._types_cache.get(array) or table
                     combined = split and table.should_split
@@ -171,9 +168,7 @@ class Flattener:
                         # e.g. it may generate columns for whole array (/tender/items/200/additionalClassificationsCount)
                         target.add_column(
                             path,
-                            {"title": f"{key} count"},
                             "integer",
-                            parent={},
                             additional=True,
                             combined_only=not combined,
                             propagate=False,

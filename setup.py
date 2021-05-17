@@ -1,3 +1,4 @@
+from babel.messages import frontend as babel
 from setuptools import find_packages, setup
 
 with open("README.rst") as f:
@@ -38,8 +39,15 @@ setup(
         "test": test_requires,
         "docs": docs_requires,
     },
+    setup_requires=["Babel"],
     package_data={"spoonbill": ["locales/*/*/*.mo", "locales/*/*/*.po"]},
     include_package_data=True,
+    cmdclass={
+        "compile_catalog": babel.compile_catalog,
+        "extract_messages": babel.extract_messages,
+        "init_catalog": babel.init_catalog,
+        "update_catalog": babel.update_catalog,
+    },
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",

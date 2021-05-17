@@ -4,7 +4,6 @@ import logging
 import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException
 
-from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
 LOGGER = logging.getLogger("spoonbill")

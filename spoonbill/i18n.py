@@ -10,15 +10,22 @@ from spoonbill.utils import common_prefix, extract_type
 
 domain = "spoonbill"
 locale_dir = str(Path(__file__).parent / "locales")
-
-try:
-    t = gettext.translation(domain, locale_dir)
-    _ = t.gettext
-except FileNotFoundError:
-    _ = lambda m: m  # noqa: E731
+LOCALE = "en"
+LANG = None
 
 
-# slightly modified version of ocds-babel`s extract_schema
+def set_locale(locale):
+    global LOCALE
+    global LANG
+    LOCALE = locale
+    LANG = gettext.translation(domain, locale_dir, languages=[LOCALE], fallback=True)
+    LANG.install()
+
+
+set_locale(LOCALE)
+
+
+# slightly modified version of ocds-babel's extract_schema
 # TODO: discuss upstreaming this extractor
 def extract_schema_po(fileobj, keywords, comment_tags, options):
     """

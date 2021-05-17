@@ -134,25 +134,6 @@ def combine_path(root, path, index="0", separator="/"):
     return combined_path
 
 
-def prepare_title(item, parent):
-    """Attempts to extract human friendly table header from schema
-
-    :param item: Schema description of item for which title should be generated
-    :param parent: Schema description of item parent object
-    :return: Generated title
-    """
-    title = []
-    if hasattr(parent, "__reference__") and parent.__reference__.get("title"):
-        parent_title = parent.__reference__.get("title", "")
-    else:
-        parent_title = parent.get("title", "")
-    for chunk in chain(parent_title.split(), item["title"].split()):
-        chunk = chunk.capitalize()
-        if chunk not in title:
-            title.append(chunk)
-    return " ".join(title)
-
-
 def get_matching_tables(tables, path):
     """Get list of matching tables for provided path
 
