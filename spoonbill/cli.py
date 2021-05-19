@@ -11,7 +11,7 @@ from ocdskit.util import detect_format
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
-from spoonbill.i18n import set_locale
+from spoonbill.i18n import _, set_locale
 from spoonbill.utils import read_lines, resolve_file_uri
 
 LOGGER = logging.getLogger("spoonbill")

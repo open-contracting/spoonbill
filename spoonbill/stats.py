@@ -5,6 +5,7 @@ from typing import List, Mapping
 import jsonref
 
 from spoonbill.common import ARRAY, DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
+from spoonbill.i18n import _
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,

@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
+from spoonbill.i18n import _
 from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")

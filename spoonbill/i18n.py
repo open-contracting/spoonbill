@@ -12,14 +12,17 @@ domain = "spoonbill"
 locale_dir = str(Path(__file__).parent / "locales")
 LOCALE = "en"
 LANG = None
+_ = lambda x: x  # noqa
 
 
 def set_locale(locale):
     global LOCALE
     global LANG
+    global _
     LOCALE = locale
     LANG = gettext.translation(domain, locale_dir, languages=[LOCALE], fallback=True)
     LANG.install()
+    _ = LANG.gettext
 
 
 set_locale(LOCALE)
