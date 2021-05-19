@@ -4,6 +4,7 @@ from pathlib import Path
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES
 from spoonbill.flatten import Flattener
+from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter
@@ -29,6 +30,7 @@ class FileAnalyzer:
         root_tables=ROOT_TABLES,
         combined_tables=COMBINED_TABLES,
         root_key="releases",
+        language=LOCALE,
     ):
         self.workdir = Path(workdir)
         if state_file:
@@ -36,7 +38,7 @@ class FileAnalyzer:
                 data = json.load(fd)
             self.spec = DataPreprocessor.restore(data)
         else:
-            self.spec = DataPreprocessor(schema, root_tables, combined_tables=combined_tables)
+            self.spec = DataPreprocessor(schema, root_tables, combined_tables=combined_tables, language=language)
         self.root_key = root_key
 
     def analyze_file(self, filename, with_preview=True):
@@ -71,8 +73,8 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, tables, root_key="releases", csv=True, xlsx=True):
-        self.flattener = Flattener(options, tables)
+    def __init__(self, workdir, options, tables, root_key="releases", csv=True, xlsx=True, language=LOCALE):
+        self.flattener = Flattener(options, tables, language=language)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
         self.root_key = root_key

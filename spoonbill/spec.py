@@ -114,6 +114,7 @@ class Table:
         self,
         path,
         item_type,
+        title,
         *,
         combined_only=False,
         propagate=True,
@@ -129,7 +130,6 @@ class Table:
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
         """
-        title = _(path)
         is_array = self.is_array(path)
         combined_path = combine_path(self, path)
         if not combined_only:
@@ -150,6 +150,7 @@ class Table:
             self.parent.add_column(
                 path,
                 item_type,
+                title,
                 combined_only=combined_only,
                 additional=additional,
                 abs_path=abs_path,

@@ -1,6 +1,9 @@
 import gettext
 import json
+import locale
+import os
 from collections import deque
+from functools import lru_cache
 from pathlib import Path
 
 import jsonref
@@ -8,24 +11,28 @@ import jsonref
 from spoonbill.common import COMBINED_TABLES
 from spoonbill.utils import common_prefix, extract_type
 
-domain = "spoonbill"
-locale_dir = str(Path(__file__).parent / "locales")
-LOCALE = "en"
-LANG = None
-_ = lambda x: x  # noqa
+DOMAIN = "spoonbill"
+LOCALEDIR = str(Path(__file__).parent / "locales")
+LOCALE = "en_US"
+system_locale = locale.getdefaultlocale()
+if system_locale and system_locale[0]:
+    LOCALE = system_locale[0]
 
 
-def set_locale(locale):
-    global LOCALE
-    global LANG
-    global _
-    LOCALE = locale
-    LANG = gettext.translation(domain, locale_dir, languages=[LOCALE], fallback=True)
-    LANG.install()
-    _ = LANG.gettext
+def translate(msg_id, lang=LOCALE):
+    """Simple wrapper of python's gettext with ability to override desired language"""
+    translator = _translation(lang)
+    if translator:
+        return translator.gettext(msg_id)
+    return msg_id
 
 
-set_locale(LOCALE)
+@lru_cache(maxsize=None)
+def _translation(lang):
+    return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
+
+
+_ = translate
 
 
 # slightly modified version of ocds-babel's extract_schema
