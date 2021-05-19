@@ -1,0 +1,61 @@
+name: push
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+       - master
+       - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ secrets.CACHE_NAME }}-${{ hashFiles('**/setup.cfg') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ secrets.CACHE_NAME }}-
+      - name: Run pre-commit
+        run: |
+            pip install pre-commit
+            pre-commit autoupdate
+            pre-commit run --all-files
+  tests:
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version:  ${{ matrix.python-version }}
+      - name: Install requirements
+        run: |
+              pip install .[test]
+              pip install tox
+      - name: Run linux test
+        if: matrix.os == 'ubuntu-latest'
+        run: tox -e py"${PYVER//.}"
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Run windows test
+        if: matrix.os == 'windows-latest'
+        run: tox -e py${env:PYVER//.}
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Upload to coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github
