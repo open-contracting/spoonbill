@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE
+from spoonbill.i18n import _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
 
