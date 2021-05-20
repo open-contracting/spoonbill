@@ -1,3 +1,4 @@
+import locale
 import logging
 from collections import deque
 from typing import List, Mapping
@@ -5,7 +6,7 @@ from typing import List, Mapping
 import jsonref
 
 from spoonbill.common import ARRAY, DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
-from spoonbill.i18n import _
+from spoonbill.i18n import DOMAIN, LOCALE, LOCALEDIR, _
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
@@ -45,6 +46,7 @@ class DataPreprocessor:
         table_threshold=TABLE_THRESHOLD,
         total_items=0,
         header_separator="/",
+        language=LOCALE,
     ):
         self.schema = schema
         self.root_tables = root_tables
@@ -58,6 +60,7 @@ class DataPreprocessor:
 
         self._lookup_cache = {}
         self._table_by_path = {}
+        self.language = language
         if not self.tables:
             self.parse_schema()
 
@@ -118,11 +121,11 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, typeset)
+                            self.current_table.add_column(pointer, typeset, _(pointer, self.language))
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
-                        self.current_table.add_column(pointer, typeset)
+                        self.current_table.add_column(pointer, typeset, _(pointer, self.language))
             else:
                 # TODO: not sure what to do here
                 continue
@@ -301,6 +304,7 @@ class DataPreprocessor:
                             self.current_table.add_column(
                                 pointer,
                                 PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
+                                _(pointer, self.language),
                                 additional=True,
                                 abs_path=abs_pointer,
                             )

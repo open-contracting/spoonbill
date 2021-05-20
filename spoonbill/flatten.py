@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE
-from spoonbill.i18n import _
+from spoonbill.i18n import LOCALE, _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
 
@@ -68,11 +68,12 @@ class Flattener:
     :param tables: Analyzed tables data
     """
 
-    def __init__(self, options: FlattenOptions, tables: Mapping[str, Table]):
+    def __init__(self, options: FlattenOptions, tables: Mapping[str, Table], language=LOCALE):
         if not is_dataclass(options):
             options = FlattenOptions(**options)
         self.options = options
         self.tables = tables
+        self.language = language
 
         self._lookup_cache = {}
         self._types_cache = {}
@@ -170,6 +171,7 @@ class Flattener:
                         target.add_column(
                             path,
                             "integer",
+                            _(path, self.language),
                             additional=True,
                             combined_only=not combined,
                             propagate=False,

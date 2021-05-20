@@ -1,6 +1,7 @@
 import csv
 import logging
 
+from spoonbill.i18n import _
 from spoonbill.utils import get_headers
 
 LOGGER = logging.getLogger("spoonbill")

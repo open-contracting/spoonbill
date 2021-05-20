@@ -11,7 +11,7 @@ from ocdskit.util import detect_format
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
-from spoonbill.i18n import _, set_locale
+from spoonbill.i18n import LOCALE, _
 from spoonbill.utils import read_lines, resolve_file_uri
 
 LOGGER = logging.getLogger("spoonbill")
@@ -122,7 +122,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--language",
     help=_("Language for headings"),
-    default="en",
+    default=LOCALE.split("_")[0],
     type=click.Choice(["en", "es"]),
 )
 @click_logging.simple_verbosity_option(LOGGER)
@@ -148,7 +148,6 @@ def cli(
     language,
 ):
     """Spoonbill cli entry point"""
-    set_locale(language)
     click.echo(_("Detecting input file format"))
     # TODO: handle line separated json
     # TODO: handle single release/record
@@ -203,6 +202,7 @@ def cli(
             root_key=root_key,
             root_tables=root_tables,
             combined_tables=combined_tables,
+            language=language,
         )
         click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
         total = path.stat().st_size
@@ -276,7 +276,15 @@ def cli(
     options = FlattenOptions(**options)
     all_tables = chain(options.selection.keys(), combined_tables.keys())
     click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
-    flattener = FileFlattener(workdir, options, analyzer.spec.tables, root_key=root_key, csv=csv, xlsx=xlsx)
+    flattener = FileFlattener(
+        workdir,
+        options,
+        analyzer.spec.tables,
+        root_key=root_key,
+        csv=csv,
+        xlsx=xlsx,
+        language=language,
+    )
     click.echo(_("Flattening input file"))
     with click.progressbar(
         flattener.flatten_file(filename),
