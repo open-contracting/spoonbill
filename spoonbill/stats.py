@@ -231,6 +231,7 @@ class DataPreprocessor:
                             self.current_table.add_column(
                                 pointer,
                                 JOINABLE,
+                                _(pointer, self.language),
                                 additional=True,
                                 abs_path=abs_pointer,
                             )
