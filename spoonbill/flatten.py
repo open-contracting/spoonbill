@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import DEFAULT_FIELDS, JOINABLE
+from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.i18n import LOCALE, _
 from spoonbill.spec import Table
 from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
@@ -263,7 +263,7 @@ class Flattener:
                         to_flatten.append((abs_pointer, pointer, key, record, item, repeat))
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
-                            value = JOINABLE.join(item)
+                            value = JOINABLE_SEPARATOR.join(item)
                             rows[table.name][-1][pointer] = value
                         else:
                             if self.options.count and pointer not in table.path and split and table.should_split:
