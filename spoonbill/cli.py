@@ -1,5 +1,6 @@
 """cli.py - Command line interface related routines"""
 import logging
+import os
 import pathlib
 from itertools import chain
 
@@ -72,13 +73,8 @@ def get_selected_tables(base, selection):
     help=_("Uri to previously generated state file"),
     type=click.Path(exists=True),
 )
-@click.option("--xlsx", help=_("Path to result xlsx file"), default=True, is_flag=True)
-@click.option(
-    "--csv",
-    help=_("Path to directory for output csv files"),
-    default=True,
-    is_flag=True,
-)
+@click.option("--xlsx", help=_("Path to result xlsx file"), type=click.Path(), default="result.xlsx")
+@click.option("--csv", help=_("Path to directory for output csv files"), type=click.Path(), required=False)
 @click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
 @click.option(
     "--unnest",
@@ -156,6 +152,14 @@ def cli(
         _is_concatenated,
         _is_array,
     ) = detect_format(filename)
+    if csv:
+        csv = pathlib.Path(csv).resolve()
+        if not csv.exists():
+            raise click.BadParameter(_("Desired location {} does not exists").format(csv))
+    if xlsx:
+        xlsx = pathlib.Path(xlsx).resolve()
+        if not xlsx.parent.exists():
+            raise click.BadParameter(_("Desired location {} does not exists").format(xlsx.parent))
     click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
     is_package = "package" in input_format
     combine_choice = combine if combine else ""
@@ -279,7 +283,6 @@ def cli(
             "repeat": repeat,
         }
     options = FlattenOptions(**options)
-
     flattener = FileFlattener(
         workdir,
         options,
