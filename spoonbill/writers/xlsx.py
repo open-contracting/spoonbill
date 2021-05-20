@@ -53,14 +53,24 @@ class XlsxWriter:
         """Write row to output file"""
         table_name = self.names.get(table, table)
         sheet = self.workbook.get_worksheet_by_name(table_name)
+        columns = self.col_index[table]
+        if not columns:
+            LOGGER.error(_("Invalid table {}").format(table))
+            return
 
         for column, value in row.items():
-            col_index = self.col_index[table][column]
+            try:
+                col_index = columns[column]
+            except KeyError:
+                LOGGER.error(
+                    _("Operation produced invalid path. This a software bug, please send issue to developers")
+                )
+                LOGGER.error(_("Failed to write column {} to xlsx sheet {}").format(column, table))
+                return
             try:
                 if isinstance(value, bool):
-                    sheet.write(self.row_counters[table], col_index, str(value))
-                else:
-                    sheet.write(self.row_counters[table], col_index, value)
+                    value = str(value)
+                sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 

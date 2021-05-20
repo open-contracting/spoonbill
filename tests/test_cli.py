@@ -8,6 +8,8 @@ from spoonbill.cli import cli
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
 ANALYZED = pathlib.Path("tests/data/analyzed.json").absolute()
+ONLY = pathlib.Path("tests/data/only").absolute()
+UNNEST = pathlib.Path("tests/data/unnest").absolute()
 
 
 def test_no_filename():
@@ -25,8 +27,8 @@ def test_default():
         result = runner.invoke(cli, ["data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_with_selections():
@@ -36,8 +38,8 @@ def test_with_selections():
         result = runner.invoke(cli, ["--selection", "tenders", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_with_combine():
@@ -47,9 +49,9 @@ def test_with_combine():
         result = runner.invoke(cli, ["--combine", "documents", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
+        assert "Dumping analyzed data" in result.output
         assert "Going to export tables: tenders,awards,contracts,planning,parties,documents" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
 
 
 def test_table_typo():
@@ -71,8 +73,8 @@ def test_with_schema():
         result = runner.invoke(cli, ["--selection", "tenders", "--schema", "schema.json", "data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
-        assert "Dumped analyzed data" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
         assert "Going to export tables: tenders" in result.output
 
 
@@ -86,4 +88,79 @@ def test_state_file():
         assert "Input file is release package" in result.output
         assert "Restoring from provided state file" in result.output
         assert "Going to export tables: tenders,awards,contracts,planning,parties" in result.output
-        assert "Done. Flattened 6 objects" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_only():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--only", "/tender/title", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Using only columns" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_only_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        shutil.copyfile(ONLY, "only")
+        result = runner.invoke(cli, ["--only-file", "only", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Using only columns" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_repleat():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--repeat", "/tender/id", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Repeating columns /tender/id in all child table of tenders" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_repeat_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        shutil.copyfile(ONLY, "only")
+        result = runner.invoke(cli, ["--repeat-file", "only", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Repeating columns /tender/id,/tender/title in all child table of tenders" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_unnest():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--unnest", "/tender/items/0/id", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Unnesting columns /tender/items/0/id for table tenders" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_unnest_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        shutil.copyfile(UNNEST, "unnest")
+        result = runner.invoke(cli, ["--unnest-file", "unnest", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Unnesting columns /tender/items/0/id for table tenders" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output

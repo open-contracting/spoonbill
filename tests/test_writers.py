@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from unittest.mock import call, patch
 
 import openpyxl
 
@@ -9,8 +10,6 @@ from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
 from .conftest import releases_path
-
-# from .data import *
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -42,7 +41,11 @@ def test_headers_filtering(spec, tmpdir, flatten_options):
         assert csv_headers[0] == ID_FIELDS[name]
 
 
-def test_writers_pretty_headers(spec, tmpdir):
+def test_writers_pretty_headers(spec, tmpdir, releases):
+    # increase items count for force split
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(
         **{
             "selection": {
@@ -56,21 +59,22 @@ def test_writers_pretty_headers(spec, tmpdir):
             }
         }
     )
-    tables = prepare_tables(spec, options)
-    for name, table in tables.items():
-        for col in table:
-            table.inc_column(col)
+    tables = {
+        "tenders": spec.tables["tenders"],
+        "parties": spec.tables["parties"],
+        "tenders_items": spec.tables["tenders_items"],
+    }
 
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options)
     xlsx = workdir / "result.xlsx"
 
-    for name in options.selection:
+    for name, opts in options.selection.items():
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
         table = tables[name]
-        for col in tables[name]:
+        for col in tables[name].available_rows(opts.split):
             title = table.titles.get(col)
             if col == "/tender/items/id":
                 title = "item id"
@@ -128,19 +132,26 @@ def test_writers_pretty_headers(spec, tmpdir):
     assert "PARTY" in csv_headers
 
 
-def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
+def test_writers_flatten_count(spec, tmpdir, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    for _ in spec.process_items(releases):
+        pass
     options = FlattenOptions(
         **{
             "selection": {
                 "tenders": {"split": True, "pretty_headers": True},
-                "parties": {"split": False, "pretty_headers": True},
+                "parties": {"split": True, "pretty_headers": True},
+                "tenders_items": {
+                    "split": False,
+                    "pretty_headers": True,
+                },
             },
             "count": True,
         }
     )
 
     workdir = Path(tmpdir)
-    flattener = FileFlattener(workdir, options, spec_analyzed.tables, root_key="releases", csv=True, xlsx=True)
+    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True, xlsx=True)
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass
@@ -153,10 +164,62 @@ def test_writers_flatten_count(spec_analyzed, tmpdir, releases):
     sheet = "parties"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Additionalidentifiers Count" in headers
+        assert "Additional Identifiers Count" in headers
 
 
 def test_writers_table_name_override(spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+                "tenders": {"split": True, "pretty_headers": True, "name": "my_tenders"},
+                "tenders_items": {"split": False, "pretty_headers": True, "name": "pretty_items"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in ("testname", "my_tenders", "pretty_items"):
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
+
+
+def test_abbreviations(spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "tenders_items_class": {"split": False},
+                "parties_ids": {"split": False},
+                "transactions": {"split": False},
+            }
+        }
+    )
+    new_names = ["tenders_items_class", "parties_ids", "transactions"]
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+
+    workdir = Path(tmpdir)
+    get_writers(workdir, tables, options)
+    xlsx = workdir / "result.xlsx"
+    for name in new_names:
+        path = workdir / f"{name}.csv"
+        assert path.is_file()
+        assert read_xlsx_headers(xlsx, name)
+        assert read_csv_headers(path)
+
+
+@patch("spoonbill.LOGGER.error")
+def test_writers_invalid_table(log, spec, tmpdir):
     options = FlattenOptions(
         **{
             "selection": {
@@ -167,14 +230,41 @@ def test_writers_table_name_override(spec, tmpdir):
     tables = prepare_tables(spec, options)
     for name, table in tables.items():
         for col in table:
-            table.inc_column(col)
+            table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    get_writers(workdir, tables, options)
-    xlsx = workdir / "result.xlsx"
-    path = workdir / "testname.csv"
-    assert read_xlsx_headers(xlsx, "testname")
-    assert read_csv_headers(path)
+    writers = get_writers(workdir, tables, options)
+    for writer in writers:
+        writer.writerow("test", {})
+    log.assert_has_calls([call("Invalid table test"), call("Invalid table test")])
+
+
+@patch("spoonbill.LOGGER.error")
+def test_writers_invalid_row(log, spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    tables = prepare_tables(spec, options)
+    for name, table in tables.items():
+        for col in table:
+            table.inc_column(col, col)
+
+    workdir = Path(tmpdir)
+    writers = get_writers(workdir, tables, options)
+    for writer in writers:
+        writer.writerow("parties", {"/test/test": "test"})
+    log.assert_has_calls(
+        [
+            call("Operation produced invalid path. This a software bug, please send issue to developers"),
+            call("Failed to write row None with error dict contains fields not in fieldnames: '/test/test'"),
+            call("Operation produced invalid path. This a software bug, please send issue to developers"),
+            call("Failed to write column /test/test to xlsx sheet parties"),
+        ]
+    )
 
 
 def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
@@ -286,4 +376,7 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     path = workdir / "result.xlsx"
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
-        assert not xlsx_reader[name]
+        try:
+            xlsx_reader[name]
+        except KeyError as e:
+            assert f"Worksheet {name} does not exist." in str(e)
