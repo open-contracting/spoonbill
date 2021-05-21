@@ -3,8 +3,9 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
-from spoonbill.common import DEFAULT_FIELDS
-from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_root, prepare_title
+from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
+from spoonbill.i18n import _
+from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -33,6 +34,8 @@ class Table:
     :param parent: Parent table, None if this table is root table
     :param is_root: This table is root table
     :param is_combined: This table contains data collected from different paths
+    :param should_split: This table should be splitted
+    :param roll_up: This table should be separated from its parent
     :param columns: Columns extracted from schema for split version of this table
     :param combined_columns: Columns extracted from schema for unsplit version of this table
     :param additional_columns: Columns identified in dataset but not in schema
@@ -51,6 +54,8 @@ class Table:
     parent: object = field(default_factory=dict)
     is_root: bool = False
     is_combined: bool = False
+    should_split: bool = False
+    roll_up: bool = False
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
@@ -78,6 +83,13 @@ class Table:
                         col = Column(**col)
                     init[name] = col
                 setattr(self, attr, init)
+            cols = DEFAULT_FIELDS if self.is_root else DEFAULT_FIELDS_COMBINED
+            for col in cols:
+                if col not in self.columns:
+                    self.columns[col] = Column(col, "string", col)
+                if col not in self.combined_columns:
+                    self.combined_columns[col] = Column(col, "string", col)
+                self.titles[col] = _(col)
 
     def _counter(self, split, cond):
         cols = self.columns if split else self.combined_columns
@@ -101,11 +113,13 @@ class Table:
     def add_column(
         self,
         path,
-        item,
         item_type,
-        parent,
+        title,
+        *,
         combined_only=False,
+        propagate=True,
         additional=False,
+        abs_path=None,
     ):
         """Add new column to the table
 
@@ -116,54 +130,54 @@ class Table:
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
         """
-        title = prepare_title(item, parent)
-        root = get_root(self)
         is_array = self.is_array(path)
-        combined_path = combine_path(root, path)
-
-        column = Column(title, item_type, path)
+        combined_path = combine_path(self, path)
+        if not combined_only:
+            self.columns[combined_path] = Column(title, item_type, combined_path)
+        # new column to track hits differently
         self.combined_columns[combined_path] = Column(title, item_type, combined_path)
+
+        if additional:
+            if is_array:
+                # when we analyzing file we need to keep index from data not to use 0
+                # e.g. /tender/items/166/relatedLot
+                combined_path = abs_path
+            self.additional_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):
             self.titles[p] = title
-
-        if not combined_only:
-            self.columns[path] = column
-        if combined_only and is_array:
-            self.columns[combined_path] = Column(title, item_type, combined_path)
-        if not self.is_root:
+        if not self.is_root and propagate:
             self.parent.add_column(
                 path,
-                item,
                 item_type,
-                parent=parent,
-                combined_only=True,
+                title,
+                combined_only=combined_only,
+                additional=additional,
+                abs_path=abs_path,
             )
-
-        if additional:
-            self.additional_columns[path] = column
 
     def is_array(self, path):
         """Check if provided path is inside any tables arrays"""
-        for array in get_root(self).arrays:
+        for array in sorted(self.arrays, reverse=True):
             if common_prefix(array, path) == array:
                 return array
         return False
 
-    def inc_column(self, header, combined=False):
+    def inc_column(self, abs_path, path):
         """Increment data counter in column
 
-        :param header: Column path
-        :param combined: Increment header only in combined version of table
+        :param abs_path: Full column jsonpath
+        :param path: Path without indexes
         """
-        if combined:
-            self.combined_columns[header].hits += 1
-            return
-        self.columns[header].hits += 1
+        header = get_pointer(self, abs_path, path, True)
+        if header in self.columns:
+            self.columns[header].hits += 1
         if header in self.combined_columns:
             self.combined_columns[header].hits += 1
         if header in self.additional_columns:
             self.additional_columns[header].hits += 1
+        if not self.is_root:
+            self.parent.inc_column(abs_path, path)
 
     def set_array(self, header, item):
         """Try to set maximum length of array
@@ -172,10 +186,12 @@ class Table:
         :param item: Array from data
         :return: True if array is bigger than previously found and length was updated
         """
-        count = self.arrays[header] or 0
+        count = self.arrays.get(header, 0)
         length = len(item)
         if length > count:
             self.arrays[header] = length
+            if not self.is_root:
+                return self.parent.set_array(header, item)
             return True
         return False
 
@@ -189,8 +205,19 @@ class Table:
             data["parent"] = data["parent"]["name"]
         return data
 
+    def set_preview_path(self, abs_path, path, value, max_items):
+        header = get_pointer(self, abs_path, path, True)
+        array = self.is_array(path)
 
-def add_child_table(current_table, pointer, parent_key, key):
+        self.preview_rows[-1][header] = value
+        if header in self.combined_columns:
+            if not array or (array and self.arrays[array] < max_items):
+                self.preview_rows_combined[-1][header] = value
+        if not self.is_root:
+            self.parent.set_preview_path(abs_path, path, value, max_items)
+
+
+def add_child_table(table, pointer, parent_key, key):
     """Create and append new child table to `current_table`
 
     :param current_table: Parent table to newly created table
@@ -199,13 +226,10 @@ def add_child_table(current_table, pointer, parent_key, key):
     :param key: New table field name object filed name, used to generate table name
     :return: Child table
     """
-    table_name = generate_table_name(current_table.name, parent_key, key)
-    child_table = Table(table_name, [pointer], parent=current_table)
-    for col in DEFAULT_FIELDS:
-        column = Column(col, "string", col)
-        child_table.columns[col] = column
-        child_table.combined_columns[col] = column
-        child_table.titles[col] = col
-    current_table.child_tables.append(table_name)
-    get_root(current_table).arrays[pointer] = 0
+    table_name = generate_table_name(table.name, parent_key, key)
+    child_table = Table(table_name, [pointer], parent=table)
+    table.child_tables.append(table_name)
+    for t in table, get_root(table):
+        t.arrays[pointer] = 0
+        t.arrays[pointer] = 0
     return child_table

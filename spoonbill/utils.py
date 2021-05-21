@@ -40,33 +40,39 @@ def common_prefix(path, subpath, separator="/"):
     '/tender'
     >>> common_prefix('/tender/items/id', '/tender/items/description')
     '/tender/items'
+    >>> common_prefix('/tender/items/0/additionalClassifications/0/id', '/tender/items/0')
+    '/tender/items/0'
     """
-    paths = path.split(separator)
-    subpaths = subpath.split(separator)
-    common = [chunk for chunk in paths if chunk in subpaths]
+    paths = [path.split(separator), subpath.split(separator)]
+    s1 = min(paths)
+    s2 = max(paths)
+    common = s1
+    for i, path in enumerate(s1):
+        if path != s2[i]:
+            common = s1[:i]
+            break
     return separator.join(common)
 
 
-def iter_file(filename, root):
+def iter_file(fd, root):
     """Iterate over `root` array in file provided by `filename` using ijson
 
-    :param str filename: Path to file
+    :param bytes fd: File descriptor
     :param str root: Array field name inside file
-    :return: Array items iterator
+    :return: Iterator of bytes read and item as a tuple
 
-    >>> [r for r in iter_file('tests/data/ocds-sample-data.json', 'records')]
+    >>> [r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'records')]
     []
-    >>> len([r for r in iter_file('tests/data/ocds-sample-data.json', 'releases')])
+    >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    with open(filename, "rb") as fd:
-        reader = ijson.items(fd, f"{root}.item")
-        for item in reader:
-            yield item
+    reader = ijson.items(fd, f"{root}.item")
+    for item in reader:
+        yield item
 
 
 def extract_type(item):
-    """Exrtact item possible types from jsonschema definition.
+    """Extract item possible types from jsonschema definition.
     >>> extract_type({'type': 'string'})
     ['string']
     >>> extract_type(None)
@@ -126,25 +132,6 @@ def combine_path(root, path, index="0", separator="/"):
             chunk = separator.join((array, index))
             combined_path = combined_path.replace(array, chunk)
     return combined_path
-
-
-def prepare_title(item, parent):
-    """Attempts to extract human friendly table header from schema
-
-    :param item: Schema description of item for which title should be generated
-    :param parent: Schema description of item parent object
-    :return: Generated title
-    """
-    title = []
-    if hasattr(parent, "__reference__") and parent.__reference__.get("title"):
-        parent_title = parent.__reference__.get("title", "")
-    else:
-        parent_title = parent.get("title", "")
-    for chunk in chain(parent_title.split(), item["title"].split()):
-        chunk = chunk.capitalize()
-        if chunk not in title:
-            title.append(chunk)
-    return " ".join(title)
 
 
 def get_matching_tables(tables, path):
@@ -226,7 +213,7 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
+def recalculate_headers(root, path, abs_path, key, item, should_split, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
@@ -235,15 +222,14 @@ def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
     :param abs_path: Full jsonpath to array
     :param key: Array field name
     :param item: Array items
-    :param max_items: Maximum elements in array before it should be split into table
+    :param should_split: True if array should be separated into child table
     :param separator: header path separator
     """
     head = OrderedDict()
     tail = OrderedDict()
     cols = head
     base_prefix = separator.join((abs_path, key))
-    zero_prefix = separator.join((base_prefix, "0"))
-    should_split = len(item) > max_items
+    zero_prefix = get_pointer(root, separator.join((base_prefix, "0")), path, True)
 
     zero_cols = {
         col_p: col
@@ -251,11 +237,11 @@ def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
         if col_p not in DEFAULT_FIELDS_COMBINED and common_prefix(col_p, zero_prefix) == zero_prefix
     }
     new_cols = {}
-    for col_i, _ in enumerate(item, 1):
-        col_prefix = separator.join((base_prefix, str(col_i)))
+    for col_i, _ in enumerate(item[1:], 1):
+        col_prefix = get_pointer(root, separator.join((base_prefix, str(col_i))), path, True)
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
-            new_cols[col_id] = replace(col, id=col_id)
+            new_cols[col_id] = replace(col, id=col_id, hits=0)
 
     head_updated = False
     for col_p, col in root.combined_columns.items():
@@ -270,9 +256,11 @@ def recalculate_headers(root, abs_path, key, item, max_items, separator="/"):
     if should_split:
         for col_path in chain(zero_cols, new_cols):
             root.columns.pop(col_path, "")
-
     for col_path, col in chain(head.items(), tail.items()):
         root.combined_columns[col_path] = col
+        root.titles[col_path] = col.title
+        if not should_split:
+            root.columns[col_path] = root.columns.get(col_path) or col
 
 
 def resolve_file_uri(file_path):
@@ -297,7 +285,8 @@ def get_headers(table, options):
     :param options: Flattening options
     :return: Mapping between column and its header
     """
-    split = options.split
+    split = options.split and table.roll_up
+    # split = options.split if is_root else table.should_split
     headers = {c: c for c in table.available_rows(split=split)}
     if options.pretty_headers:
         for c in headers:
@@ -308,7 +297,38 @@ def get_headers(table, options):
     return headers
 
 
-def get_pointer(pointer, abs_path, key, split, separator="/", is_root=True):
-    if split or is_root:
-        return pointer
-    return separator.join((abs_path, key))
+def read_lines(path):
+    """Read file as lines"""
+    with open(path) as fd:
+        return [line.strip() for line in fd.readlines()]
+
+
+def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
+    """Combine path and abs_path in order to fit table columns
+
+    For example /tender/items/0/id should be /tender/items/0/id for tenders table
+    but /tender/items/id for tenders_items table
+    """
+    array = table.is_array(path)
+    if index and array:
+        return separator.join((abs_path, index))
+    if table.is_root:
+        return abs_path
+
+    if array:
+        paths = abs_path.split(separator)
+        prefix = ""
+
+        for index, pth in enumerate(paths, 1):
+            if pth.isdigit():
+                continue
+            if not pth:
+                continue
+            prefix = separator.join((prefix, pth))
+            if prefix == array:
+                break
+        pointer = separator.join(paths[index:])
+        if pointer:
+            return separator.join((prefix, pointer))
+        return prefix
+    return path

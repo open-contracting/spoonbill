@@ -95,16 +95,33 @@ def root_table():
                     Column(title="parentID", type="string", id="parentID", hits=0),
                 ),
                 (
+                    "/tender/awardCriteriaDetails",
+                    Column(
+                        title="Tender Award Criteria Details",
+                        type="string",
+                        id="/tender/awardCriteriaDetails",
+                        hits=0,
+                    ),
+                ),
+                (
                     "/tender/submissionMethod",
                     Column(
                         title="Tender Submission Method",
                         type="array",
-                        id="/tender/submissionMethod/0",
+                        id="/tender/submissionMethod",
                     ),
                 ),
                 (
                     "/tender/items/0/id",
                     Column(title="Tender Item id", type="string", id="/tender/items/0/id"),
+                ),
+                (
+                    "/tender/items/0/additionalClassifications/0/id",
+                    Column(
+                        title="Tender Item Classification id",
+                        type="string",
+                        id="/tender/items/0/additionalClassifications/0/id",
+                    ),
                 ),
             ]
         ),

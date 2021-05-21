@@ -1,0 +1,9 @@
+[main]
+host = https://www.transifex.com
+
+[spoonbill.cli]
+file_filter = spoonbill/locales/<lang>/LC_MESSAGES/spoonbill.po
+minimum_perc = 0
+source_file = spoonbill/locales/base.pot
+source_lang = en
+type = PO

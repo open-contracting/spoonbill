@@ -41,6 +41,43 @@
             "legalName": "London Borough of Barnet",
             "scheme": "GB-LAC"
           },
+          "additionalIdentifiers": [
+            {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+            },
+            {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+            },
+            {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+            },
+	      {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+              },
+	      {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+              },
+	      {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+              },
+	      {
+              "id": "E09000003",
+              "legalName": "London Borough of Barnet",
+              "scheme": "GB-LAC"
+            }
+          ],
           "name": "London Borough of Barnet",
           "roles": [
             "buyer"
