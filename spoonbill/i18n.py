@@ -39,7 +39,7 @@ _ = translate
 # TODO: discuss upstreaming this extractor
 def extract_schema_po(fileobj, keywords, comment_tags, options):
     """
-    Yields the "title" and "description" values of a JSON Schema file.
+    Yields json path values of a JSON Schema file.
     """
     combine = options.get("combine")
     combined_paths = []
