@@ -158,6 +158,7 @@ def cli(
     ) = detect_format(filename)
     click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
     is_package = "package" in input_format
+    combine_choice = combine if combine else ""
     if not is_package:
         # TODO: fix this
         click.echo("Single releases are not supported by now")
@@ -278,8 +279,7 @@ def cli(
             "repeat": repeat,
         }
     options = FlattenOptions(**options)
-    all_tables = chain(options.selection.keys(), combined_tables.keys())
-    click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
+
     flattener = FileFlattener(
         workdir,
         options,
@@ -289,6 +289,19 @@ def cli(
         xlsx=xlsx,
         language=language,
     )
+
+    all_tables = chain([table for table in flattener.flattener.tables.keys()], combine_choice)
+
+    click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
+
+    click.echo(_("Processed tables:"))
+    for table in flattener.flattener.tables.keys():
+        message = _("{}: {} rows").format(table, flattener.flattener.tables[table].total_rows)
+        if not flattener.flattener.tables[table].is_root:
+            message = "└-----" + message
+            click.echo(message)
+        else:
+            click.echo(message)
     click.echo(_("Flattening input file"))
     with click.progressbar(
         flattener.flatten_file(filename),
@@ -299,4 +312,5 @@ def cli(
     ) as bar:
         for count in bar:
             bar.label = FLATTENED_LABEL.format(click.style(str(count + 1), fg="cyan"))
+
     click.secho(_("Done flattening. Flattened objects: {}").format(click.style(str(count + 1), fg="red")), fg="green")
