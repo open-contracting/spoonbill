@@ -94,6 +94,9 @@ jobs:
             pull_sources: false
             push_translations: false
             push_sources: true
+      - run: |
+              sudo chown $(whoami) -R  spoonbill/locales/
+              pybabel compile -f -D spoonbill -d spoonbill/locales/
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -112,3 +115,14 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ secrets.REGISTRY_USER }}/spoonbill:latest
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
