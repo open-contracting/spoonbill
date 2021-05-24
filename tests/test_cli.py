@@ -55,7 +55,9 @@ def test_with_combine():
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
         assert "Dumping analyzed data" in result.output
-        assert "Going to export tables: tenders,awards,contracts,planning,parties,documents" in result.output
+        assert (
+            "Going to export tables: tenders,awards,contracts,planning,parties,parties_ids,documents" in result.output
+        )
         assert "Done flattening. Flattened objects: 6" in result.output
 
 
@@ -169,6 +171,20 @@ def test_unnest_file():
         assert "Input file is release package" in result.output
         assert "Unnesting columns /tender/items/0/id for table tenders" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
+
+
+def test_table_stats():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert "Processed tables:" in result.output
+        assert "tenders: 4 rows" in result.output
+        assert "awards: 3 rows" in result.output
+        assert "contracts: 2 rows" in result.output
+        assert "planning: 1 rows" in result.output
+        assert "parties: 8 rows" in result.output
+        assert "└-----parties_ids: 14 rows" in result.output
 
 
 def test_message_repeat(capsys):
