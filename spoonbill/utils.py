@@ -332,3 +332,16 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
             return separator.join((prefix, pointer))
         return prefix
     return path
+
+
+class RepeatFilter(logging.Filter):
+    """
+    Logger filter to avoid repeating of same messages during file processing
+    """
+
+    def filter(self, record):
+        current_log = (record.module, record.levelno, record.msg)
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log
+            return True
+        return False

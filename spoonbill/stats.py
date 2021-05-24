@@ -10,6 +10,7 @@ from spoonbill.i18n import DOMAIN, LOCALE, LOCALEDIR, _
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
+    RepeatFilter,
     extract_type,
     generate_row_id,
     get_matching_tables,
@@ -22,6 +23,7 @@ from spoonbill.utils import (
 
 PREVIEW_ROWS = 20
 LOGGER = logging.getLogger("spoonbill")
+LOGGER.addFilter(RepeatFilter())
 
 
 class DataPreprocessor:
@@ -224,7 +226,7 @@ class DataPreprocessor:
                     elif isinstance(item, list):
                         abs_pointer = separator.join([abs_path, key])
                         if not isinstance(item[0], dict) and not item_type:
-                            LOGGER.warning(
+                            LOGGER.debug(
                                 _("Detected additional column: {} in {} table").format(abs_pointer, root.name)
                             )
                             item_type = JOINABLE
@@ -254,7 +256,7 @@ class DataPreprocessor:
                         else:
                             parent_table = self.current_table.parent
                             if pointer not in parent_table.arrays:
-                                LOGGER.warning(_("Detected additional table: {}").format(pointer))
+                                LOGGER.debug(_("Detected additional table: {}").format(pointer))
                                 self.current_table.types[pointer] = ["array"]
                                 # TODO: do we need to mark this table as additional
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
@@ -299,7 +301,7 @@ class DataPreprocessor:
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
-                            LOGGER.warning(
+                            LOGGER.debug(
                                 _("Detected additional column: {} in {} table").format(abs_pointer, root.name)
                             )
                             self.current_table.add_column(
