@@ -80,16 +80,19 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, tables, root_key="releases", csv=True, xlsx=True, language=LOCALE):
+    def __init__(self, workdir, options, tables, root_key="releases", csv=None, xlsx="result.xlsx", language=LOCALE):
         self.flattener = Flattener(options, tables, language=language)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
         self.root_key = root_key
         self.writers = []
         if csv:
-            self.writers.append(CSVWriter(self.workdir, self.flattener.tables, self.flattener.options))
+            workdir = self.workdir
+            if isinstance(csv, Path):
+                workdir = csv
+            self.writers.append(CSVWriter(workdir, self.flattener.tables, self.flattener.options))
         if xlsx:
-            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options))
+            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options, filename=xlsx))
 
     def writerow(self, table, row):
         """Write row to output file"""

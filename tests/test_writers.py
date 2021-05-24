@@ -146,7 +146,7 @@ def test_writers_flatten_count(spec, tmpdir, releases):
     )
 
     workdir = Path(tmpdir)
-    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True, xlsx=True)
+    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True)
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass
@@ -260,3 +260,19 @@ def test_writers_invalid_row(log, spec, tmpdir):
             call("Failed to write column /test/test to xlsx sheet parties"),
         ]
     )
+
+
+@patch("spoonbill.LOGGER.error")
+@patch("spoonbill.writers.csv.open", **{"side_effect": OSError("test")})
+def test_writers_open_fail(open_, log, spec, tmpdir):
+    options = FlattenOptions(
+        **{
+            "selection": {
+                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            }
+        }
+    )
+    workdir = Path(tmpdir)
+    tables = prepare_tables(spec, options)
+    get_writers(workdir, tables, options)
+    log.assert_has_calls([call("Failed to open file {} with error {}".format(str(tmpdir / "testname.csv"), "test"))])

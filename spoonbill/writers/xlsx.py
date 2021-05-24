@@ -22,9 +22,9 @@ class XlsxWriter:
 
     name = "xlsx"
 
-    def __init__(self, workdir, tables, options):
+    def __init__(self, workdir, tables, options, filename="result.xlsx"):
         self.workdir = workdir
-        self.workbook = xlsxwriter.Workbook(workdir / "result.xlsx", {"constant_memory": True})
+        self.workbook = xlsxwriter.Workbook(workdir / filename, {"constant_memory": True})
         self.row_counters = {}
         self.tables = tables
         self.options = options
