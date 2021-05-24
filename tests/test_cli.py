@@ -1,5 +1,6 @@
 import pathlib
 import shutil
+from os import getcwd, listdir
 
 from click.testing import CliRunner
 
@@ -180,3 +181,23 @@ def test_table_stats():
         assert "planning: 1 rows" in result.output
         assert "parties: 8 rows" in result.output
         assert "└-----parties_ids: 14 rows" in result.output
+
+
+def test_xlsx_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        runner.invoke(cli, ["--xlsx", "data.json"])
+        file_list = listdir(getcwd())
+        assert "result.xlsx" in file_list
+        assert not any((file.endswith(".csv") for file in file_list))
+
+
+def test_csv_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        runner.invoke(cli, ["--selection", "tenders", "--csv", "data.json"])
+        file_list = listdir(getcwd())
+        assert "tenders.csv" in file_list
+        assert "result.xlsx" not in file_list
