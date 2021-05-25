@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 import shutil
 
@@ -193,7 +194,32 @@ def test_message_repeat(capsys):
     LOGGER.warning(message)
     LOGGER.warning(message)
     LOGGER.warning(message)
-
     captured = capsys.readouterr()
-
     assert captured.out.count(message) == 1
+
+
+def test_xlsx():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--state-file", "analyzed.json", "--xlsx", "test.xlsx", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+        path = pathlib.Path("test.xlsx")
+        assert path.resolve().exists()
+
+
+def test_csv():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        os.mkdir("test")
+        result = runner.invoke(cli, ["--state-file", "analyzed.json", "--csv", "test", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+        path = pathlib.Path("test").resolve() / "tenders.csv"
+        assert path.resolve().exists()
