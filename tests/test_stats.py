@@ -139,7 +139,6 @@ def test_dump_restore(spec, releases, tmpdir):
 
     with open(tmpdir / "result.json") as fd:
         data = load(fd)
-
     spec2 = DataPreprocessor.restore(data)
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]

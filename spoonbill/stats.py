@@ -1,6 +1,7 @@
 import locale
 import logging
 from collections import deque
+from functools import lru_cache
 from typing import List, Mapping
 
 import jsonref
@@ -58,7 +59,6 @@ class DataPreprocessor:
         self.total_items = total_items
         self.current_table = None
 
-        self._lookup_cache = {}
         self.language = language
         if not self.tables:
             self.parse_schema()
@@ -130,22 +130,19 @@ class DataPreprocessor:
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
         self.current_table = table
-        self._lookup_cache[pointer] = table
+        self.get_table.cache_clear()
 
+    @lru_cache(maxsize=None)
     def get_table(self, path):
         """Get best matching table for `path`
 
         :param path: Path to find corresponding table
         :return: Best matching table
         """
-        if path in self._lookup_cache:
-            return self._lookup_cache[path]
         candidates = get_matching_tables(self.tables, path)
         if not candidates:
             return
-        table = candidates[0]
-        self._lookup_cache[path] = table
-        return table
+        return candidates[0]
 
     def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=""):
         """Append empty row to previews
