@@ -392,4 +392,4 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     path = workdir / "result.xlsx"
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
-        assert not xlsx_reader[name]
+        assert name not in xlsx_reader
