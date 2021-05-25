@@ -66,7 +66,7 @@ def iter_file(fd, root):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    reader = ijson.items(fd, f"{root}.item")
+    reader = ijson.items(fd, f"{root}.item", map_type=OrderedDict)
     for item in reader:
         yield item
 
@@ -242,7 +242,6 @@ def recalculate_headers(root, path, abs_path, key, item, should_split, separator
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
-
     head_updated = False
     for col_p, col in root.combined_columns.items():
         if col_p in zero_cols and not head_updated:

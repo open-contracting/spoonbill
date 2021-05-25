@@ -68,7 +68,10 @@ class XlsxWriter:
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {}").format(column, table))
                 return
             try:
-                sheet.write(self.row_counters[table], col_index, value)
+                if isinstance(value, bool):
+                    sheet.write(self.row_counters[table], col_index, str(value))
+                else:
+                    sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 

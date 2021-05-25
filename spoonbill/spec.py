@@ -47,8 +47,8 @@ class Table:
     :param preview_rows_combined: Generated preview for unsplit version of this table
     """
 
-    name: str
-    path: [str]
+    name: str  #: Table name
+    path: [str]  #: List of paths to gather data to this table
     total_rows: int = 0
     # parent is Table object but dataclasses don`t play well with recursion
     parent: object = field(default_factory=dict)
@@ -198,6 +198,8 @@ class Table:
     def inc(self):
         """Increment number of rows in table"""
         self.total_rows += 1
+        for col_name in DEFAULT_FIELDS_COMBINED:
+            self.inc_column(col_name, col_name)
 
     def dump(self):
         data = asdict(self)

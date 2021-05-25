@@ -2,7 +2,9 @@ from collections import defaultdict
 
 import pytest
 from jmespath import search
+from jsonpointer import resolve_pointer
 
+from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.flatten import Flattener, FlattenOptions
 
 ID_ITEMS = {
@@ -259,3 +261,26 @@ def test_flatten_should_split_with_child(spec, releases, options):
     for item in items:
         assert "/tender/items/id" in item
         assert "/tender/items/description" in item
+
+
+def test_flatten_fields_compare(spec_analyzed, releases):
+    options = FlattenOptions(
+        **{
+            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
+        }
+    )
+    flattener = Flattener(options, spec_analyzed.tables)
+    fields = ["submissionMethod", "roles"]
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            counters = defaultdict(int)
+            for row in reversed(rows):
+                for key, value in row.items():
+                    if "/" in key:
+                        if "parties" in key:
+                            key = key.replace("parties", f"parties/{counters['parties']}")
+                        expected = resolve_pointer(releases[count], key)
+                        if any(key.endswith(field) for field in fields):
+                            expected = JOINABLE_SEPARATOR.join(expected)
+                        assert expected == value
+                counters[name] += 1
