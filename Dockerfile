@@ -1,4 +1,7 @@
 FROM python:3.7-alpine
+
+LABEL org.opencontainers.image.source https://github.com/open-contracting/spoonbill
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV UMASK 000
 
