@@ -1,8 +1,12 @@
+from collections import defaultdict
 from json import dump, load
+from operator import attrgetter
 
 import pytest
 from jmespath import search
+from jsonpointer import resolve_pointer
 
+from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import recalculate_headers
@@ -232,71 +236,53 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.columns
 
 
-def test_analyze_preview_rows(spec, releases):
-    spec.process_items(releases)
-    commodities_path = ["tenders", "parties", "awards", "contracts", "planning"]
-    commodities = [spec.tables.get(i) for i in commodities_path]
-    counters = {}
-    # Compare values of input file and preview_rows
-    for commodity in commodities:
-        for row in commodity.preview_rows:
-            for key, value in row.items():
+def test_analyze_preview_rows(spec_analyzed, releases):
+    tenders = spec_analyzed.tables["tenders"]
+    tenders_items = spec_analyzed.tables["tenders_items"]
+    tenders_tende = spec_analyzed.tables["tenders_tenderers"]
+    tenders_items_class = spec_analyzed.tables["tenders_items_class"]
+
+    for getter in (attrgetter("preview_rows"), attrgetter("preview_rows_combined")):
+        for count, row in enumerate(getter(tenders)):
+            ocid, parent_id, row_id = row["rowID"].split("/")
+            row_id = row_id.split(":")[-1]
+            tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row_id]
+            items = [r for r in getter(tenders_items) if r["parentID"] == row_id and r["parentID"] == parent_id]
+            items_class = [
+                r for r in getter(tenders_items_class) if r["parentID"] == row_id and r["parentID"] == parent_id
+            ]
+            for key, item in row.items():
                 if "/" in key:
-                    if key not in counters:
-                        counters[key] = 0
                     # Check headers are present in tables
-                    header = key
-                    for char in header:
-                        if char.isdigit():
-                            header = header.replace(char, "0")
-                    assert header in COMBINED_COLUMNS[commodity.name] or header in ADDITIONAL_COLUMNS
-                    # Query formatting
-                    query = "".join(["" if char.isdigit() or char == "." else char for char in key]).replace("//", "/")
-                    query = query.replace("//", "/").replace("/", "[].") + "[]"
-                    search_result = search(query, releases)
+                    assert key in tenders
+                    expected = resolve_pointer(releases[count], key)
+                    if isinstance(expected, list):
+                        # joinable
+                        expected = JOINABLE_SEPARATOR.join(expected)
+                    assert item == expected
+                    if "tenderers" in key:
+                        for index, tenderer in enumerate(reversed(tenderers)):
+                            for k, v in tenderer.items():
+                                if "/" in k:
+                                    path = k.replace("/tender/tenderers", f"/tender/tenderers/{index}")
+                                    value = resolve_pointer(releases[count], path)
+                                    assert value == v
 
-                    if len(search_result) == 8:
-                        search_result.reverse()
-                        assert value == search_result[counters[key] - 1]
-                    elif len(search_result) == 2 and value is not search_result[counters[key]]:
-                        search_result.reverse()
-                        assert value == search_result[counters[key]]
-                    else:
-                        assert value == search_result[counters[key]]
-
-                    counters[key] += 1
-
-
-def test_analyze_preview_rows_combined(spec, releases):
-    spec.process_items(releases)
-    commodities_path = ["tenders", "parties", "awards", "contracts", "planning"]
-    commodities = [spec.tables.get(i) for i in commodities_path]
-    counters = {}
-    # Compare values of input file and preview_rows
-    for commodity in commodities:
-        for row in commodity.preview_rows_combined:
-            for key, value in row.items():
-                if "/" in key:
-                    if key not in counters:
-                        counters[key] = 0
-                    # Check headers are present in tables
-                    header = key
-                    for char in header:
-                        if char.isdigit():
-                            header = header.replace(char, "0")
-                    assert header in COMBINED_COLUMNS[commodity.name] or header in ADDITIONAL_COLUMNS
-                    # Query formatting
-                    query = "".join(["" if char.isdigit() or char == "." else char for char in key]).replace("//", "/")
-                    query = query.replace("//", "/").replace("/", "[].") + "[]"
-                    search_result = search(query, releases)
-
-                    if len(search_result) == 8:
-                        search_result.reverse()
-                        assert value == search_result[counters[key] - 1]
-                    elif len(search_result) == 2 and value is not search_result[counters[key]]:
-                        search_result.reverse()
-                        assert value == search_result[counters[key]]
-                    else:
-                        assert value == search_result[counters[key]]
-
-                    counters[key] += 1
+                    if "/tender/items/" in key:
+                        for index, it in enumerate(reversed(items)):
+                            for k, v in it.items():
+                                if "/" in k:
+                                    path = k.replace("/tender/items", f"/tender/items/{index}")
+                                    value = resolve_pointer(releases[count], path)
+                                    assert value == v
+                                    if "additionalClassifications" in k:
+                                        for i, cls in enumerate(reversed(items_class)):
+                                            for k, v in cls.items():
+                                                if "/" in k:
+                                                    path = k.replace("/tender/items", f"/tender/items/{index}")
+                                                    path = path.replace(
+                                                        "/additionalClassifications/",
+                                                        f"/additionalClassifications/{i}/",
+                                                    )
+                                                    value = resolve_pointer(releases[count], path)
+                                                    assert v == value
