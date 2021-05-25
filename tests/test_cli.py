@@ -7,6 +7,7 @@ from click.testing import CliRunner
 from spoonbill.cli import cli
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
+EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
 ANALYZED = pathlib.Path("tests/data/analyzed.json").absolute()
 ONLY = pathlib.Path("tests/data/only").absolute()
@@ -208,3 +209,11 @@ def test_csv():
         assert "Done flattening. Flattened objects: 6" in result.output
         path = pathlib.Path("test").resolve() / "tenders.csv"
         assert path.resolve().exists()
+
+
+def test_empty_list_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(EMPTY_LIST_FILE, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert result.exit_code == 0
