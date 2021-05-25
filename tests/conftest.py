@@ -1,6 +1,7 @@
 import json
 import pathlib
 from collections import OrderedDict
+from decimal import Decimal
 
 import pytest
 
@@ -19,13 +20,13 @@ analyzed_path = here / "data" / "analyzed.json"
 @pytest.fixture
 def schema():
     with open(schema_path) as fd:
-        return json.load(fd)
+        return json.load(fd, parse_float=Decimal)
 
 
 @pytest.fixture
 def releases():
     with open(releases_path) as fd:
-        return json.load(fd)["releases"]
+        return json.load(fd, object_pairs_hook=OrderedDict)["releases"]
 
 
 @pytest.fixture
@@ -43,10 +44,10 @@ def spec(schema):
 
 
 @pytest.fixture
-def spec_analyzed():
-    with open(analyzed_path) as fd:
-        data = json.load(fd)
-    dp = DataPreprocessor.restore(data)
+def spec_analyzed(schema, releases):
+    dp = DataPreprocessor(schema, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
+    for _ in dp.process_items(releases):
+        pass
     return dp
 
 

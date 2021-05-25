@@ -2,7 +2,9 @@ from collections import defaultdict
 
 import pytest
 from jmespath import search
+from jsonpointer import resolve_pointer
 
+from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.flatten import Flattener, FlattenOptions
 
 ID_ITEMS = {
@@ -268,51 +270,17 @@ def test_flatten_fields_compare(spec_analyzed, releases):
         }
     )
     flattener = Flattener(options, spec_analyzed.tables)
-    counters = {}
-    for _count, flat in flattener.flatten(releases):
+    fields = ["submissionMethod", "roles"]
+    for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
-            for row in rows:
+            counters = defaultdict(int)
+            for row in reversed(rows):
                 for key, value in row.items():
                     if "/" in key:
-                        if key not in counters:
-                            counters[key] = 0
-                        query = key.replace("/", "[].") + "[]"
-                        search_result = search(query, releases)
-
-                        if len(search_result) == 8:
-                            search_result.reverse()
-                            assert value == search_result[counters[key] - 1]
-                        elif len(search_result) == 2 and value is not search_result[counters[key]]:
-                            search_result.reverse()
-                            assert value == search_result[counters[key]]
-                        else:
-                            assert value == search_result[counters[key]]
-
-                        counters[key] += 1
-
-
-def test_flatten_joinable_arrays(spec_analyzed, releases):
-    options = FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
-        }
-    )
-    flattener = Flattener(options, spec_analyzed.tables)
-    fields = ["submissionMethod", "roles"]
-    counters = {}
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            for row in rows:
-                for key, value in row.items():
-                    if any(field in key for field in fields):
-                        if key not in counters:
-                            counters[key] = 0
-                        query = key.replace("/", "[].") + "[]"
-                        search_result = search(query, releases)
-
-                        if len(search_result) == 8:
-                            search_result.reverse()
-                            assert value == search_result[counters[key] - 1]
-                        else:
-                            assert value == search_result[counters[key]]
-                        counters[key] += 1
+                        if "parties" in key:
+                            key = key.replace("parties", f"parties/{counters['parties']}")
+                        expected = resolve_pointer(releases[count], key)
+                        if any(key.endswith(field) for field in fields):
+                            expected = JOINABLE_SEPARATOR.join(expected)
+                        assert expected == value
+                counters[name] += 1
