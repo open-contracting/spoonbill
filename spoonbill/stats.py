@@ -59,7 +59,6 @@ class DataPreprocessor:
         self.current_table = None
 
         self._lookup_cache = {}
-        self._table_by_path = {}
         self.language = language
         if not self.tables:
             self.parse_schema()
@@ -72,8 +71,6 @@ class DataPreprocessor:
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
-            for p in path:
-                self._table_by_path[p] = table
 
     def parse_schema(self):
         """Extract all available information from schema"""
@@ -133,8 +130,7 @@ class DataPreprocessor:
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
         self.current_table = table
-        for cache in self._lookup_cache, self._table_by_path:
-            cache[pointer] = table
+        self._lookup_cache[pointer] = table
 
     def get_table(self, path):
         """Get best matching table for `path`
