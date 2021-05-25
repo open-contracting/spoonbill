@@ -166,9 +166,7 @@ class DataPreprocessor:
         if parent_table:
             defaults["parentTable"] = parent_table
         self.current_table.preview_rows.append(defaults)
-        self.current_table.preview_rows_combined.append(
-            {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
-        )
+        self.current_table.preview_rows_combined.append(defaults)
 
     def process_items(self, releases, with_preview=True):
         """Analyze releases
@@ -187,24 +185,21 @@ class DataPreprocessor:
 
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
-                table = self._table_by_path.get(path)
-                if table:
-                    # TODO: fields without ids??
-                    row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
-                    table.inc()
-
-                    for col_name in DEFAULT_FIELDS:
-                        table.inc_column(col_name, col_name)
-
-                    self.current_table = table
-                    if with_preview and count < PREVIEW_ROWS:
-                        self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_key)
                 for key, item in record.items():
                     pointer = separator.join([path, key])
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
                     item_type = self.current_table.types.get(pointer)
+                    if pointer in self.current_table.path:
+                        # strict match like /parties, /tender
+                        row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
+                        c = item if isinstance(item, list) else [item]
+                        for _nop in c:
+                            self.current_table.inc()
+                            if with_preview and count < PREVIEW_ROWS:
+                                parent_table = not self.current_table.is_root and parent_key
+                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
 
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
@@ -270,21 +265,12 @@ class DataPreprocessor:
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    if with_preview and count < PREVIEW_ROWS:
-                                        if pointer in self.current_table.path:
-                                            self.add_preview_row(
-                                                ocid,
-                                                value.get("id"),
-                                                row_id,
-                                                parent.get("id"),
-                                                parent_key,
-                                            )
                                     abs_pointer = separator.join([abs_path, key, str(i)])
                                     to_analyze.append(
                                         (
                                             abs_pointer,
                                             pointer,
-                                            key,
+                                            parent_key,
                                             record,
                                             value,
                                         )
