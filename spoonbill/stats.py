@@ -258,6 +258,7 @@ class DataPreprocessor:
                                 self.current_table.types[pointer] = ["array"]
                                 # TODO: do we need to mark this table as additional
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
+                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
 
                             if parent_table.set_array(pointer, item):
                                 should_split = len(item) >= self.table_threshold
