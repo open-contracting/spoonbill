@@ -1,6 +1,6 @@
 import locale
 import logging
-from collections import deque
+from collections import defaultdict, deque
 from functools import lru_cache
 from typing import List, Mapping
 
@@ -14,6 +14,7 @@ from spoonbill.utils import (
     RepeatFilter,
     extract_type,
     generate_row_id,
+    generate_table_name,
     get_matching_tables,
     get_pointer,
     get_root,
@@ -62,11 +63,19 @@ class DataPreprocessor:
         self.current_table = None
 
         self.language = language
+        self.names_counter = defaultdict(int)
         if not self.tables:
             self.parse_schema()
 
     def __getitem__(self, table):
         return self.tables[table]
+
+    def name_check(self, parent_key, key):
+        table_name = generate_table_name(self.current_table.name, parent_key, key)
+        self.names_counter[table_name] += 1
+        if self.names_counter[table_name] > 1:
+            key = key[:4] + str(self.names_counter[table_name] - 1)
+        return key
 
     def init_tables(self, tables, is_combined=False):
         """Initialize root tables with default fields"""
@@ -114,6 +123,7 @@ class DataPreprocessor:
                         if set(items_type) & {"array", "object"}:
                             if pointer not in self.current_table.path:
                                 # found child array, need to create child table
+                                key = self.name_check(parent_key, key)
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
                             to_analyze.append((pointer, key, properties, items))
                         else:

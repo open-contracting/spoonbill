@@ -1,20 +1,19 @@
 import collections
 import logging
+from collections import defaultdict
 
 import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException
 
 from spoonbill.i18n import _
-from spoonbill.utils import get_headers
+from spoonbill.writers.base_writer import BaseWriter
 
 LOGGER = logging.getLogger("spoonbill")
 
 
-class XlsxWriter:
+class XlsxWriter(BaseWriter):
     """Writer class with output to xlsx files
-
     For each table will be created corresponding sheet inside workbook
-
     :param workdir: Working directory
     :param tables: Tables data
     :options: Flattening options
@@ -23,22 +22,17 @@ class XlsxWriter:
     name = "xlsx"
 
     def __init__(self, workdir, tables, options, filename="result.xlsx"):
-        self.workdir = workdir
+        super().__init__(workdir, tables, options)
+        self.col_index = collections.defaultdict(dict)
         self.workbook = xlsxwriter.Workbook(workdir / filename, {"constant_memory": True})
         self.row_counters = {}
-        self.tables = tables
-        self.options = options
-        self.col_index = collections.defaultdict(dict)
-        self.names = {}
 
-    def writeheaders(self):
+    def __enter__(self):
         """Write headers to output file"""
         for name, table in self.tables.items():
-            opt = self.options.selection[name]
-            table_name = opt.name or name
-            self.names[name] = table_name
+            table_name, headers = self.init_sheet(name, table)
             sheet = self.workbook.add_worksheet(table_name)
-            headers = get_headers(table, opt)
+
             for col_index, col_name in enumerate(headers):
                 self.col_index[name][col_name] = col_index
                 try:
@@ -48,6 +42,10 @@ class XlsxWriter:
                         _("Failed to write header {} to xlsx sheet {} with error {}").format(col_name, name, err)
                     )
             self.row_counters[name] = 1
+        return self
+
+    def __exit__(self, *args):
+        self.workbook.close()
 
     def writerow(self, table, row):
         """Write row to output file"""
@@ -59,6 +57,8 @@ class XlsxWriter:
             return
 
         for column, value in row.items():
+            if isinstance(value, bool):
+                value = str(value)
             try:
                 col_index = columns[column]
             except KeyError:
@@ -68,15 +68,8 @@ class XlsxWriter:
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {}").format(column, table))
                 return
             try:
-                if isinstance(value, bool):
-                    sheet.write(self.row_counters[table], col_index, str(value))
-                else:
-                    sheet.write(self.row_counters[table], col_index, value)
+                sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 
         self.row_counters[table] += 1
-
-    def close(self):
-        """Finish work"""
-        self.workbook.close()

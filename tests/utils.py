@@ -18,21 +18,9 @@ def read_xlsx_headers(path, sheet):
     return [c.value for cell in columns for c in cell]
 
 
-def read_headers(path, sheet, type):
-    if type == "csv":
-        return read_csv_headers(path)
-    return read_xlsx_headers(path, sheet)
-
-
 def get_writers(workdir, tables, options):
-    writers = [
-        CSVWriter(workdir, tables, options),
-        XlsxWriter(workdir, tables, options),
-    ]
-    for writer in writers:
-        writer.writeheaders()
-        writer.close()
-    return writers
+    with CSVWriter(workdir, tables, options) as csv, XlsxWriter(workdir, tables, options) as xlsx:
+        return [csv, xlsx]
 
 
 def prepare_tables(spec, options, inc_columns=None):
