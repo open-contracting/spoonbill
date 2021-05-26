@@ -210,7 +210,7 @@ def cli(
             language=language,
             table_threshold=threshold,
         )
-        click.echo(_("Alanyze options:"))
+        click.echo(_("Analyze options:"))
         click.echo(_(" - table threshold => {}").format(click.style(str(threshold), fg="cyan")))
         click.echo(_(" - language        => {}").format(click.style(language, fg="cyan")))
         click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
