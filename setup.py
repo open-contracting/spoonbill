@@ -21,6 +21,8 @@ docs_requires = [
     "Sphinx",
     "sphinx-autobuild",
     "sphinx-rtd-theme",
+    "sphinx_click",
+    "sphinx_changelog",
 ]
 
 setup(
