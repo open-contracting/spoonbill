@@ -4,16 +4,17 @@ import locale
 import os
 from collections import deque
 from functools import lru_cache
-from pathlib import Path
 
 import jsonref
+import pkg_resources
 
 from spoonbill.common import COMBINED_TABLES
 from spoonbill.utils import common_prefix, extract_type
 
 DOMAIN = "spoonbill"
-LOCALEDIR = str(Path(__file__).parent / "locales")
+LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locales/")
 LOCALE = "en_US"
+
 system_locale = locale.getdefaultlocale()
 if system_locale and system_locale[0]:
     LOCALE = system_locale[0]

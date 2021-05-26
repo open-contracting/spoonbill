@@ -24,7 +24,9 @@ class XlsxWriter(BaseWriter):
     def __init__(self, workdir, tables, options, filename="result.xlsx"):
         super().__init__(workdir, tables, options)
         self.col_index = collections.defaultdict(dict)
-        self.workbook = xlsxwriter.Workbook(workdir / filename, {"constant_memory": True})
+        path = workdir / filename
+        LOGGER.info(_("Dumping all sheets to file to file '{}'").format(path))
+        self.workbook = xlsxwriter.Workbook(path, {"constant_memory": True})
         self.row_counters = {}
 
     def __enter__(self):
