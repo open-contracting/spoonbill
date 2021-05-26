@@ -209,7 +209,7 @@ class DataPreprocessor:
                                 item,
                             )
                         )
-                    elif isinstance(item, list):
+                    elif item and isinstance(item, list):
                         abs_pointer = separator.join([abs_path, key])
                         if not isinstance(item[0], dict) and not item_type:
                             LOGGER.warning(
@@ -289,7 +289,7 @@ class DataPreprocessor:
                                 abs_path=abs_pointer,
                             )
                         self.current_table.inc_column(abs_pointer, pointer)
-                        if with_preview and count < PREVIEW_ROWS:
+                        if item and with_preview and count < PREVIEW_ROWS:
                             self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
         self.total_items = count
