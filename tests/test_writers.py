@@ -312,15 +312,12 @@ def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    writer = CSVWriter(workdir, tables, flatten_options)
-    writer.writeheaders()
-
-    # Writing CSV files
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            for row in rows:
-                writer.writerow(name, row)
-    writer.close()
+    with CSVWriter(workdir, tables, flatten_options) as writer:
+        # Writing CSV files
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
 
     # Reading CSV files
     counter = {}
@@ -345,15 +342,12 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    writer = XlsxWriter(workdir, tables, flatten_options)
-    writer.writeheaders()
-
-    # Writing XLSX file
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            for row in rows:
-                writer.writerow(name, row)
-    writer.close()
+    with XlsxWriter(workdir, tables, flatten_options) as writer:
+        # Writing XLSX file
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
 
     # Reading XLSX files
     counter = {}
@@ -388,13 +382,11 @@ def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    writer = CSVWriter(workdir, tables, flatten_options)
-    writer.writeheaders()
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            for row in rows:
-                writer.writerow(name, row)
-    writer.close()
+    with CSVWriter(workdir, tables, flatten_options) as writer:
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
 
     for name in test_arrays:
         path = workdir / f"{name}.csv"
@@ -406,13 +398,11 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    writer = XlsxWriter(workdir, tables, flatten_options)
-    writer.writeheaders()
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            for row in rows:
-                writer.writerow(name, row)
-    writer.close()
+    with XlsxWriter(workdir, tables, flatten_options) as writer:
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
 
     path = workdir / "result.xlsx"
     xlsx_reader = openpyxl.load_workbook(path)

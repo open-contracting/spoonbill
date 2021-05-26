@@ -121,6 +121,7 @@ class DataPreprocessor:
                         if set(items_type) & {"array", "object"}:
                             if pointer not in self.current_table.path:
                                 # found child array, need to create child table
+                                key = self.name_check(parent_key, key)
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
                             to_analyze.append((pointer, key, properties, items))
                         else:

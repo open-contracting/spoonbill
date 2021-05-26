@@ -86,39 +86,43 @@ class FileFlattener:
         # TODO: detect package, where?
         self.root_key = root_key
         self.writers = []
-        if csv:
-            workdir = self.workdir
-            if isinstance(csv, Path):
-                workdir = csv
-            self.writers.append(CSVWriter(workdir, self.flattener.tables, self.flattener.options))
-        if xlsx:
-            self.writers.append(XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options, filename=xlsx))
+        self.csv = csv
+        self.xlsx = xlsx
 
-    def writerow(self, table, row):
-        """Write row to output file"""
-        for wr in self.writers:
-            wr.writerow(table, row)
-
-    def _close(self):
-        for wr in self.writers:
-            wr.close()
+    def _flatten(self, filename, writers):
+        path = self.workdir / filename
+        with open(path, "rb") as fd:
+            items = iter_file(fd, self.root_key)
+            for count, data in self.flattener.flatten(items):
+                for table, rows in data.items():
+                    for row in rows:
+                        for wr in writers:
+                            wr.writerow(table, row)
+                yield count
 
     def flatten_file(self, filename):
         """Flatten file
 
         :param filename: Input filename in working directory
         """
-        path = self.workdir / filename
-        for w in self.writers:
-            w.writeheaders()
-        with open(path, "rb") as fd:
-            items = iter_file(fd, self.root_key)
-            for count, data in self.flattener.flatten(items):
-                for table, rows in data.items():
-                    for row in rows:
-                        self.writerow(table, row)
-                yield count
-        self._close()
+        workdir = self.workdir
+        if isinstance(self.csv, Path):
+            workdir = self.csv
+        if not self.xlsx and self.csv:
+            with CSVWriter(workdir, self.flattener.tables, self.flattener.options) as writer:
+                for count in self._flatten(filename, [writer]):
+                    yield count
+        if self.xlsx and not self.csv:
+            with XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options, filename=self.xlsx) as writer:
+                for count in self._flatten(filename, [writer]):
+                    yield count
+
+        if self.xlsx and self.csv:
+            with XlsxWriter(
+                self.workdir, self.flattener.tables, self.flattener.options, filename=self.xlsx
+            ) as xlsx, CSVWriter(workdir, self.flattener.tables, self.flattener.options) as csv:
+                for count in self._flatten(filename, [xlsx, csv]):
+                    yield count
 
 
 __all__ = ["FileFlattener", "FileAnalyzer"]

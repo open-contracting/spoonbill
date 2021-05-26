@@ -3,7 +3,6 @@ import logging
 from collections import defaultdict
 
 from spoonbill.i18n import _
-from spoonbill.utils import get_headers
 from spoonbill.writers.base_writer import BaseWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -20,23 +19,17 @@ class CSVWriter(BaseWriter):
     name = "csv"
 
     def __init__(self, workdir, tables, options):
-        self.workdir = workdir
+        super().__init__(workdir, tables, options)
         self.writers = {}
         self.fds = []
-        self.tables = tables
-        self.options = options
-        self.headers = {}
-        self.names_counter = defaultdict(int)
-        for name, table in self.tables.items():
-            opt = self.options.selection[name]
-            headers = get_headers(table, opt)
-            self.headers[name] = headers
-            table_name = opt.name or name
 
-            table_name = self.name_check(table_name)
+    def __enter__(self):
+        """Write headers to output file"""
+        for name, table in self.tables.items():
+            table_name, headers = self.init_sheet(name, table)
 
             try:
-                path = workdir / f"{table_name}.csv"
+                path = self.workdir / f"{table_name}.csv"
                 fd = open(path, "w")
             except (IOError, OSError) as e:
                 LOGGER.error(_("Failed to open file {} with error {}").format(path, e))
@@ -45,14 +38,17 @@ class CSVWriter(BaseWriter):
             self.fds.append(fd)
             self.writers[name] = writer
 
-    def writeheaders(self):
-        """Write headers to output file"""
         for name, writer in self.writers.items():
             headers = self.headers[name]
             try:
                 writer.writerow(headers)
             except ValueError as err:
                 LOGGER.error(_("Failed to headers with error {}").format(err))
+        return self
+
+    def __exit__(self, *args):
+        for fd in self.fds:
+            fd.close()
 
     def writerow(self, table, row):
         """Write row to output file"""
@@ -63,8 +59,3 @@ class CSVWriter(BaseWriter):
             LOGGER.error(_("Failed to write row {} with error {}").format(row.get("rowID"), err))
         except KeyError:
             LOGGER.error(_("Invalid table {}").format(table))
-
-    def close(self):
-        """Finish work"""
-        for fd in self.fds:
-            fd.close()

@@ -6,7 +6,6 @@ import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException
 
 from spoonbill.i18n import _
-from spoonbill.utils import get_headers
 from spoonbill.writers.base_writer import BaseWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -23,26 +22,17 @@ class XlsxWriter(BaseWriter):
     name = "xlsx"
 
     def __init__(self, workdir, tables, options, filename="result.xlsx"):
-        self.workdir = workdir
+        super().__init__(workdir, tables, options)
+        self.col_index = collections.defaultdict(dict)
         self.workbook = xlsxwriter.Workbook(workdir / filename, {"constant_memory": True})
         self.row_counters = {}
-        self.tables = tables
-        self.options = options
-        self.col_index = collections.defaultdict(dict)
-        self.names = {}
-        self.names_counter = defaultdict(int)
 
-    def writeheaders(self):
+    def __enter__(self):
         """Write headers to output file"""
         for name, table in self.tables.items():
-            opt = self.options.selection[name]
-            table_name = opt.name or name
-
-            table_name = self.name_check(table_name)
-
-            self.names[name] = table_name
+            table_name, headers = self.init_sheet(name, table)
             sheet = self.workbook.add_worksheet(table_name)
-            headers = get_headers(table, opt)
+
             for col_index, col_name in enumerate(headers):
                 self.col_index[name][col_name] = col_index
                 try:
@@ -52,6 +42,10 @@ class XlsxWriter(BaseWriter):
                         _("Failed to write header {} to xlsx sheet {} with error {}").format(col_name, name, err)
                     )
             self.row_counters[name] = 1
+        return self
+
+    def __exit__(self, *args):
+        self.workbook.close()
 
     def writerow(self, table, row):
         """Write row to output file"""
@@ -79,7 +73,3 @@ class XlsxWriter(BaseWriter):
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 
         self.row_counters[table] += 1
-
-    def close(self):
-        """Finish work"""
-        self.workbook.close()

@@ -277,25 +277,6 @@ def resolve_file_uri(file_path):
             return json.load(fd)
 
 
-def get_headers(table, options):
-    """Generate table headers respecting human and override options
-
-    :param table: Target table
-    :param options: Flattening options
-    :return: Mapping between column and its header
-    """
-    split = options.split and table.roll_up
-    # split = options.split if is_root else table.should_split
-    headers = {c: c for c in table.available_rows(split=split)}
-    if options.pretty_headers:
-        for c in headers:
-            headers[c] = table.titles.get(c, c)
-    if options.headers:
-        for c, h in options.headers.items():
-            headers[c] = h
-    return headers
-
-
 def read_lines(path):
     """Read file as lines"""
     with open(path) as fd:
