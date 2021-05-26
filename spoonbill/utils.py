@@ -1,4 +1,5 @@
 import codecs
+import functools
 import json
 import logging
 from collections import OrderedDict
@@ -31,6 +32,7 @@ ABBREVIATION_TABLE_NAME = {
 }
 
 
+@functools.lru_cache(maxsize=None)
 def common_prefix(path, subpath, separator="/"):
     """Given two paths, returns the longest common sub-path.
 
@@ -44,13 +46,16 @@ def common_prefix(path, subpath, separator="/"):
     '/tender/items/0'
     """
     paths = [path.split(separator), subpath.split(separator)]
-    s1 = min(paths)
-    s2 = max(paths)
-    common = s1
+    if len(paths[0]) <= len(paths[1]):
+        s1, s2 = paths
+    else:
+        s2, s1 = paths
     for i, path in enumerate(s1):
         if path != s2[i]:
             common = s1[:i]
             break
+    else:
+        common = s1
     return separator.join(common)
 
 
