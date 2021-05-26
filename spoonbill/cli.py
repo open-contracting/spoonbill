@@ -226,7 +226,7 @@ def cli(
         click.secho(
             _("Done processing. Analyzed objects: {}").format(click.style(str(number + 1), fg="red")), fg="green"
         )
-        state_file = pathlib.Path(f"{filename}.analyzed.json")
+        state_file = pathlib.Path(f"{filename}.state")
         state_file_path = workdir / state_file
         click.echo(_("Dumping analyzed data to '{}'").format(click.style(str(state_file_path.absolute()), fg="cyan")))
         analyzer.dump_to_file(state_file)

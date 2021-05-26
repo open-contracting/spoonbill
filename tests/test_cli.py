@@ -14,7 +14,7 @@ LOGGER.addFilter(RepeatFilter())
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
-ANALYZED = pathlib.Path("tests/data/analyzed.json").absolute()
+ANALYZED = pathlib.Path("tests/data/analyzed").absolute()
 ONLY = pathlib.Path("tests/data/only").absolute()
 UNNEST = pathlib.Path("tests/data/unnest").absolute()
 

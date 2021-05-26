@@ -1,7 +1,9 @@
 import locale
 import logging
+import pickle
 from collections import defaultdict, deque
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Mapping
 
 import jsonref
@@ -85,7 +87,7 @@ class DataPreprocessor:
 
     def parse_schema(self):
         """Extract all available information from schema"""
-        if isinstance(self.schema, str):
+        if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.schema = jsonref.JsonRef.replace_refs(self.schema)
         self.init_tables(self.root_tables)
@@ -302,42 +304,22 @@ class DataPreprocessor:
             yield count
         self.total_items = count
 
-    def dump(self):
-        """Dump table objects to python dictionary"""
-        return {
-            "schema": self.schema,
-            "root_tables": self.root_tables,
-            "combined_tables": self.combined_tables,
-            "header_separator": self.header_separator,
-            "tables": {name: table.dump() for name, table in self.tables.items()},
-            "table_threshold": self.table_threshold,
-            "total_items": self.total_items,
-        }
+    def dump(self, path):
+        """Dump table objects to file system"""
+        try:
+            with open(path, "wb") as fd:
+                pickle.dump(self, fd)
+        except (OSError, IOError) as e:
+            LOGGER.error(_("Failed to dump DataPreprocessor to file. Error: {}").format(e))
 
     @classmethod
-    def restore(cls, data):
-        """Restore DataPreprocessor from existing data
+    def restore(_cls, path):
+        """Restore DataPreprocessor from file
 
-        :param data: Data to restore from
+        :param path: Full path to file
         """
         try:
-            spec = {
-                "schema": data["schema"],
-                "root_tables": data["root_tables"],
-                "combined_tables": data["combined_tables"],
-                "header_separator": data["header_separator"],
-                "table_threshold": data["table_threshold"],
-                "total_items": data["total_items"],
-            }
-        except KeyError as e:
-            LOGGER.error(_("Failed to restore from malformed data. Missing {} attribute").format(e))
-            raise ValueError(_("Unable to restore, invalid input data"))
-        tables = {name: Table(**table) for name, table in data["tables"].items() if table["is_root"]}
-
-        for name, table in data["tables"].items():
-            if not table["is_root"]:
-                parent = tables[table["parent"]]
-                table["parent"] = parent
-                tables[name] = Table(**table)
-        spec["tables"] = tables
-        return cls(**spec)
+            with open(path, "rb") as fd:
+                return pickle.load(fd)
+        except (TypeError, pickle.UnpicklingError):
+            LOGGER.error(_("Invalid pickle file. Can't restore."))

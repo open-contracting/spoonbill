@@ -35,8 +35,7 @@ class FileAnalyzer:
     ):
         self.workdir = Path(workdir)
         if state_file:
-            with open(state_file, "rb") as fd:
-                self.spec = pickle.load(fd)
+            self.spec = DataPreprocessor.restore(state_file)
         else:
             self.spec = DataPreprocessor(
                 schema,
@@ -64,8 +63,7 @@ class FileAnalyzer:
         :param filename: Output filename in working directory
         """
         path = self.workdir / filename
-        with open(path, "wb") as fd:
-            pickle.dump(self.spec, fd)
+        self.spec.dump(path)
 
 
 class FileFlattener:
