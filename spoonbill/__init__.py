@@ -1,5 +1,5 @@
-import json
 import logging
+import pickle
 from pathlib import Path
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
@@ -35,9 +35,7 @@ class FileAnalyzer:
     ):
         self.workdir = Path(workdir)
         if state_file:
-            with open(state_file) as fd:
-                data = json.load(fd)
-            self.spec = DataPreprocessor.restore(data)
+            self.spec = DataPreprocessor.restore(state_file)
         else:
             self.spec = DataPreprocessor(
                 schema,
@@ -65,8 +63,7 @@ class FileAnalyzer:
         :param filename: Output filename in working directory
         """
         path = self.workdir / filename
-        with open(path, "w") as fd:
-            json.dump(self.spec.dump(), fd, default=str)
+        self.spec.dump(path)
 
 
 class FileFlattener:

@@ -1,6 +1,7 @@
+import pickle
 from collections import defaultdict
-from json import dump, load
 from operator import attrgetter
+from unittest.mock import call, mock_open, patch
 
 import pytest
 from jmespath import search
@@ -10,8 +11,8 @@ from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import recalculate_headers
+from tests.conftest import TEST_COMBINED_TABLES, TEST_ROOT_TABLES, schema_path
 from tests.data import (
-    TEST_ROOT_TABLES,
     awards_arrays,
     awards_columns,
     awards_combined_columns,
@@ -77,6 +78,11 @@ def test_parse_schema(schema, spec):
             assert col == 0
 
 
+def test_resolve_schema_uri():
+    dp = DataPreprocessor(schema_path, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
+    assert isinstance(dp.schema, dict)
+
+
 def test_get_table(spec, releases):
     table = spec.get_table("/tender")
     assert table.name == "tenders"
@@ -131,15 +137,21 @@ def test_analyze(spec, releases):
     assert parties["/parties/roles"].hits == len(search("[].parties[].roles", releases))
 
 
-def test_dump_restore(spec, releases, tmpdir):
+@patch("spoonbill.LOGGER.error")
+def test_mismatched_types(log, spec, releases):
+    releases[0]["tender"]["id"] = ["/test/id"]
     for _ in spec.process_items(releases):
         pass
-    with open(tmpdir / "result.json", "w") as fd:
-        dump(spec.dump(), fd)
+    log.assert_has_calls([call("Mismatched type on /tender/id expected ['string', 'integer']")])
 
-    with open(tmpdir / "result.json") as fd:
-        data = load(fd)
-    spec2 = DataPreprocessor.restore(data)
+
+@patch("spoonbill.LOGGER.error")
+def test_dump_restore(log, spec, releases, tmpdir):
+    for _ in spec.process_items(releases):
+        pass
+    spec.dump(tmpdir / "result.json")
+    spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]
     for key in (
@@ -152,9 +164,13 @@ def test_dump_restore(spec, releases, tmpdir):
         "total_items",
     ):
         assert key in spec2.__dict__
-    with pytest.raises(ValueError, match="Unable to restore"):
-        del data["schema"]
-        spec2 = DataPreprocessor.restore(data)
+    with patch("builtins.open", mock_open(read_data="invalid")):
+        spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+        log.assert_has_calls([call("Invalid pickle file. Can't restore.")])
+
+    with patch("builtins.open", mock_open(read_data=b"invalid")):
+        spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+        log.assert_has_calls([call("Invalid pickle file. Can't restore.")])
 
 
 def test_recalculate_headers(root_table, releases):

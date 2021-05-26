@@ -1,5 +1,6 @@
 import json
 import pathlib
+import pickle
 from collections import OrderedDict
 from decimal import Decimal
 
@@ -14,7 +15,7 @@ from .data import TEST_COMBINED_TABLES, TEST_ROOT_TABLES
 here = pathlib.Path(__file__).parent
 schema_path = here / "data" / "ocds-simplified-schema.json"
 releases_path = here / "data" / "ocds-sample-data.json"
-analyzed_path = here / "data" / "analyzed.json"
+analyzed_path = here / "data" / "analyzed"
 
 
 @pytest.fixture

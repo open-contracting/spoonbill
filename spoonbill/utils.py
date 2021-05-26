@@ -6,8 +6,10 @@ from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
+from pathlib import Path
 
 import ijson
+import requests
 
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
@@ -273,13 +275,11 @@ def resolve_file_uri(file_path):
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
-    if file_path.startswith("http"):
-        import requests
-
-        return requests.get(file_path).json()
-    else:
+    if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd)
+    if file_path.startswith("http"):
+        return requests.get(file_path).json()
 
 
 def read_lines(path):
