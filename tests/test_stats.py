@@ -1,6 +1,6 @@
+import pickle
 from collections import defaultdict
 from operator import attrgetter
-import pickle
 from unittest.mock import call, mock_open, patch
 
 import pytest
