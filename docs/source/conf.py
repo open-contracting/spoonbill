@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "spoonbill"
 copyright = "2021, Open Contracting Partnership"
 author = "Open Contracting Partnership"
-release = "1.0.0b1"
+release = "1.0.1b1"
 
 
 # -- General configuration ---------------------------------------------------
