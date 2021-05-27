@@ -99,6 +99,13 @@ jobs:
       - run: |
               sudo chown $(whoami) -R  spoonbill/locales/
               pybabel compile -f -D spoonbill -d spoonbill/locales/
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -115,8 +122,14 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
           tags: |
-            ghcr.io/${{ secrets.REGISTRY_USER }}/spoonbill:latest
+            ghcr.io/${{ secrets.REGISTRY_PATH }}/spoonbill:latest
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - run: |
               pip install --upgrade setuptools wheel
               python setup.py sdist bdist_wheel
