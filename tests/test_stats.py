@@ -1,14 +1,11 @@
-import pickle
-from collections import defaultdict
 from operator import attrgetter
 from unittest.mock import call, mock_open, patch
 
-import pytest
 from jmespath import search
 from jsonpointer import resolve_pointer
 
 from spoonbill.common import JOINABLE_SEPARATOR
-from spoonbill.spec import Column, Table, add_child_table
+from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import recalculate_headers
 from tests.conftest import TEST_COMBINED_TABLES, TEST_ROOT_TABLES, schema_path

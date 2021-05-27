@@ -1,12 +1,12 @@
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
-from typing import List, Mapping, Sequence
+from typing import List, Mapping
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.i18n import LOCALE, _
 from spoonbill.spec import Table
-from spoonbill.utils import generate_row_id, get_matching_tables, get_pointer, get_root
+from spoonbill.utils import generate_row_id, get_pointer, get_root
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -167,7 +167,8 @@ class Flattener:
                     if combined:
                         # add count columns only if table is rolled up
                         # in other way it could be frustrating
-                        # e.g. it may generate columns for whole array (/tender/items/200/additionalClassificationsCount)
+                        # e.g. it may generate columns for whole array like:
+                        # /tender/items/200/additionalClassificationsCount
                         target.add_column(
                             path,
                             "integer",

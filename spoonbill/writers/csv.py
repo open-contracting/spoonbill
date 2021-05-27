@@ -1,6 +1,5 @@
 import csv
 import logging
-from collections import defaultdict
 
 from spoonbill.i18n import _
 from spoonbill.writers.base_writer import BaseWriter

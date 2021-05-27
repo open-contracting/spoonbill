@@ -1,10 +1,9 @@
 import logging
-import pickle
 from pathlib import Path
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import Flattener
-from spoonbill.i18n import LOCALE, _
+from spoonbill.i18n import LOCALE
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter

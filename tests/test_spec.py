@@ -1,6 +1,4 @@
-from collections import OrderedDict
-
-from spoonbill.spec import Column, Table, add_child_table
+from spoonbill.spec import add_child_table
 from spoonbill.utils import combine_path, get_pointer
 
 
