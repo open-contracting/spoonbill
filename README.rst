@@ -7,7 +7,7 @@ Spoonbill is a library and command-line tool to convert OCDS data from JSON to E
 Installation
 ############
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install spoonbill.
+Use the package manager `pip <https://pip.pypa.io/en/stable/>`_ to install spoonbill.
 
 .. code-block:: bash
 
@@ -16,24 +16,12 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install spoonbi
 Features
 ############
 
-* Convert data from json to csv and xlsx sheets
-* Generate state file with analyzed data from intput file
-* Use a JSON schema to guide the approach to flattening
-* Use a JSON schema to provide column titles rather than field names
-* Output tables selection
-* Same datatypes from different locations could be combined into one table
+The primary use case for OCDS Flatten Tool is to convert data that conforms to the Open Contracting Data Standard from JSON to Excel / CSV (*hereinafter tables*).
 
+It aims to improve the user's experience with performing a simple transformation of JSON to tables by:
 
-Usage
-############
+1. Mitigating a high number of tables through rollup of top-level arrays into the initial table.
+2. Exploring the dataset to see what fields are available and customization to fit your requirements.
+3. Storing objects that follow the same schema in the same table. For example, an array of Document objects is allowed under 5 different objects (Award, Contract, Planning, Tenders,Implementation) woud be created as a single table.
 
-
-.. code-block:: bash
-
-   spoonbill --selection tenders,parties tests/data/ocds-sample-data.json
-
-Contributing
-############
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
+For more examples see `documentation <https://spoonbill.readthedocs.io/en/latest/>`_
