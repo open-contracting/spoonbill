@@ -1,37 +1,40 @@
-.. spoonbill documentation master file, created by
-   sphinx-quickstart on Mon Apr 19 15:11:07 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Spoonbill |release|
+===================
 
-#####################################
-Welcome to spoonbill's documentation!
-#####################################
+.. include:: ../../README.rst
 
-The primary use case for OCDS Flatten Tool is to convert data that conforms to the Open Contracting Data Standard from JSON to Excel / CSV (*hereinafter tables*).
+To install:
 
-It aims to improve the user's experience with performing a simple transformation of JSON to tables by:
+.. code-block:: bash
 
-1. Mitigating a high number of tables through rollup of top-level arrays into the root table.
-For example, an array of ``Document`` objects is allowed under 5 different objects (``Award, Contract, Planning, Tenders,Implementation``) woud be created as a single root table.
-2. Exploring the dataset to see what fields are available and customization to fit your requirements.
-3. Rolling up short arrays into parent tables. If an array consistently has a small number of entries, it can be moved into its root table, with additional columns for each entry.
+    pip install spoonbill
 
-For users which are not familiar with the command line, this tool is available as web interface to perform and configure the conversion.
+To improve performance, install the `YAJL <http://lloyd.github.io/yajl/>`__ system library (for example, on macOS, run ``brew install yajl``).
+
+Spoonbill requires Python 3.6 or greater.
+
+Goals
+-----
+
+Spoonbill aims to improve the user's experience by:
+
+#. Reducing the number of tables:
+
+   -  OCDS allows arrays of ``Document`` objects in five locations (under ``planning``, ``tender``, etc.). Instead of creating one table per location, Spoonbill combines documents into one table. It does the same for milestones and amendments.
+   -  Some arrays always have few entries within a given dataset: for example, an organization's identifiers. Instead of creating a new table, Spoonbill merges short arrays into their parent table.
+
+#. Exploring the dataset to see what fields are available and customization to fit your requirements.
+
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents
 
-   getting-started
    cli-usage
    flattenning-conf
    cli
    api
-   developer-guide
-   change-log
+   contributing
+   changelog
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Copyright (c) 2021 Open Contracting Partnership, released under the BSD license

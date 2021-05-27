@@ -1,27 +1,16 @@
-*********
-Spoonbill
-*********
+|PyPI Version| |Build Status| |Lint Status| |Coverage Status| |Python Version|
 
-Spoonbill is a library and command-line tool to convert OCDS data from JSON to Excel/CSV
+Spoonbill converts data that conforms to the `Open Contracting Data Standard (OCDS) <https://standard.open-contracting.org/latest/en/>`__ from JSON to Excel / CSV ("tables", hereafter).
 
-Installation
-############
+This documentation describes the command-line tool and Python library. Spoonbill is also accessible via a web application (URL pending).
 
-Use the package manager `pip <https://pip.pypa.io/en/stable/>`_ to install spoonbill.
+If you are viewing this on GitHub or PyPI, open the `full documentation <https://open-contracting.github.io/spoonbill/>`__ for additional details.
 
-.. code-block:: bash
-
-   pip install spoonbill
-
-Features
-############
-
-The primary use case for OCDS Flatten Tool is to convert data that conforms to the Open Contracting Data Standard from JSON to Excel / CSV (*hereinafter tables*).
-
-It aims to improve the user's experience with performing a simple transformation of JSON to tables by:
-
-1. Mitigating a high number of tables through rollup of top-level arrays into the initial table.
-2. Exploring the dataset to see what fields are available and customization to fit your requirements.
-3. Storing objects that follow the same schema in the same table. For example, an array of Document objects is allowed under 5 different objects (Award, Contract, Planning, Tenders,Implementation) woud be created as a single table.
-
-For more examples see `documentation <https://open-contracting.github.io/spoonbill/index.html>`_
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/spoonbill.svg
+   :target: https://pypi.org/project/spoonbill/
+.. |Build Status| image:: https://github.com/open-contracting/spoonbill/workflows/CI/badge.svg
+.. |Lint Status| image:: https://github.com/open-contracting/spoonbill/workflows/Lint/badge.svg
+.. |Coverage Status| image:: https://coveralls.io/repos/github/open-contracting/spoonbill/badge.svg?branch=main
+   :target: https://coveralls.io/github/open-contracting/spoonbill?branch=main
+.. |Python Version| image:: https://img.shields.io/pypi/pyversions/spoonbill.svg
+   :target: https://pypi.org/project/spoonbill/
