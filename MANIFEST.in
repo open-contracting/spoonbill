@@ -1,11 +1,10 @@
-include LICENSE
+include *.rst
+include babel.cfg
+include tox.ini
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
-recursive-include tests *.csv
+recursive-include spoonbill *.po
+recursive-include spoonbill *.pot
 recursive-include tests *.json
-recursive-include tests *.jsonl
 recursive-include tests *.py
-recursive-include tests *.yaml
-recursive-include tests *.po
-recursive-include tests *.mo
