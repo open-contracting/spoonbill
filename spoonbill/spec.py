@@ -13,6 +13,7 @@ LOGGER = logging.getLogger("spoonbill")
 @dataclass
 class Column:
     """Column class is a data container to store column information
+
     :param title: Column human friendly title
     :param type: Column expected type
     :param id: Column path
@@ -28,6 +29,7 @@ class Column:
 @dataclass
 class Table:
     """Table data holder
+
     :param name: Table name
     :param path: List of paths to gather data to this table
     :param total_rows: Total available rows in this table
