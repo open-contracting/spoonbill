@@ -13,7 +13,7 @@ from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import LOCALE, _
-from spoonbill.utils import read_lines, resolve_file_uri
+from spoonbill.utils import default_field_case, read_lines, resolve_file_uri
 
 LOGGER = logging.getLogger("spoonbill")
 click_logging.basic_config(LOGGER)
@@ -259,6 +259,7 @@ def cli(
                 )
             )
 
+        only = default_field_case(only)
         only = [col for col in only if col in table]
         if only:
             click.echo(

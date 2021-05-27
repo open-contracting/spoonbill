@@ -8,7 +8,7 @@ from numbers import Number
 
 import ijson
 
-from spoonbill.common import DEFAULT_FIELDS_COMBINED
+from spoonbill.common import DEFAULT_FIELDS_CASE, DEFAULT_FIELDS_COMBINED
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -332,3 +332,10 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
             return separator.join((prefix, pointer))
         return prefix
     return path
+
+
+def default_field_case(only):
+    for option in only:
+        if option in DEFAULT_FIELDS_CASE:
+            only[only.index(option)] = DEFAULT_FIELDS_CASE[option]
+    return only
