@@ -1,6 +1,6 @@
-|PyPI Version| |Build Status| |Lint Status| |Coverage Status| |Python Version|
+|PyPI Version| |Build Status| |Coverage Status| |Python Version|
 
-Spoonbill converts data that conforms to the `Open Contracting Data Standard (OCDS) <https://standard.open-contracting.org/latest/en/>`__ from JSON to Excel / CSV ("tables", hereafter).
+Spoonbill converts data that conforms to the `Open Contracting Data Standard (OCDS) <https://standard.open-contracting.org/latest/en/>`__ from JSON to Excel / CSV ("tables", hereafter). This is also known as "flattening" JSON data.
 
 This documentation describes the command-line tool and Python library. Spoonbill is also accessible via a web application (URL pending).
 
@@ -8,8 +8,7 @@ If you are viewing this on GitHub or PyPI, open the `full documentation <https:/
 
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/spoonbill.svg
    :target: https://pypi.org/project/spoonbill/
-.. |Build Status| image:: https://github.com/open-contracting/spoonbill/workflows/CI/badge.svg
-.. |Lint Status| image:: https://github.com/open-contracting/spoonbill/workflows/Lint/badge.svg
+.. |Build Status| image:: https://github.com/open-contracting/spoonbill/workflows/push.yaml/badge.svg
 .. |Coverage Status| image:: https://coveralls.io/repos/github/open-contracting/spoonbill/badge.svg?branch=main
    :target: https://coveralls.io/github/open-contracting/spoonbill?branch=main
 .. |Python Version| image:: https://img.shields.io/pypi/pyversions/spoonbill.svg
