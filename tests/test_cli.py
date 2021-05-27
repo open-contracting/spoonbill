@@ -244,3 +244,12 @@ def test_empty_list_file():
         shutil.copyfile(EMPTY_LIST_FILE, "data.json")
         result = runner.invoke(cli, ["data.json"])
         assert result.exit_code == 0
+
+
+def test_default_field_only():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["--selection", "tenders,parties", "--only", "parentID", "data.json"])
+        assert "Using only columns parentID for table tenders" in result.output
+        assert "Using only columns parentID for table parties" in result.output

@@ -33,7 +33,7 @@ class CommaSeparated(click.ParamType):
     def convert(self, value, param, ctx):  # noqa
         if not value:
             return []
-        return [v.lower() for v in value.split(",")]
+        return [v for v in value.split(",")]
 
 
 def read_option_file(option, option_file):
