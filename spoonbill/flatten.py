@@ -200,7 +200,7 @@ class Flattener:
                             child_table.titles[col_id] = title
 
     def _only(self, table, only, split):
-        only = only + DEFAULT_FIELDS
+        only = only
         columns = table.columns
         if split:
             columns = table.combined_columns
