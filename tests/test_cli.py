@@ -49,6 +49,18 @@ def test_with_selections():
         assert "Done flattening. Flattened objects: 6" in result.output
 
 
+def test_with_exclude():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["--exclude", "tenders_items", "data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
+        assert "Ignoring tables (excluded by user): tenders_items" in result.output
+        assert "Dumping analyzed data" in result.output
+        assert "Done flattening. Flattened objects: 6" in result.output
+
+
 def test_with_combine():
     runner = CliRunner()
     with runner.isolated_filesystem():

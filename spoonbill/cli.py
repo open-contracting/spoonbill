@@ -22,6 +22,7 @@ click_logging.basic_config(LOGGER)
 CURRENT_SCHEMA_TAG = "1__1__5"
 ANALYZED_LABEL = _("  Processed {} objects")
 FLATTENED_LABEL = _("  Flattened {} objects")
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
 class CommaSeparated(click.ParamType):
@@ -53,15 +54,15 @@ def get_selected_tables(base, selection):
 # TODO: generated state-file + schema how to validate
 
 
-@click.command(help=_("CLI tool to flatten OCDS datasets"))
-@click.option("--schema", help=_("Schema file uri"), type=str)
-@click.option("--selection", help=_("List of tables to extract"), type=CommaSeparated())
+@click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS datasets"))
 @click.option(
-    "--split",
-    help=_("List of tables to split into multiple sheets"),
-    type=CommaSeparated(),
-    default="",
+    "--schema",
+    help=_(
+        "Schema file uri. This option is used to provide OCDS schema which spoonbill requires to analyze dataset. URI might be file path or HTTP link. Spoonbill will use default schema tag if not provided (requires internet connection)"
+    ),
+    type=str,
 )
+@click.option("--selection", type=CommaSeparated())
 @click.option(
     "--threshold",
     help=_("Maximum number of elements in array before its spitted into table"),
@@ -76,6 +77,7 @@ def get_selected_tables(base, selection):
 @click.option("--xlsx", help=_("Path to result xlsx file"), type=click.Path(), default="result.xlsx")
 @click.option("--csv", help=_("Path to directory for output csv files"), type=click.Path(), required=False)
 @click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
+@click.option("--exclude", help=_("Exclude tables from export"), type=CommaSeparated(), default="")
 @click.option(
     "--unnest",
     help=_("Extract columns form child tables to parent table"),
@@ -127,12 +129,12 @@ def cli(
     filename,
     schema,
     selection,
-    split,
     threshold,
     state_file,
     xlsx,
     csv,
     combine,
+    exclude,
     unnest,
     unnest_file,
     only,
@@ -239,8 +241,10 @@ def cli(
         raise click.UsageError(_("Conflicting options: repeat and repeat-file"))
     if only and only_file:
         raise click.UsageError(_("Conflicting options: only and only-file"))
+    if exclude:
+        click.echo(_("Ignoring tables (excluded by user): {}").format(click.style(",".join(exclude), fg="red")))
 
-    options = {"selection": {}, "count": count}
+    options = {"selection": {}, "count": count, "exclude": exclude}
     unnest = read_option_file(unnest, unnest_file)
     repeat = read_option_file(repeat, repeat_file)
     only = read_option_file(only, only_file)
@@ -276,7 +280,7 @@ def cli(
             )
 
         options["selection"][name] = {
-            "split": split or analyzer.spec[name].should_split,
+            "split": analyzer.spec[name].should_split,
             "pretty_headers": human,
             "unnest": unnest,
             "only": only,
