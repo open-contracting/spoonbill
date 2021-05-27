@@ -1,5 +1,80 @@
-*********
 Changelog
-*********
+=========
 
-.. include:: ../CHANGELOG.rst
+.. Follow the format from https://keepachangelog.com/en/1.0.0/
+
+1.0.1b1 (2021-05-27)
+--------------------
+
+Fixed
+~~~~~
+
+* **flatten:** strict columns match in only option
+
+1.0.0b1 (2021-05-27)
+--------------------
+
+Added
+~~~~~
+
+* **cli:** add --unnest-file, --repeat-file and --only-file options (`9b024e2 <https://github.com/open-contracting/spoonbill/commit/9b024e2ae93d22d9a9a33b2f5b74edc1039c604d>`_)
+* **cli:** add click integration with logging (`3c1184f <https://github.com/open-contracting/spoonbill/commit/3c1184f9d05f669401b30a2d7350126b631bbaf5>`_)
+* **cli:** add informational messages about only, unnest and repeat (`2e6d48e <https://github.com/open-contracting/spoonbill/commit/2e6d48e09345669a743c436e2c4bdc85fc7f5dbb>`_)
+* **cli:** add language option (`1d89e0b <https://github.com/open-contracting/spoonbill/commit/1d89e0b7d755cf7dc001e2aa65cb0a9ae22c1142>`_)
+* **cli:** add progressbar when analyze file (`49e4440 <https://github.com/open-contracting/spoonbill/commit/49e44406d2c18c08e4bcbeeec5554fc6623acf7d>`_)
+* **cli:** enable only and repeat options (`8b82f9e <https://github.com/open-contracting/spoonbill/commit/8b82f9eb42562e8291864fcd4f79234ef5938998>`_)
+* **cli:** use click.progressabr in heavy operations (`1e27a09 <https://github.com/open-contracting/spoonbill/commit/1e27a096ffcbc94e9695ed700e9091a5de166c30>`_)
+* **cli:** use csv and xlsx options to provide output paths (`bf8689d <https://github.com/open-contracting/spoonbill/commit/bf8689d6e6b3ee340db2a4a432fe7ec08e0163f4>`_)
+* **csv:** more exception handling in csv writer (`9e85095 <https://github.com/open-contracting/spoonbill/commit/9e85095b9d8e680043bae4b1e4b181146a0daa2d>`_)
+* **flatten:** add exclude option to remove table from export (`26025dd <https://github.com/open-contracting/spoonbill/commit/26025dd611b6512e8b0b1dabcb65cff0773b6417>`_)
+* **flatten:** implement only option to specify list of output cols (`a57200b <https://github.com/open-contracting/spoonbill/commit/a57200bce0cb3ae51d05a8955ce9998470a26ddc>`_)
+* **i18n:** add custom babel extractor to produce schema paths (`f602a69 <https://github.com/open-contracting/spoonbill/commit/f602a6968779be23e59c179beacf569ac0e2b79c>`_)
+* **i18n:** add locale override option when using gettext (`638b9a8 <https://github.com/open-contracting/spoonbill/commit/638b9a8f3b35dcb4fd1cf18edc1f754c8ca761d7>`_)
+* **i18n:** use localization mechanism as tool to generate h/r titles (`5e20df3 <https://github.com/open-contracting/spoonbill/commit/5e20df398a18980ec62ad700ce9aecac7f0ac15d>`_)
+* add ability to rename sheet (`9d4c68d <https://github.com/open-contracting/spoonbill/commit/9d4c68df2340bdc631a062d976c215dd724a88ba>`_)
+* add DataPreprocessor restore method to init from existing data (`1c3ada7 <https://github.com/open-contracting/spoonbill/commit/1c3ada7375717d7ab14eeb705a6545d1bc241315>`_)
+* implement --state-file option to restore analyzer state from file (`a8294ea <https://github.com/open-contracting/spoonbill/commit/a8294ea292989a6528c76fdde462ed88346e2e5b>`_)
+* make DataPreprocessor.process_items iterable to track progress (`380196f <https://github.com/open-contracting/spoonbill/commit/380196ff3bcb70fd4b901df834abcf8d12024239>`_)
+* table threshold option now enabled by default (`42283e6 <https://github.com/open-contracting/spoonbill/commit/42283e6e283335f5d5f8940c825aa2486b45ff24>`_)
+
+Changed
+~~~~~~~
+
+* Add lru_cache for common_prefix, and compare len() instead of using min() and max() (`694135c <https://github.com/open-contracting/spoonbill/commit/694135ce220b565dd9a19fbf1470224f485c79b0>`_)
+* Use pickle instead of json (`63a4265 <https://github.com/open-contracting/spoonbill/commit/63a42653f95d9a9a134ef560c863351b84643f20>`_)
+
+Fixed
+~~~~~
+
+* **cli:** drop --split option and introduce --exclude (`35f1391 <https://github.com/open-contracting/spoonbill/commit/35f13911c770ed7ef76d612d23f30e7063122a2a>`_)
+* use pkg_resources.resource_filename to access locales (`be48d77 <https://github.com/open-contracting/spoonbill/commit/be48d7785c95a741771c3001ebc42a4eb067a966>`_)
+* **stats:** fix IndexError when generating preview_rows for extra tables (`82b179b <https://github.com/open-contracting/spoonbill/commit/82b179b994d570eea3b08e99467105748812a1e8>`_)
+* **utils:** make resolve_file_uri understand pathlib.Path (`51e82a3 <https://github.com/open-contracting/spoonbill/commit/51e82a3633837b5104ecfb4db604d69d619c948b>`_)
+* use pickle instead of json in DataPreprocessor dump (`d0c516b <https://github.com/open-contracting/spoonbill/commit/d0c516bf194d72ac08a84cb0bf5a13f815b3c843>`_)
+* **writers:** make writers context managers (`18e4c09 <https://github.com/open-contracting/spoonbill/commit/18e4c097a01f95bbacda41cac00552608322463f>`_)
+* add more logging messages (`9205217 <https://github.com/open-contracting/spoonbill/commit/920521716cd4532f9649b1651ad108c742bec04a>`_)
+* added logger filter for repetative messages (`f936d50 <https://github.com/open-contracting/spoonbill/commit/f936d5078abb37caf29ae7436c98333c0637fd7f>`_)
+* added table abbreviation support (`85f46f3 <https://github.com/open-contracting/spoonbill/commit/85f46f3fcecf08b499728b2551fa3f63906a7805>`_)
+* CLI export message edit - removed extra tables from message, added list of exported tables and number of rows for each (`9681c71 <https://github.com/open-contracting/spoonbill/commit/9681c7109d483114a95312ee0428c2e550a7249c>`_)
+* CLI index out of range error, issue `#66 <https://github.com/open-contracting/spoonbill/issues/66>`_ (`0318558 <https://github.com/open-contracting/spoonbill/commit/03185587b1d17a7c638d8b1399d3208a56ec7491>`_)
+* code refactor; added duplicate check to stats/DataPreprocessor (`fcfb611 <https://github.com/open-contracting/spoonbill/commit/fcfb6116050d62b0b5ea9474ac94b8834d34bea7>`_)
+* fix crash with additional array of strings present in data (`4e73c70 <https://github.com/open-contracting/spoonbill/commit/4e73c70acbd75136c7ff317a574636c259fa5d88>`_)
+* fix KeyError with adding count column in child tables (`36d5ccc <https://github.com/open-contracting/spoonbill/commit/36d5ccc109eefb0f12346674cfba1379616efc3a>`_)
+* fixed bug with regenerated headers when array is shorter than table_threshold (`3e87b4c <https://github.com/open-contracting/spoonbill/commit/3e87b4ce6b9e15dd79db41ff053e33088f4356dc>`_)
+* fixed KeyError when flattening data with additional arrays (`c7e3cd0 <https://github.com/open-contracting/spoonbill/commit/c7e3cd0f72b394571161c957ffa4ded63cd41ec0>`_)
+* increment default columns when incrementing table rows (`3c602a6 <https://github.com/open-contracting/spoonbill/commit/3c602a641ea36a88e6a1787837b4e325b8cf65b0>`_)
+* make name '_' explicit imported (`99932e0 <https://github.com/open-contracting/spoonbill/commit/99932e07637bf8d30d9bddcc6015b635cb83d18a>`_)
+* strip lines when reading option file (`e57031b <https://github.com/open-contracting/spoonbill/commit/e57031b6897c082ee5daa7c12785d29a9bdd538c>`_)
+* use OrderedDict as map container in iter_file (`0d1df1b <https://github.com/open-contracting/spoonbill/commit/0d1df1b14b4520cd416a98efadb4aca5e848f0f1>`_)
+* writing booleans to .xlsx cells (`1d8de32 <https://github.com/open-contracting/spoonbill/commit/1d8de320278517a418ac989bc0c2fdb1879188bf>`_)
+* **cli:** enable --threshold option (`852ff92 <https://github.com/open-contracting/spoonbill/commit/852ff92c156e4c904caec241d41d7d8aa9e1002e>`_)
+* **cli:** fix variable naming (`c17ca63 <https://github.com/open-contracting/spoonbill/commit/c17ca632bc5eae347a4d0129d564c5d674ad382f>`_)
+* **flaten:** fixed typo JOINABLE -> JOINABLE_SEPARATOR (`1adc440 <https://github.com/open-contracting/spoonbill/commit/1adc440e950a4e4b19cbd2435f362831befa1b2f>`_)
+* **flatten:** fix only option causing empty output (`c8447b0 <https://github.com/open-contracting/spoonbill/commit/c8447b015683f606a10e3c9270dcb84eea95bf95>`_)
+* **flatten:** fix repeat spreading to unrelated tables (`2e16c30 <https://github.com/open-contracting/spoonbill/commit/2e16c309a53857916693ca2aef09ce4891729cee>`_)
+* **i18n:** generate message for count columns (`a527f8d <https://github.com/open-contracting/spoonbill/commit/a527f8dc91f52be00ae8b681984a85798a36065c>`_)
+* **setup:** do not use babel cmds in setup.py (`e449c37 <https://github.com/open-contracting/spoonbill/commit/e449c3705f234c2eadc66553348873c4223ac679>`_)
+* fixed mixing preview_rows and preview_rows combined (`dd1dd19 <https://github.com/open-contracting/spoonbill/commit/dd1dd1977ba0e86a8d762f16fdd9ce2d5379aa78>`_)
+* fixed serialization of total_items (`055ff65 <https://github.com/open-contracting/spoonbill/commit/055ff657588e58599aee71a6eb4fd5297eaf0267>`_)
+* remove copy column by reference in recalculate headers (`22c63f8 <https://github.com/open-contracting/spoonbill/commit/22c63f84e308e16ca0a95059ce06a99ac0864af7>`_)
+* **stats:** respect with_preview when appending new preview row (`cfd8663 <https://github.com/open-contracting/spoonbill/commit/cfd8663f03ff7565da836b465eba9ead780e6e84>`_)
