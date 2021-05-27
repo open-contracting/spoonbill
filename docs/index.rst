@@ -1,7 +1,7 @@
 Spoonbill |release|
 ===================
 
-.. include:: ../../README.rst
+.. include:: ../README.rst
 
 To install:
 
