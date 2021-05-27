@@ -1,6 +1,9 @@
 import locale
 import logging
-from collections import deque
+import pickle
+from collections import defaultdict, deque
+from functools import lru_cache
+from pathlib import Path
 from typing import List, Mapping
 
 import jsonref
@@ -10,8 +13,10 @@ from spoonbill.i18n import DOMAIN, LOCALE, LOCALEDIR, _
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
+    RepeatFilter,
     extract_type,
     generate_row_id,
+    generate_table_name,
     get_matching_tables,
     get_pointer,
     get_root,
@@ -22,6 +27,7 @@ from spoonbill.utils import (
 
 PREVIEW_ROWS = 20
 LOGGER = logging.getLogger("spoonbill")
+LOGGER.addFilter(RepeatFilter())
 
 
 class DataPreprocessor:
@@ -58,26 +64,30 @@ class DataPreprocessor:
         self.total_items = total_items
         self.current_table = None
 
-        self._lookup_cache = {}
-        self._table_by_path = {}
         self.language = language
+        self.names_counter = defaultdict(int)
         if not self.tables:
             self.parse_schema()
 
     def __getitem__(self, table):
         return self.tables[table]
 
+    def name_check(self, parent_key, key):
+        table_name = generate_table_name(self.current_table.name, parent_key, key)
+        self.names_counter[table_name] += 1
+        if self.names_counter[table_name] > 1:
+            key = key[:4] + str(self.names_counter[table_name] - 1)
+        return key
+
     def init_tables(self, tables, is_combined=False):
         """Initialize root tables with default fields"""
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
-            for p in path:
-                self._table_by_path[p] = table
 
     def parse_schema(self):
         """Extract all available information from schema"""
-        if isinstance(self.schema, str):
+        if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.schema = jsonref.JsonRef.replace_refs(self.schema)
         self.init_tables(self.root_tables)
@@ -115,6 +125,7 @@ class DataPreprocessor:
                         if set(items_type) & {"array", "object"}:
                             if pointer not in self.current_table.path:
                                 # found child array, need to create child table
+                                key = self.name_check(parent_key, key)
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
                             to_analyze.append((pointer, key, properties, items))
                         else:
@@ -133,23 +144,19 @@ class DataPreprocessor:
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
         self.current_table = table
-        for cache in self._lookup_cache, self._table_by_path:
-            cache[pointer] = table
+        self.get_table.cache_clear()
 
+    @lru_cache(maxsize=None)
     def get_table(self, path):
         """Get best matching table for `path`
 
         :param path: Path to find corresponding table
         :return: Best matching table
         """
-        if path in self._lookup_cache:
-            return self._lookup_cache[path]
         candidates = get_matching_tables(self.tables, path)
         if not candidates:
             return
-        table = candidates[0]
-        self._lookup_cache[path] = table
-        return table
+        return candidates[0]
 
     def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=""):
         """Append empty row to previews
@@ -166,9 +173,7 @@ class DataPreprocessor:
         if parent_table:
             defaults["parentTable"] = parent_table
         self.current_table.preview_rows.append(defaults)
-        self.current_table.preview_rows_combined.append(
-            {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
-        )
+        self.current_table.preview_rows_combined.append(defaults)
 
     def process_items(self, releases, with_preview=True):
         """Analyze releases
@@ -187,24 +192,21 @@ class DataPreprocessor:
 
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
-                table = self._table_by_path.get(path)
-                if table:
-                    # TODO: fields without ids??
-                    row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
-                    table.inc()
-
-                    for col_name in DEFAULT_FIELDS:
-                        table.inc_column(col_name, col_name)
-
-                    self.current_table = table
-                    if with_preview and count < PREVIEW_ROWS:
-                        self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_key)
                 for key, item in record.items():
                     pointer = separator.join([path, key])
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
                     item_type = self.current_table.types.get(pointer)
+                    if pointer in self.current_table.path:
+                        # strict match like /parties, /tender
+                        row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
+                        c = item if isinstance(item, list) else [item]
+                        for _nop in c:
+                            self.current_table.inc()
+                            if with_preview and count < PREVIEW_ROWS:
+                                parent_table = not self.current_table.is_root and parent_key
+                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
 
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
@@ -221,12 +223,10 @@ class DataPreprocessor:
                                 item,
                             )
                         )
-                    elif isinstance(item, list):
+                    elif item and isinstance(item, list):
                         abs_pointer = separator.join([abs_path, key])
                         if not isinstance(item[0], dict) and not item_type:
-                            LOGGER.warning(
-                                _("Detected additional column: {} in {} table").format(abs_pointer, root.name)
-                            )
+                            LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, root.name))
                             item_type = JOINABLE
                             self.current_table.add_column(
                                 pointer,
@@ -254,10 +254,11 @@ class DataPreprocessor:
                         else:
                             parent_table = self.current_table.parent
                             if pointer not in parent_table.arrays:
-                                LOGGER.warning(_("Detected additional table: {}").format(pointer))
+                                LOGGER.debug(_("Detected additional table: %s") % pointer)
                                 self.current_table.types[pointer] = ["array"]
                                 # TODO: do we need to mark this table as additional
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
+                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
 
                             if parent_table.set_array(pointer, item):
                                 should_split = len(item) >= self.table_threshold
@@ -270,21 +271,12 @@ class DataPreprocessor:
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    if with_preview and count < PREVIEW_ROWS:
-                                        if pointer in self.current_table.path:
-                                            self.add_preview_row(
-                                                ocid,
-                                                value.get("id"),
-                                                row_id,
-                                                parent.get("id"),
-                                                parent_key,
-                                            )
                                     abs_pointer = separator.join([abs_path, key, str(i)])
                                     to_analyze.append(
                                         (
                                             abs_pointer,
                                             pointer,
-                                            key,
+                                            parent_key,
                                             record,
                                             value,
                                         )
@@ -299,9 +291,7 @@ class DataPreprocessor:
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
-                            LOGGER.warning(
-                                _("Detected additional column: {} in {} table").format(abs_pointer, root.name)
-                            )
+                            LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, root.name))
                             self.current_table.add_column(
                                 pointer,
                                 PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
@@ -310,47 +300,27 @@ class DataPreprocessor:
                                 abs_path=abs_pointer,
                             )
                         self.current_table.inc_column(abs_pointer, pointer)
-                        if with_preview and count < PREVIEW_ROWS:
+                        if item and with_preview and count < PREVIEW_ROWS:
                             self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
         self.total_items = count
 
-    def dump(self):
-        """Dump table objects to python dictionary"""
-        return {
-            "schema": self.schema,
-            "root_tables": self.root_tables,
-            "combined_tables": self.combined_tables,
-            "header_separator": self.header_separator,
-            "tables": {name: table.dump() for name, table in self.tables.items()},
-            "table_threshold": self.table_threshold,
-            "total_items": self.total_items,
-        }
+    def dump(self, path):
+        """Dump table objects to file system"""
+        try:
+            with open(path, "wb") as fd:
+                pickle.dump(self, fd)
+        except (OSError, IOError) as e:
+            LOGGER.error(_("Failed to dump DataPreprocessor to file. Error: {}").format(e))
 
     @classmethod
-    def restore(cls, data):
-        """Restore DataPreprocessor from existing data
+    def restore(_cls, path):
+        """Restore DataPreprocessor from file
 
-        :param data: Data to restore from
+        :param path: Full path to file
         """
         try:
-            spec = {
-                "schema": data["schema"],
-                "root_tables": data["root_tables"],
-                "combined_tables": data["combined_tables"],
-                "header_separator": data["header_separator"],
-                "table_threshold": data["table_threshold"],
-                "total_items": data["total_items"],
-            }
-        except KeyError as e:
-            LOGGER.error(_("Failed to restore from malformed data. Missing {} attribute").format(e))
-            raise ValueError(_("Unable to restore, invalid input data"))
-        tables = {name: Table(**table) for name, table in data["tables"].items() if table["is_root"]}
-
-        for name, table in data["tables"].items():
-            if not table["is_root"]:
-                parent = tables[table["parent"]]
-                table["parent"] = parent
-                tables[name] = Table(**table)
-        spec["tables"] = tables
-        return cls(**spec)
+            with open(path, "rb") as fd:
+                return pickle.load(fd)
+        except (TypeError, pickle.UnpicklingError):
+            LOGGER.error(_("Invalid pickle file. Can't restore."))

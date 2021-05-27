@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import shutil
@@ -5,10 +6,15 @@ import shutil
 from click.testing import CliRunner
 
 from spoonbill.cli import cli
+from spoonbill.utils import RepeatFilter
+
+LOGGER = logging.getLogger("spoonbill")
+LOGGER.addFilter(RepeatFilter())
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
+EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
-ANALYZED = pathlib.Path("tests/data/analyzed.json").absolute()
+ANALYZED = pathlib.Path("tests/data/analyzed").absolute()
 ONLY = pathlib.Path("tests/data/only").absolute()
 UNNEST = pathlib.Path("tests/data/unnest").absolute()
 
@@ -183,6 +189,16 @@ def test_table_stats():
         assert "└-----parties_ids: 14 rows" in result.output
 
 
+def test_message_repeat(capsys):
+    message = "Around the world, around the world"
+
+    LOGGER.warning(message)
+    LOGGER.warning(message)
+    LOGGER.warning(message)
+    captured = capsys.readouterr()
+    assert captured.out.count(message) == 1
+
+
 def test_xlsx():
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -208,6 +224,14 @@ def test_csv():
         assert "Done flattening. Flattened objects: 6" in result.output
         path = pathlib.Path("test").resolve() / "tenders.csv"
         assert path.resolve().exists()
+
+
+def test_empty_list_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(EMPTY_LIST_FILE, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert result.exit_code == 0
 
 
 def test_default_field_only():

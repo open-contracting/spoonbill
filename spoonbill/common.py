@@ -35,7 +35,6 @@ COMBINED_TABLES = {
 
 DEFAULT_FIELDS = ["ocid", "id", "rowID", "parentID"]
 DEFAULT_FIELDS_COMBINED = ["ocid", "id", "rowID", "parentID", "parentTable"]
-DEFAULT_FIELDS_CASE = {"parentid": "parentID", "rowid": "rowID"}
 
 ARRAY = "array of {}"
 # TODO: is joinable good name?

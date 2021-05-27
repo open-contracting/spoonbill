@@ -1,13 +1,18 @@
-from json import dump, load
+import pickle
+from collections import defaultdict
+from operator import attrgetter
+from unittest.mock import call, mock_open, patch
 
 import pytest
 from jmespath import search
+from jsonpointer import resolve_pointer
 
+from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table, add_child_table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import recalculate_headers
+from tests.conftest import TEST_COMBINED_TABLES, TEST_ROOT_TABLES, schema_path
 from tests.data import (
-    TEST_ROOT_TABLES,
     awards_arrays,
     awards_columns,
     awards_combined_columns,
@@ -46,6 +51,7 @@ ARRAYS_COLUMNS = {
     "contracts": contracts_arrays,
     "planning": planning_arrays,
 }
+ADDITIONAL_COLUMNS = ["/parties/test"]
 
 
 def test_parse_schema(schema, spec):
@@ -70,6 +76,11 @@ def test_parse_schema(schema, spec):
         for col_id in ARRAYS_COLUMNS[name]:
             col = table.arrays[col_id]
             assert col == 0
+
+
+def test_resolve_schema_uri():
+    dp = DataPreprocessor(schema_path, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
+    assert isinstance(dp.schema, dict)
 
 
 def test_get_table(spec, releases):
@@ -126,16 +137,21 @@ def test_analyze(spec, releases):
     assert parties["/parties/roles"].hits == len(search("[].parties[].roles", releases))
 
 
-def test_dump_restore(spec, releases, tmpdir):
+@patch("spoonbill.LOGGER.error")
+def test_mismatched_types(log, spec, releases):
+    releases[0]["tender"]["id"] = ["/test/id"]
     for _ in spec.process_items(releases):
         pass
-    with open(tmpdir / "result.json", "w") as fd:
-        dump(spec.dump(), fd)
+    log.assert_has_calls([call("Mismatched type on /tender/id expected ['string', 'integer']")])
 
-    with open(tmpdir / "result.json") as fd:
-        data = load(fd)
 
-    spec2 = DataPreprocessor.restore(data)
+@patch("spoonbill.LOGGER.error")
+def test_dump_restore(log, spec, releases, tmpdir):
+    for _ in spec.process_items(releases):
+        pass
+    spec.dump(tmpdir / "result.json")
+    spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+
     for name, table in spec.tables.items():
         assert table == spec2.tables[name]
     for key in (
@@ -148,9 +164,13 @@ def test_dump_restore(spec, releases, tmpdir):
         "total_items",
     ):
         assert key in spec2.__dict__
-    with pytest.raises(ValueError, match="Unable to restore"):
-        del data["schema"]
-        spec2 = DataPreprocessor.restore(data)
+    with patch("builtins.open", mock_open(read_data="invalid")):
+        spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+        log.assert_has_calls([call("Invalid pickle file. Can't restore.")])
+
+    with patch("builtins.open", mock_open(read_data=b"invalid")):
+        spec2 = DataPreprocessor.restore(tmpdir / "result.json")
+        log.assert_has_calls([call("Invalid pickle file. Can't restore.")])
 
 
 def test_recalculate_headers(root_table, releases):
@@ -229,3 +249,55 @@ def test_recalculate_headers(root_table, releases):
     ):
         assert key in root_table.combined_columns
         assert key not in root_table.columns
+
+
+def test_analyze_preview_rows(spec_analyzed, releases):
+    tenders = spec_analyzed.tables["tenders"]
+    tenders_items = spec_analyzed.tables["tenders_items"]
+    tenders_tende = spec_analyzed.tables["tenders_tenderers"]
+    tenders_items_class = spec_analyzed.tables["tenders_items_class"]
+
+    for getter in (attrgetter("preview_rows"), attrgetter("preview_rows_combined")):
+        for count, row in enumerate(getter(tenders)):
+            ocid, parent_id, row_id = row["rowID"].split("/")
+            row_id = row_id.split(":")[-1]
+            tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row_id]
+            items = [r for r in getter(tenders_items) if r["parentID"] == row_id and r["parentID"] == parent_id]
+            items_class = [
+                r for r in getter(tenders_items_class) if r["parentID"] == row_id and r["parentID"] == parent_id
+            ]
+            for key, item in row.items():
+                if "/" in key:
+                    # Check headers are present in tables
+                    assert key in tenders
+                    expected = resolve_pointer(releases[count], key)
+                    if isinstance(expected, list):
+                        # joinable
+                        expected = JOINABLE_SEPARATOR.join(expected)
+                    assert item == expected
+                    if "tenderers" in key:
+                        for index, tenderer in enumerate(reversed(tenderers)):
+                            for k, v in tenderer.items():
+                                if "/" in k:
+                                    path = k.replace("/tender/tenderers", f"/tender/tenderers/{index}")
+                                    value = resolve_pointer(releases[count], path)
+                                    assert value == v
+
+                    if "/tender/items/" in key:
+                        for index, it in enumerate(reversed(items)):
+                            for k, v in it.items():
+                                if "/" in k:
+                                    path = k.replace("/tender/items", f"/tender/items/{index}")
+                                    value = resolve_pointer(releases[count], path)
+                                    assert value == v
+                                    if "additionalClassifications" in k:
+                                        for i, cls in enumerate(reversed(items_class)):
+                                            for k, v in cls.items():
+                                                if "/" in k:
+                                                    path = k.replace("/tender/items", f"/tender/items/{index}")
+                                                    path = path.replace(
+                                                        "/additionalClassifications/",
+                                                        f"/additionalClassifications/{i}/",
+                                                    )
+                                                    value = resolve_pointer(releases[count], path)
+                                                    assert v == value

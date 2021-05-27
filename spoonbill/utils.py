@@ -1,14 +1,17 @@
 import codecs
+import functools
 import json
 import logging
 from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
+from pathlib import Path
 
 import ijson
+import requests
 
-from spoonbill.common import DEFAULT_FIELDS_CASE, DEFAULT_FIELDS_COMBINED
+from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -31,6 +34,7 @@ ABBREVIATION_TABLE_NAME = {
 }
 
 
+@functools.lru_cache(maxsize=None)
 def common_prefix(path, subpath, separator="/"):
     """Given two paths, returns the longest common sub-path.
 
@@ -44,13 +48,16 @@ def common_prefix(path, subpath, separator="/"):
     '/tender/items/0'
     """
     paths = [path.split(separator), subpath.split(separator)]
-    s1 = min(paths)
-    s2 = max(paths)
-    common = s1
+    if len(paths[0]) <= len(paths[1]):
+        s1, s2 = paths
+    else:
+        s2, s1 = paths
     for i, path in enumerate(s1):
         if path != s2[i]:
             common = s1[:i]
             break
+    else:
+        common = s1
     return separator.join(common)
 
 
@@ -66,7 +73,7 @@ def iter_file(fd, root):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    reader = ijson.items(fd, f"{root}.item")
+    reader = ijson.items(fd, f"{root}.item", map_type=OrderedDict)
     for item in reader:
         yield item
 
@@ -242,7 +249,6 @@ def recalculate_headers(root, path, abs_path, key, item, should_split, separator
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
-
     head_updated = False
     for col_p, col in root.combined_columns.items():
         if col_p in zero_cols and not head_updated:
@@ -269,32 +275,11 @@ def resolve_file_uri(file_path):
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
-    if file_path.startswith("http"):
-        import requests
-
-        return requests.get(file_path).json()
-    else:
+    if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd)
-
-
-def get_headers(table, options):
-    """Generate table headers respecting human and override options
-
-    :param table: Target table
-    :param options: Flattening options
-    :return: Mapping between column and its header
-    """
-    split = options.split and table.roll_up
-    # split = options.split if is_root else table.should_split
-    headers = {c: c for c in table.available_rows(split=split)}
-    if options.pretty_headers:
-        for c in headers:
-            headers[c] = table.titles.get(c, c)
-    if options.headers:
-        for c, h in options.headers.items():
-            headers[c] = h
-    return headers
+    if file_path.startswith("http"):
+        return requests.get(file_path).json()
 
 
 def read_lines(path):
@@ -334,8 +319,14 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
     return path
 
 
-def default_field_case(only):
-    for option in only:
-        if option in DEFAULT_FIELDS_CASE:
-            only[only.index(option)] = DEFAULT_FIELDS_CASE[option]
-    return only
+class RepeatFilter(logging.Filter):
+    """
+    Logger filter to avoid repeating of same messages during file processing
+    """
+
+    def filter(self, record):
+        current_log = (record.module, record.levelno, record.msg)
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log
+            return True
+        return False

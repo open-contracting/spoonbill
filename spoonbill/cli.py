@@ -13,7 +13,7 @@ from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import LOCALE, _
-from spoonbill.utils import default_field_case, read_lines, resolve_file_uri
+from spoonbill.utils import read_lines, resolve_file_uri
 
 LOGGER = logging.getLogger("spoonbill")
 click_logging.basic_config(LOGGER)
@@ -32,7 +32,7 @@ class CommaSeparated(click.ParamType):
     def convert(self, value, param, ctx):  # noqa
         if not value:
             return []
-        return [v.lower() for v in value.split(",")]
+        return [v for v in value.split(",")]
 
 
 def read_option_file(option, option_file):
@@ -210,7 +210,7 @@ def cli(
             language=language,
             table_threshold=threshold,
         )
-        click.echo(_("Alanyze options:"))
+        click.echo(_("Analyze options:"))
         click.echo(_(" - table threshold => {}").format(click.style(str(threshold), fg="cyan")))
         click.echo(_(" - language        => {}").format(click.style(language, fg="cyan")))
         click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
@@ -226,7 +226,7 @@ def cli(
         click.secho(
             _("Done processing. Analyzed objects: {}").format(click.style(str(number + 1), fg="red")), fg="green"
         )
-        state_file = pathlib.Path(f"{filename}.analyzed.json")
+        state_file = pathlib.Path(f"{filename}.state")
         state_file_path = workdir / state_file
         click.echo(_("Dumping analyzed data to '{}'").format(click.style(str(state_file_path.absolute()), fg="cyan")))
         analyzer.dump_to_file(state_file)
@@ -259,7 +259,6 @@ def cli(
                 )
             )
 
-        only = default_field_case(only)
         only = [col for col in only if col in table]
         if only:
             click.echo(

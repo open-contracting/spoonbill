@@ -1,0 +1,72 @@
+{
+  "uri": "",
+  "license": "gibberish",
+  "publicationPolicy": "gibberish",
+  "publishedDate": "",
+  "version": "1.1",
+  "releases": [
+    {
+      "initiationType": "tender",
+      "parties": [
+
+      ],
+      "tag": [
+        "tenderUpdate"
+      ],
+      "date": "2020-04-28T15:30:00Z",
+      "ocid": "ocds-gibber-111111",
+      "id": "aclar_gibber-111111-0",
+      "tender": {
+        "id": "111111",
+        "hasEnquiries": true,
+        "submissionMethod": [
+          "electronicSubmission"
+        ],
+        "procurementMethodDetails": "Gibberish",
+        "procurementMethod": "open",
+        "title": "Gibberish",
+        "description": "Gibberish",
+        "tenderPeriod": {
+          "endDate": "2020-05-05T12:00:00Z",
+          "startDate": "2020-04-28T15:30:00Z"
+        },
+        "procuringEntity": {
+          "id": "12-1",
+          "name": "Gibberish"
+        },
+        "submissionMethodDetails": "Gibberish",
+        "items": [
+          {
+            "id": "1",
+            "description": "Gibberish",
+            "quantity": 4800.0,
+            "classification": {
+              "id": "3711",
+              "description": "Gibberish",
+              "scheme": "Gibberish"
+            },
+            "unit": {
+              "name": "Gibberish",
+              "id": "22"
+            }
+          }
+        ],
+        "documents": [
+          {
+            "id": "Gibberish-0",
+            "documentType": "clarifications",
+            "description": "Gibberish",
+            "datePublished": "2020-05-05T12:01:00Z",
+            "url": "Gibberish",
+            "language": "es",
+            "format": "Gibberish"
+          }
+        ]
+      },
+      "buyer": {
+        "id": "12-1",
+        "name": "Gibberish"
+      }
+    }
+  ]
+}
