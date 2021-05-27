@@ -1,9 +1,8 @@
-*************
 API Reference
-*************
+=============
 
-Flattening Module
-=================
+Flatten module
+--------------
 
 .. automodule:: spoonbill.flatten
 
@@ -13,15 +12,15 @@ Flattening Module
 
 .. autoclass:: Flattener
 
-CLI Module
-==========
+CLI module
+----------
 
 .. automodule:: spoonbill.cli
 
 .. autoclass:: CommaSeparated
 
-Spec Module
-===========
+Spec module
+-----------
 
 .. automodule:: spoonbill.spec
 
@@ -29,25 +28,25 @@ Spec Module
 
 .. autoclass:: Table
 
-Stats Module
-============
+Stats module
+------------
 
 .. automodule:: spoonbill.stats
 
 .. autoclass:: DataPreprocessor
 
-Writers Module
-==============
+Writer modules
+--------------
 
 CSV
----
+~~~
 
 .. automodule:: spoonbill.writers.csv
 
 .. autoclass:: CSVWriter
 
 XLSX
-----
+~~~~
 
 .. automodule:: spoonbill.writers.xlsx
 
