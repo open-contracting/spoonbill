@@ -142,6 +142,7 @@ class Table:
                 # when we analyzing file we need to keep index from data not to use 0
                 # e.g. /tender/items/166/relatedLot
                 combined_path = abs_path
+            LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))
             self.additional_columns[combined_path] = Column(title, item_type, combined_path)
 
         for p in (path, combined_path):

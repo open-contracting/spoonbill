@@ -256,6 +256,7 @@ class DataPreprocessor:
                             if pointer not in parent_table.arrays:
                                 LOGGER.debug(_("Detected additional table: %s") % pointer)
                                 self.current_table.types[pointer] = ["array"]
+                                parent_table = self.current_table
                                 # TODO: do we need to mark this table as additional
                                 self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
                                 self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
@@ -291,7 +292,6 @@ class DataPreprocessor:
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
-                            LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, root.name))
                             self.current_table.add_column(
                                 pointer,
                                 PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
