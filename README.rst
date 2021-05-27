@@ -8,7 +8,8 @@ If you are viewing this on GitHub or PyPI, open the `full documentation <https:/
 
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/spoonbill.svg
    :target: https://pypi.org/project/spoonbill/
-.. |Build Status| image:: https://github.com/open-contracting/spoonbill/workflows/push.yaml/badge.svg
+.. |Build Status| image:: https://github.com/open-contracting/spoonbill/actions/workflows/push.yaml/badge.svg
+   :target: https://github.com/open-contracting/spoonbill/actions/workflows/push.yaml
 .. |Coverage Status| image:: https://coveralls.io/repos/github/open-contracting/spoonbill/badge.svg?branch=main
    :target: https://coveralls.io/github/open-contracting/spoonbill?branch=main
 .. |Python Version| image:: https://img.shields.io/pypi/pyversions/spoonbill.svg
