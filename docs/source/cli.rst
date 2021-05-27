@@ -1,6 +1,6 @@
-+++++++++++++
+*************
 CLI Reference
-+++++++++++++
+*************
 
 Please find an examples of CLI Tool usage :ref:`here <usage_examples>`.
 
