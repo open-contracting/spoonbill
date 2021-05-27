@@ -45,7 +45,11 @@ Versioning and CHANGELOG
 
 This library is versioned and a changelog is kept in the CHANGELOG.rst file. See that file for more.
 
-Any pull request to this library should include updating the CHANGELOG.rst file.
+To generate changelog for new release from commit history you can use `conventional-changelog-cli <https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-cli>`_ for example:
+
+.. code-block:: bash
+
+    conventional-changelog -i CHANGELOG.md -s -p angular
 
 PyPi
 ====

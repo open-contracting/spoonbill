@@ -27,7 +27,7 @@ docs_requires = [
 
 setup(
     name="spoonbill",
-    version="0.0.1",
+    version="1.0.1b1",
     author="Open Contracting Partnership",
     author_email="data@open-contracting.org",
     url="https://github.com/open-contracting/spoonbill",
