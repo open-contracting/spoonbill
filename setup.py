@@ -34,7 +34,7 @@ setup(
             "pytest-cov",
         ],
         "docs": [
-            "sphinx",
+            "sphinx<4",
             "sphinx-autobuild",
             "sphinx-rtd-theme",
             "sphinx_click",
