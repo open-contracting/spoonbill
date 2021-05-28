@@ -1,6 +1,5 @@
 import json
 import pathlib
-import pickle
 from collections import OrderedDict
 from decimal import Decimal
 

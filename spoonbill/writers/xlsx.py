@@ -1,6 +1,5 @@
 import collections
 import logging
-from collections import defaultdict
 
 import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException

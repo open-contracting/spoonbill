@@ -1,6 +1,5 @@
 """cli.py - Command line interface related routines"""
 import logging
-import os
 import pathlib
 from itertools import chain
 
@@ -58,7 +57,9 @@ def get_selected_tables(base, selection):
 @click.option(
     "--schema",
     help=_(
-        "Schema file uri. This option is used to provide OCDS schema which spoonbill requires to analyze dataset. URI might be file path or HTTP link. Spoonbill will use default schema tag if not provided (requires internet connection)"
+        "Schema file uri. This option is used to provide OCDS schema which spoonbill requires to analyze dataset. URI "
+        "might be file path or HTTP link. Spoonbill will use default schema tag if not provided (requires internet "
+        "connection)"
     ),
     type=str,
 )

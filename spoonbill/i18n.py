@@ -1,7 +1,6 @@
 import gettext
 import json
 import locale
-import os
 from collections import deque
 from functools import lru_cache
 

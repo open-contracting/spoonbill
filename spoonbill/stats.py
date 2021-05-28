@@ -1,4 +1,3 @@
-import locale
 import logging
 import pickle
 from collections import defaultdict, deque
@@ -8,9 +7,9 @@ from typing import List, Mapping
 
 import jsonref
 
-from spoonbill.common import ARRAY, DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
-from spoonbill.i18n import DOMAIN, LOCALE, LOCALEDIR, _
-from spoonbill.spec import Column, Table, add_child_table
+from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
+from spoonbill.i18n import LOCALE, _
+from spoonbill.spec import Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
     RepeatFilter,
@@ -18,7 +17,6 @@ from spoonbill.utils import (
     generate_row_id,
     generate_table_name,
     get_matching_tables,
-    get_pointer,
     get_root,
     recalculate_headers,
     resolve_file_uri,
