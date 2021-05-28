@@ -50,7 +50,7 @@ class Table:
     """
 
     name: str  #: Table name
-    path: [str]  #: List of paths to gather data to this table
+    path: List[str]  #: List of paths to gather data to this table
     total_rows: int = 0
     # parent is Table object but dataclasses don`t play well with recursion
     parent: object = field(default_factory=dict)
