@@ -38,6 +38,7 @@ release = version
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
     "sphinx_click",
     "sphinx_rtd_theme",
 ]
@@ -62,3 +63,11 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+
+# -- Extension configuration -------------------------------------------------
+
+autodoc_default_options = {
+    "members": None,
+}
+autodoc_member_order = "bysource"

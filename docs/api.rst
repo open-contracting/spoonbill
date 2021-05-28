@@ -5,49 +5,48 @@ Flatten module
 --------------
 
 .. automodule:: spoonbill.flatten
-
-.. autoclass:: TableFlattenConfig
-
-.. autoclass:: FlattenOptions
-
-.. autoclass:: Flattener
+   :members:
+   :undoc-members:
 
 CLI module
 ----------
 
 .. automodule:: spoonbill.cli
-
-.. autoclass:: CommaSeparated
+   :members:
+   :undoc-members:
 
 Spec module
 -----------
 
 .. automodule:: spoonbill.spec
-
-.. autoclass:: Column
-
-.. autoclass:: Table
+   :members:
+   :undoc-members:
 
 Stats module
 ------------
 
 .. automodule:: spoonbill.stats
-
-.. autoclass:: DataPreprocessor
+   :members:
+   :undoc-members:
 
 Writer modules
 --------------
+
+.. automodule:: spoonbill.writers.base_writer
+   :members:
+   :undoc-members:
+   :special-members: __init__
 
 CSV
 ~~~
 
 .. automodule:: spoonbill.writers.csv
-
-.. autoclass:: CSVWriter
+   :members:
+   :undoc-members:
 
 XLSX
 ~~~~
 
 .. automodule:: spoonbill.writers.xlsx
-
-.. autoclass:: XlsxWriter
+   :members:
+   :undoc-members:
