@@ -8,7 +8,7 @@ Clone the repository:
 
 .. code-block:: bash
 
-   git clone https://github.com/open-contracting/spoonbill
+   git clone git@github.com:open-contracting/spoonbill.git
    cd spoonbill
 
 Create a virtual environment. For example:
@@ -18,11 +18,18 @@ Create a virtual environment. For example:
    python3 -m venv .venv
    source .venv/bin/activate
 
-Install the development dependencies:
+Install the development requirements:
 
 .. code-block:: bash
 
-   pip install -e .[test] pre-commit
+   pip install -e .[test]
+
+Install the pre-commit script:
+
+.. code-block:: bash
+
+   pip install pre-commit
+   pre-commit install
 
 Tests
 -----
@@ -47,7 +54,7 @@ Follow the `Conventional Commits <https://www.conventionalcommits.org/en/v1.0.0/
 Package releases
 ----------------
 
-This package is versioned and a changelog is maintained.
+This package is versioned. A changelog is maintained.
 
 To prepare a changelog for a new release from the commit history, you can use `conventional-changelog-cli <https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-cli>`_. For example:
 
