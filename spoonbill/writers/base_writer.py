@@ -2,11 +2,15 @@ from collections import defaultdict
 
 
 class BaseWriter:
+    """
+    Base writer class
+    """
+
     def __init__(self, workdir, tables, options):
-        """Base writer class
+        """
         :param workdir: Working directory
-        :param tables: Tables data
-        :options: Flattening options
+        :param tables: The table objects
+        :param options: Flattening options
         """
         self.workdir = workdir
         self.tables = tables
@@ -16,11 +20,12 @@ class BaseWriter:
         self.names_counter = defaultdict(int)
 
     def get_headers(self, table, options):
-        """Generate table headers respecting human and override options
+        """
+        Return a table's headers, respecting the human and override options.
 
-        :param table: Target table
+        :param table: A table object
         :param options: Flattening options
-        :return: Mapping between column and its header
+        :return: Mapping between the machine-readable headers and the output headers
         """
         # split = options.split and (table.roll_up or table.should_split)
         split = options.split and table.should_split
@@ -40,9 +45,10 @@ class BaseWriter:
         return table_name
 
     def init_sheet(self, name, table):
-        """Initialize sheet in writer
+        """
+        Initialize a sheet, setting its headers and unique name.
 
-        Sheet in this context might be either csv file or sheet inside xlsx workbook
+        In this context, the sheet might be either a CSV file or a sheet in an Excel workbook.
 
         :param name: Table name
         :param table: Table object

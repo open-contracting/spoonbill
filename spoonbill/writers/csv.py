@@ -9,22 +9,30 @@ LOGGER = logging.getLogger("spoonbill")
 
 
 class CSVWriter(BaseWriter):
-    """Writer class with output to csv files
-    For each table will be created corresponding csv file
-    :param workdir: Working directory
-    :param tables: Tables data
-    :options: Flattening options
+    """
+    Writer class with output to CSV files.
+
+    For each table, a corresponding CSV file will be created.
     """
 
     name = "csv"
 
     def __init__(self, workdir, tables, options):
+        """
+        :param workdir: Working directory
+        :param tables: The table objects
+        :param options: Flattening options
+        """
+
         super().__init__(workdir, tables, options)
         self.writers = {}
         self.fds = []
 
     def __enter__(self):
-        """Write headers to output file"""
+        """
+        Write the headers to the output file.
+        """
+
         for name, table in self.tables.items():
             table_name, headers = self.init_sheet(name, table)
 
@@ -48,11 +56,18 @@ class CSVWriter(BaseWriter):
         return self
 
     def __exit__(self, *args):
+        """
+        Close the CSV files.
+        """
+
         for fd in self.fds:
             fd.close()
 
     def writerow(self, table, row):
-        """Write row to output file"""
+        """
+        Write a row to the output file.
+        """
+
         try:
             self.writers[table].writerow(row)
         except ValueError as err:

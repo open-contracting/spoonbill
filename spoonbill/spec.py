@@ -12,12 +12,13 @@ LOGGER = logging.getLogger("spoonbill")
 
 @dataclass
 class Column:
-    """Column class is a data container to store column information
+    """
+    A container for column information.
 
-    :param title: Column human friendly title
-    :param type: Column expected type
-    :param id: Column path
-    :param hits: Count number of times column is set during analysis
+    :param title: The human-friendly title
+    :param type: The expected type
+    :param id: The JSON path
+    :param hits: The number of times the column contains data during analysis
     """
 
     title: str
@@ -28,7 +29,8 @@ class Column:
 
 @dataclass
 class Table:
-    """Table data holder
+    """
+    A container for table information.
 
     :param name: Table name
     :param path: List of paths to gather data to this table
@@ -41,18 +43,18 @@ class Table:
     :param columns: Columns extracted from schema for split version of this table
     :param combined_columns: Columns extracted from schema for unsplit version of this table
     :param additional_columns: Columns identified in dataset but not in schema
-    :param arrays: Table array columns and maximum items in each array
-    :param titles: All human friendly columns titles extracted from schema
+    :param arrays: Table array columns and maximum items (not the total count) in each array
+    :param titles: All human-friendly column titles, extracted from the schema
     :param child_tables: List of possible child tables
     :param types: All paths matched to this table with corresponding object type on each path
     :param preview_rows: Generated preview for split version of this table
     :param preview_rows_combined: Generated preview for unsplit version of this table
     """
 
-    name: str  #: Table name
-    path: List[str]  #: List of paths to gather data to this table
+    name: str
+    path: List[str]
     total_rows: int = 0
-    # parent is Table object but dataclasses don`t play well with recursion
+    # `parent` is a Table object, but dataclasses don't play well with recursion.
     parent: object = field(default_factory=dict)
     is_root: bool = False
     is_combined: bool = False
@@ -61,9 +63,7 @@ class Table:
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
-    # max length not count
     arrays: Mapping[str, int] = field(default_factory=dict)
-    # for headers
     titles: Mapping[str, str] = field(default_factory=dict)
     child_tables: List[str] = field(default_factory=list)
     types: Mapping[str, List[str]] = field(default_factory=dict)
@@ -98,11 +98,17 @@ class Table:
         return [header for header, col in cols.items() if cond(col)]
 
     def missing_rows(self, split=True):
-        """Return columns available in schema but not in analyzed data"""
+        """
+        Return the columns that are available in the schema, but not present in the analyzed data.
+        """
+
         return self._counter(split, lambda c: c.hits == 0)
 
     def available_rows(self, split=True):
-        """Return available in analyzed data columns"""
+        """
+        Return the columns that are available in the analyzed data.
+        """
+
         return self._counter(split, lambda c: c.hits > 0)
 
     def __iter__(self):
@@ -123,11 +129,12 @@ class Table:
         additional=False,
         abs_path=None,
     ):
-        """Add new column to the table
+        """
+        Add a new column to the table.
 
-        :param path: Column path
+        :param path: The column's path
         :param item: Object schema description
-        :param item_type: Column expected type
+        :param item_type: The column's expected type
         :param parent: Parent object schema description
         :param combined_only: Make this column available only in combined version of table
         :param additional: Mark this column as missing in schema
@@ -160,17 +167,21 @@ class Table:
             )
 
     def is_array(self, path):
-        """Check if provided path is inside any tables arrays"""
+        """
+        Check whether the given path is in any table's arrays.
+        """
+
         for array in sorted(self.arrays, reverse=True):
             if common_prefix(array, path) == array:
                 return array
         return False
 
     def inc_column(self, abs_path, path):
-        """Increment data counter in column
+        """
+        Increment the number of non-empty cells in the column.
 
-        :param abs_path: Full column jsonpath
-        :param path: Path without indexes
+        :param abs_path: The column's full JSON path
+        :param path: The column's JSON path without array indexes
         """
         header = get_pointer(self, abs_path, path, True)
         if header in self.columns:
@@ -183,11 +194,12 @@ class Table:
             self.parent.inc_column(abs_path, path)
 
     def set_array(self, header, item):
-        """Try to set maximum length of array
+        """
+        Try to set the maximum length of an array.
 
-        :param header: Path to array object
+        :param header: The path to the array
         :param item: Array from data
-        :return: True if array is bigger than previously found and length was updated
+        :return: Whether the array is bigger than previously found and the length was updated
         """
         count = self.arrays.get(header, 0)
         length = len(item)
@@ -199,7 +211,10 @@ class Table:
         return False
 
     def inc(self):
-        """Increment number of rows in table"""
+        """
+        Increment the number of rows in the table.
+        """
+
         self.total_rows += 1
         for col_name in DEFAULT_FIELDS_COMBINED:
             self.inc_column(col_name, col_name)
@@ -222,9 +237,10 @@ class Table:
 
 
 def add_child_table(table, pointer, parent_key, key):
-    """Create and append new child table to `current_table`
+    """
+    Create and append a new child table to the given table.
 
-    :param current_table: Parent table to newly created table
+    :param current_table: The parent table to the newly created table
     :param pointer: Path to which table should match
     :param parent_key: New table parent object filed name, used to generate table name
     :param key: New table field name object filed name, used to generate table name

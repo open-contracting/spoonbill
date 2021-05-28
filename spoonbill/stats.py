@@ -31,16 +31,17 @@ LOGGER.addFilter(RepeatFilter())
 
 
 class DataPreprocessor:
-    """Data analyzer
+    """
+    Data analyzer
 
-    Process provided schema and based on this data extracts information fromm iterable dataset
+    Processes the given schema and, based on this, extracts information from the iterable dataset.
 
-    :param schema: Dataset schema
-    :param root_tables: Paths which should become root tables
-    :param combined_tables: List of tables with data from different locations
-    :param tables: Do not parse schema and use this tables data
-    :param table_threshold: Maximum array length before system recommends it to separated to child table
-    :param total_items: Total objects processed
+    :param schema: The dataset's schema
+    :param root_tables: The paths which should become root tables
+    :param combined_tables: The paths which should become tables that combine data from different locations
+    :param tables: Use these tables objects instead of parsing the schema
+    :param table_threshold: The maximum array length, before it is recommended to split out a child table
+    :param total_items: The total objects processed
     """
 
     def __init__(
@@ -80,13 +81,17 @@ class DataPreprocessor:
         return key
 
     def init_tables(self, tables, is_combined=False):
-        """Initialize root tables with default fields"""
+        """
+        Initialize the root tables with default fields.
+        """
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
 
     def parse_schema(self):
-        """Extract all available information from schema"""
+        """
+        Extract information from the schema.
+        """
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.schema = jsonref.JsonRef.replace_refs(self.schema)
@@ -148,10 +153,11 @@ class DataPreprocessor:
 
     @lru_cache(maxsize=None)
     def get_table(self, path):
-        """Get best matching table for `path`
+        """
+        Get the table that best matches the given path.
 
-        :param path: Path to find corresponding table
-        :return: Best matching table
+        :param path: A path
+        :return: A table
         """
         candidates = get_matching_tables(self.tables, path)
         if not candidates:
@@ -159,15 +165,16 @@ class DataPreprocessor:
         return candidates[0]
 
     def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=""):
-        """Append empty row to previews
+        """
+        Append a mostly-empty row to the previews.
 
-        Important to do because all preview items is set using -1 index to access current row
+        This is important to do, because other code uses an index of -1 to access and update the current row.
 
-        :param ocid: Row ocid
-        :param item_id: Current object id
-        :param row_id: Unique row id
-        :param parent_id: Parent object id
-        :param parent_table: Parent table name
+        :param ocid: The row's ocid
+        :param item_id: The current object's id
+        :param row_id: The unique row id
+        :param parent_id: The parent object's id
+        :param parent_table: The parent table's name
         """
         defaults = {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
         if parent_table:
@@ -176,13 +183,14 @@ class DataPreprocessor:
         self.current_table.preview_rows_combined.append(defaults)
 
     def process_items(self, releases, with_preview=True):
-        """Analyze releases
+        """
+        Analyze releases.
 
-        Iterate over every item in provided list to
-        calculate metrics and optionally generate preview for combined and split version of the table
+        Iterates over every release to calculate metrics and optionally generates previews for combined and split
+        versions of each table.
 
-        :param releases: Iterator of items to analyze
-        :param with_preview: If set to True generates previews for each table
+        :param releases: The releases to analyze
+        :param with_preview: Whether to generate previews for each table
         """
         separator = self.header_separator
         for count, release in enumerate(releases):
@@ -306,7 +314,11 @@ class DataPreprocessor:
         self.total_items = count
 
     def dump(self, path):
-        """Dump table objects to file system"""
+        """
+        Dump the data processor's state to a file.
+
+        :param path: Full path to file
+        """
         try:
             with open(path, "wb") as fd:
                 pickle.dump(self, fd)
@@ -315,7 +327,8 @@ class DataPreprocessor:
 
     @classmethod
     def restore(_cls, path):
-        """Restore DataPreprocessor from file
+        """
+        Restore a data preprocessor's state from a file.
 
         :param path: Full path to file
         """

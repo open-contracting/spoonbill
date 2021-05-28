@@ -12,16 +12,21 @@ LOGGER = logging.getLogger("spoonbill")
 
 
 class XlsxWriter(BaseWriter):
-    """Writer class with output to xlsx files
-    For each table will be created corresponding sheet inside workbook
-    :param workdir: Working directory
-    :param tables: Tables data
-    :options: Flattening options
+    """
+    Writer class with output to XLSX files.
+
+    For each table, a corresponding sheet in an Excel workbook will be created.
     """
 
     name = "xlsx"
 
     def __init__(self, workdir, tables, options, filename="result.xlsx"):
+        """
+        :param workdir: Working directory
+        :param tables: The table objects
+        :param options: Flattening options
+        """
+
         super().__init__(workdir, tables, options)
         self.col_index = collections.defaultdict(dict)
         path = workdir / filename
@@ -30,7 +35,10 @@ class XlsxWriter(BaseWriter):
         self.row_counters = {}
 
     def __enter__(self):
-        """Write headers to output file"""
+        """
+        Write the headers to the output file.
+        """
+
         for name, table in self.tables.items():
             table_name, headers = self.init_sheet(name, table)
             sheet = self.workbook.add_worksheet(table_name)
@@ -47,10 +55,17 @@ class XlsxWriter(BaseWriter):
         return self
 
     def __exit__(self, *args):
+        """
+        Close the workbook.
+        """
+
         self.workbook.close()
 
     def writerow(self, table, row):
-        """Write row to output file"""
+        """
+        Write a row to the output file.
+        """
+
         table_name = self.names.get(table, table)
         sheet = self.workbook.get_worksheet_by_name(table_name)
         columns = self.col_index[table]
