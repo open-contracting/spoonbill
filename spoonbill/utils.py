@@ -153,6 +153,7 @@ def get_matching_tables(tables, path):
         for candidate in table.path:
             if common_prefix(candidate, path) == candidate:
                 candidates.append(table)
+
     return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
 
@@ -193,29 +194,37 @@ def generate_table_name(parent_table, parent_key, key):
     return table_name
 
 
-def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
+def generate_row(table, ocid, item_id, parent_id=None, parent_table=None, buyer=None):
     """Generates uniq rowID for table row
 
     :param str ocid: OCID of release
     :param str item_id: Corresponding object id for current row, e.g. tender/id
-    :param str parent_key: Corresponding field name for current object frow which row is constructed, e.g. documents
-    :param top_level_id: The ID of whole release
-    :return: Generated rowID
-    :rtype: str
-
-    >>> generate_row_id('ocid', 'item', 'documens', 'top')
-    'ocid/top/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '1')
-    'ocid/1/item'
-    >>> generate_row_id('ocid', 'item', 'documens', '')
-    'ocid/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '')
-    'ocid/item'
+    :param str parent_id: Parent object id
+    :param str parent_key: Parent table name
+    :return: Generated row
     """
-    tail = f"{parent_key}:{item_id}" if parent_key else item_id
-    if top_level_id:
-        return f"{ocid}/{top_level_id}/{tail}"
-    return f"{ocid}/{tail}"
+    name = table.name
+    head = ocid
+    row = OrderedDict(
+        {
+            "id": item_id,
+            "parentID": parent_id,
+            "ocid": ocid,
+        }
+    )
+    if not table.is_root:
+        head = f"{head}/{parent_table}:{parent_id}"
+        row["parentID"] = parent_id
+        row["parentTable"] = parent_table
+    row["rowID"] = f"{head}/{name}:{item_id}"
+
+    if table.name == "parties" and buyer:
+        # it works and we bind to OCDS anyway
+        # but this is a hack
+        # and its a good idea to find better way of doing it in future
+        row["/buyer/id"] = buyer.get("id")
+        row["/buyer/name"] = buyer.get("name")
+    return row
 
 
 def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
@@ -277,7 +286,7 @@ def resolve_file_uri(file_path):
     """
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
-            return json.load(fd)
+            return json.load(fd, object_pairs_hook=OrderedDict)
     if file_path.startswith("http://") or file_path.startswith("https://"):
         return requests.get(file_path).json()
 
@@ -330,3 +339,16 @@ class RepeatFilter(logging.Filter):
             self.last_log = current_log
             return True
         return False
+
+
+def make_count_column(array):
+    """Make column name for arrays elements count
+
+    >>> make_count_column('/tender/items')
+    '/tender/itemsCount'
+    >>> make_count_column('/tender/items/additionalClassifications')
+    '/tender/items/additionalClassificationsCount'
+    """
+    parts = array.split("/")
+    parts[-1] = f"{parts[-1]}Count"
+    return "/".join(parts)

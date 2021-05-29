@@ -256,13 +256,11 @@ def test_analyze_preview_rows(spec_analyzed, releases):
 
     for getter in (attrgetter("preview_rows"), attrgetter("preview_rows_combined")):
         for count, row in enumerate(getter(tenders)):
-            ocid, parent_id, row_id = row["rowID"].split("/")
-            row_id = row_id.split(":")[-1]
+            ocid, row_id = row["rowID"].split("/")
+            table_name, parent_id = row_id.split(":")
             tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row_id]
-            items = [r for r in getter(tenders_items) if r["parentID"] == row_id and r["parentID"] == parent_id]
-            items_class = [
-                r for r in getter(tenders_items_class) if r["parentID"] == row_id and r["parentID"] == parent_id
-            ]
+            items = [r for r in getter(tenders_items) if r["parentID"] == parent_id and r["parentTable"] == table_name]
+            items_class = [r for r in getter(tenders_items_class) if r["parentID"] == row_id]
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables

@@ -293,4 +293,16 @@ def test_flatten_only_no_default_columns(spec_analyzed, releases):
         for name, rows in flat.items():
             for row in rows:
                 assert len(rows) == 1
-                assert "/tender/id" in row
+                assert not set(row).difference(["/tender/id"])
+
+
+def test_flatten_buyer(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"parties": {"split": False}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    for count, flat in flattener.flatten(releases):
+        buyer = search(f"[{count}].buyer", releases)
+        for name, rows in flat.items():
+            for row in rows:
+                if buyer:
+                    assert "/buyer/id" in row
+                    assert "/buyer/name" in row

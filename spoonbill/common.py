@@ -7,7 +7,7 @@ ROOT_TABLES = {
     "awards": ["/awards"],
     "contracts": ["/contracts"],
     "planning": ["/planning"],
-    "parties": ["/parties"],
+    "parties": ["/parties", "/buyer"],
 }
 # TODO: extract types from schema? items and additionalClassifications as table?
 COMBINED_TABLES = {
