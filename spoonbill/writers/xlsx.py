@@ -28,9 +28,8 @@ class XlsxWriter(BaseWriter):
 
         super().__init__(workdir, tables, options)
         self.col_index = collections.defaultdict(dict)
-        path = workdir / filename
-        LOGGER.info(_("Dumping all sheets to file to file '{}'").format(path))
-        self.workbook = xlsxwriter.Workbook(path, {"constant_memory": True})
+        self.path = workdir / filename
+        self.workbook = xlsxwriter.Workbook(self.path, {"constant_memory": True})
         self.row_counters = {}
 
     def __enter__(self):
@@ -57,7 +56,7 @@ class XlsxWriter(BaseWriter):
         """
         Close the workbook.
         """
-
+        LOGGER.info(_("Dumped all sheets to file to file '{}'").format(self.path))
         self.workbook.close()
 
     def writerow(self, table, row):
