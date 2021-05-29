@@ -232,7 +232,10 @@ class DataPreprocessor:
                     elif item and isinstance(item, list):
                         abs_pointer = separator.join([abs_path, key])
                         if not isinstance(item[0], dict) and not item_type:
-                            LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, root.name))
+                            LOGGER.debug(
+                                _("Detected additional column: %s in %s table")
+                                % (abs_pointer, self.current_table.name)
+                            )
                             item_type = JOINABLE
                             self.current_table.add_column(
                                 pointer,
@@ -292,9 +295,6 @@ class DataPreprocessor:
                         root = get_root(self.current_table)
                         abs_pointer = separator.join((abs_path, key))
                         if self.current_table.is_combined:
-                            LOGGER.debug(
-                                _("Path %s is targeted to combined table %s") % (pointer, self.current_table.name)
-                            )
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
