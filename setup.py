@@ -24,6 +24,7 @@ setup(
         "requests",
         "xlsxwriter",
         'dataclasses;python_version<"3.7"',
+        "flatten-dict",
     ],
     extras_require={
         "test": [

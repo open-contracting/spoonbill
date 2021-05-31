@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Mapping
 
 import jsonref
+from flatten_dict import flatten
 
 from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
 from spoonbill.i18n import LOCALE, _
@@ -149,6 +150,25 @@ class DataPreprocessor:
         self.current_table = table
         self.get_table.cache_clear()
 
+    def _add_additional_table(self, pointer, abs_pointer, parent_key, key, item, separator="/"):
+        LOGGER.debug(_("Detected additional table: %s") % pointer)
+        self.current_table.types[pointer] = ["array"]
+        self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
+        # add columns beforehand because it might be required
+        # to recalculate  and reorder headers when enlarging array
+        # there must be a better way but it should work for now
+        for extended_item in item:
+            for path_, it in flatten(extended_item, reducer="path").items():
+                p = separator.join((pointer, path_))
+                a_p = separator.join((abs_pointer, path_))
+                if p not in self.current_table:
+                    self.current_table.add_column(
+                        p,
+                        PYTHON_TO_JSON_TYPE.get(type(it).__name__, "N/A"),
+                        _(p, self.language),
+                        abs_path=a_p,
+                    )
+
     @lru_cache(maxsize=None)
     def get_table(self, path):
         """
@@ -267,7 +287,7 @@ class DataPreprocessor:
                                 self.current_table.types[pointer] = ["array"]
                                 parent_table = self.current_table
                                 # TODO: do we need to mark this table as additional
-                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
+                                self._add_additional_table(pointer, abs_pointer, parent_key, key, item)
                                 self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
 
                             if parent_table.set_array(pointer, item):
