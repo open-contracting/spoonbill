@@ -5,7 +5,7 @@ from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file
+from spoonbill.utils import detect_multiple_values, iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -33,6 +33,7 @@ class FileAnalyzer:
         table_threshold=TABLE_THRESHOLD,
     ):
         self.workdir = Path(workdir)
+        self.multiple_values = False
         if state_file:
             self.spec = DataPreprocessor.restore(state_file)
         else:
@@ -51,8 +52,9 @@ class FileAnalyzer:
         :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
+        self.multiple_values = detect_multiple_values(path)
         with open(path, "rb") as fd:
-            items = iter_file(fd, self.root_key)
+            items = iter_file(fd, self.root_key, multiple_values=self.multiple_values)
             for count in self.spec.process_items(items, with_preview=with_preview):
                 yield fd.tell(), count
 
@@ -76,7 +78,17 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, tables, root_key="releases", csv=None, xlsx="result.xlsx", language=LOCALE):
+    def __init__(
+        self,
+        workdir,
+        options,
+        tables,
+        multiple_values=False,
+        root_key="releases",
+        csv=None,
+        xlsx="result.xlsx",
+        language=LOCALE,
+    ):
         self.flattener = Flattener(options, tables, language=language)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
@@ -84,11 +96,12 @@ class FileFlattener:
         self.writers = []
         self.csv = csv
         self.xlsx = xlsx
+        self.multiple_values = multiple_values
 
     def _flatten(self, filename, writers):
         path = self.workdir / filename
         with open(path, "rb") as fd:
-            items = iter_file(fd, self.root_key)
+            items = iter_file(fd, self.root_key, multiple_values=self.multiple_values)
             for count, data in self.flattener.flatten(items):
                 for table, rows in data.items():
                     for row in rows:

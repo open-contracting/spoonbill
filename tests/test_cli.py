@@ -12,6 +12,8 @@ LOGGER = logging.getLogger("spoonbill")
 LOGGER.addFilter(RepeatFilter())
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
+FILENAME_JSONL = pathlib.Path("tests/data/ocds-sample-data.jsonl").absolute()
+FILENAME_GARBAGE = pathlib.Path("tests/data/trailing_garbage.json").absolute()
 EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
 ANALYZED = pathlib.Path("tests/data/analyzed.state").absolute()
@@ -253,3 +255,21 @@ def test_default_field_only():
         result = runner.invoke(cli, ["--selection", "tenders,parties", "--only", "parentID", "data.json"])
         assert "Using only columns parentID for table tenders" in result.output
         assert "Using only columns parentID for table parties" in result.output
+
+
+def test_jsonl():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME_JSONL, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert "Input file is release" in result.output
+        assert result.exit_code == 0
+
+
+def test_ijson_parse_error():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME_GARBAGE, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert "Please make sure that valid file provided" in result.output
+        assert result.exit_code == 1

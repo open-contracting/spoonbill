@@ -1,10 +1,11 @@
 """cli.py - Command line interface related routines"""
 import logging
 import pathlib
-from itertools import chain
+from operator import attrgetter
 
 import click
 import click_logging
+from ijson.common import IncompleteJSONError
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -49,79 +50,146 @@ def get_selected_tables(base, selection):
     return {name: tab for name, tab in base.items() if name in selection}
 
 
-# TODO: we could provide two commands: flatten and analyze
-# TODO: generated state-file + schema how to validate
+def parse_schema_option(input_format, schema=None):
+    if schema:
+        schema = resolve_file_uri(schema)
+    if "release" in input_format:
+        pkg_type = "releases"
+        getter = attrgetter("release_package_schema")
+    else:
+        pkg_type = "records"
+        getter = attrgetter("record_package_schema")
+    if not schema:
+        click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
+        profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+        schema = getter(profile)()
+    title = schema.get("title", "").lower()
+    if not title:
+        raise ValueError(_("Incomplete schema, please make sure your data is correct"))
+    if "package" in title:
+        # TODO: is is a good way to get release/record schema
+        schema = schema["properties"][pkg_type]["items"]
+    return schema, pkg_type
 
 
-@click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS datasets"))
+@click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS files"))
 @click.option(
     "--schema",
     help=_(
-        "Schema file uri. This option is used to provide OCDS schema which spoonbill requires to analyze dataset. URI "
-        "might be file path or HTTP link. Spoonbill will use default schema tag if not provided (requires internet "
-        "connection)"
+        "A JSON schema file URI. The URI can be a file path or an HTTP link. Spoonbill uses the schema to analyze the "
+        "provided JSON file. Defaults to the OCDS 1.1.5 release schema (requires internet connection)"
     ),
     type=str,
 )
-@click.option("--selection", type=CommaSeparated())
+@click.option(
+    "--selection",
+    type=CommaSeparated(),
+    help=_(
+        "A comma-separated list of initial tables to write. The available tables to select are: "
+        "parties, planning, tenders, awards, contracts"
+    ),
+)
 @click.option(
     "--threshold",
-    help=_("Maximum number of elements in array before its spitted into table"),
+    help=_("The maximum number of elements in an array before it is split into a table"),
     type=int,
     default=TABLE_THRESHOLD,
+    show_default=True,
 )
 @click.option(
     "--state-file",
-    help=_("Uri to previously generated state file"),
+    help=_("A file path URI to a previously generated state file. If not provided, a new state file is generated"),
     type=click.Path(exists=True),
 )
-@click.option("--xlsx", help=_("Path to result xlsx file"), type=click.Path(), default="result.xlsx")
-@click.option("--csv", help=_("Path to directory for output csv files"), type=click.Path(), required=False)
-@click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
-@click.option("--exclude", help=_("Exclude tables from export"), type=CommaSeparated(), default="")
+@click.option(
+    "--xlsx",
+    help=_(
+        "A file path to store the resulting xlsx file. Default to result.xlsx. "
+        "Set to '' to disable the xlsx file generation"
+    ),
+    type=click.Path(),
+    default="result.xlsx",
+)
+@click.option(
+    "--csv",
+    help=_("An existing directory path. If set also generates CSV files in the given directory. Disabled by default"),
+    type=click.Path(),
+    required=False,
+)
+@click.option(
+    "--combine",
+    help=_(
+        "A comma-separated list of tables. Combines same OCDS object types from different locations "
+        "(tender, awards, etc) into a single table. The available tables are: documents, milestones, and amendments"
+    ),
+    type=CommaSeparated(),
+)
+@click.option(
+    "--exclude",
+    help=_("A comma-separated list of tables to exclude from export. Disabled by default"),
+    type=CommaSeparated(),
+    default="",
+)
 @click.option(
     "--unnest",
-    help=_("Extract columns form child tables to parent table"),
+    help=_(
+        "A comma-separated list of column names to copy from child tables into their parent table. Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
 @click.option(
     "--unnest-file",
-    help=_("Same as --unnest, but read columns from a file"),
+    help=_("A file path directory. Same as --unnest, but read column names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
-@click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated(), default="")
+@click.option(
+    "--only",
+    help=_(
+        "A comma-separated list of a subset of columns to output instead of all, in JSON path format, "
+        "e.g. /parties/name. Defaults to all the available columns"
+    ),
+    type=CommaSeparated(),
+    default="",
+)
 @click.option(
     "--only-file",
-    help=_("Same as --only, but read columns from a file"),
+    help=_("A file path directory. Same as --only, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
 @click.option(
     "--repeat",
-    help=_("Repeat a column from a parent sheet onto child tables"),
+    help=_(
+        "A comma-separated list of columns to repeat from a parent table into its child tables, in JSON path format,"
+        "e.g. /parties/name. Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
 @click.option(
     "--repeat-file",
-    help=_("Same as --repeat, but read columns from a file"),
+    help=_("A file path directory. Same as --repeat, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
 @click.option(
-    "--count", help=_("For each array field, add a count column to the parent table"), is_flag=True, default=False
+    "--count",
+    help=_("For each array field, add a count column to its parent table. Disabled by default"),
+    is_flag=True,
+    default=False,
 )
 @click.option(
     "--human",
-    help=_("Use the schema's title properties for column headings"),
+    help=_("Change the tables headings to human-readable format, using the schema's title properties"),
     is_flag=True,
 )
 @click.option(
     "--language",
-    help=_("Language for headings"),
+    help=_("Use with --human, the language to use for the human-readable headings"),
     default=LOCALE.split("_")[0],
+    show_default=True,
     type=click.Choice(["en", "es"]),
 )
 @click_logging.simple_verbosity_option(LOGGER)
@@ -148,13 +216,15 @@ def cli(
 ):
     """Spoonbill cli entry point"""
     click.echo(_("Detecting input file format"))
-    # TODO: handle line separated json
-    # TODO: handle single release/record
-    (
-        input_format,
-        _is_concatenated,
-        _is_array,
-    ) = detect_format(filename)
+    try:
+        (
+            input_format,
+            _is_concatenated,
+            _is_array,
+        ) = detect_format(filename)
+    except IncompleteJSONError as error:
+        click.echo(error)
+        click.echo("Please make sure that valid file provided")
     if csv:
         csv = pathlib.Path(csv).resolve()
         if not csv.exists():
@@ -164,32 +234,8 @@ def cli(
         if not xlsx.parent.exists():
             raise click.BadParameter(_("Desired location {} does not exists").format(xlsx.parent))
     click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
-    is_package = "package" in input_format
-    combine_choice = combine if combine else ""
-    if not is_package:
-        # TODO: fix this
-        click.echo("Single releases are not supported by now")
-        return
-    if schema:
-        schema = resolve_file_uri(schema)
-    if "release" in input_format:
-        root_key = "releases"
-        if not schema:
-            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
-            schema = profile.release_package_schema()
-    else:
-        root_key = "records"
-        if not schema:
-            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
-            schema = profile.record_package_schema()
-    title = schema.get("title", "").lower()
-    if not title:
-        raise ValueError(_("Incomplete schema, please make sure your data is correct"))
-    if "package" in title:
-        # TODO: is is a good way to get release/record schema
-        schema = schema["properties"][root_key]["items"]
+
+    schema, root_key = parse_schema_option(input_format, schema)
 
     path = pathlib.Path(filename)
     workdir = path.parent
@@ -214,8 +260,8 @@ def cli(
             table_threshold=threshold,
         )
         click.echo(_("Analyze options:"))
-        click.echo(_(" - table threshold => {}").format(click.style(str(threshold), fg="cyan")))
-        click.echo(_(" - language        => {}").format(click.style(language, fg="cyan")))
+        for name, option in ("threshold", str(threshold)), ("language", language):
+            click.echo(_(" - {:30} => {}").format(name, click.style(option, fg="cyan")))
         click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
         total = path.stat().st_size
         progress = 0
@@ -250,43 +296,43 @@ def cli(
     repeat = read_option_file(repeat, repeat_file)
     only = read_option_file(only, only_file)
 
-    for name in selection:
+    for name in list(selection) + list(combine):
         table = analyzer.spec[name]
         if table.total_rows == 0:
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
-
-        unnest = [col for col in unnest if col in table.combined_columns]
-        if unnest:
-            click.echo(
-                _("Unnesting columns {} for table {}").format(
-                    click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
-        only = [col for col in only if col in table]
-        if only:
-            click.echo(
-                _("Using only columns {} for table {}").format(
-                    click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
-        repeat = [col for col in repeat if col in table]
-        if repeat:
-            click.echo(
-                _("Repeating columns {} in all child table of {}").format(
-                    click.style(",".join(repeat), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
         options["selection"][name] = {
             "split": analyzer.spec[name].should_split,
             "pretty_headers": human,
-            "unnest": unnest,
-            "only": only,
-            "repeat": repeat,
         }
+        if not analyzer.spec[name].is_combined:
+            unnest_in_table = [col for col in unnest if col in table.combined_columns]
+            if unnest_in_table:
+                click.echo(
+                    _("Unnesting columns {} for table {}").format(
+                        click.style(",".join(unnest_in_table), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+
+            only_in_table = [col for col in only if col in table]
+            if only_in_table:
+                click.echo(
+                    _("Using only columns {} for table {}").format(
+                        click.style(",".join(only_in_table), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+
+            repeat_in_table = [col for col in repeat if col in table]
+            if repeat_in_table:
+                click.echo(
+                    _("Repeating columns {} in all child table of {}").format(
+                        click.style(",".join(repeat_in_table), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+            options["selection"][name]["only"] = only_in_table
+            options["selection"][name]["repeat"] = repeat_in_table
+            options["selection"][name]["unnest"] = unnest_in_table
+
     options = FlattenOptions(**options)
     flattener = FileFlattener(
         workdir,
@@ -296,20 +342,17 @@ def cli(
         csv=csv,
         xlsx=xlsx,
         language=language,
+        multiple_values=analyzer.multiple_values,
     )
 
-    all_tables = chain([table for table in flattener.flattener.tables.keys()], combine_choice)
-
-    click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
-
+    click.echo(
+        _("Going to export tables: {}").format(click.style(",".join(flattener.flattener.tables.keys()), fg="magenta"))
+    )
     click.echo(_("Processed tables:"))
-    for table in flattener.flattener.tables.keys():
-        message = _("{}: {} rows").format(table, flattener.flattener.tables[table].total_rows)
-        if not flattener.flattener.tables[table].is_root:
-            message = "└-----" + message
-            click.echo(message)
-        else:
-            click.echo(message)
+    for table_name, table in flattener.flattener.tables.items():
+        msg = _(" - {:30} => {} rows") if table.is_root else _(" ---- {:27} => {} rows")
+        message = msg.format(table_name, click.style(str(table.total_rows), fg="cyan"))
+        click.echo(message)
     click.echo(_("Flattening input file"))
     with click.progressbar(
         flattener.flatten_file(filename),

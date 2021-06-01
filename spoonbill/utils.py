@@ -10,6 +10,7 @@ from pathlib import Path
 
 import ijson
 import requests
+from ocdskit.util import detect_format
 
 from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
@@ -61,11 +62,12 @@ def common_prefix(path, subpath, separator="/"):
     return separator.join(common)
 
 
-def iter_file(fd, root):
+def iter_file(fd, root, multiple_values=False):
     """Iterate over `root` array in file provided by `filename` using ijson
 
     :param bytes fd: File descriptor
     :param str root: Array field name inside file
+    :param bool multiple_values: Determine line-delimited JSON
     :return: Iterator of bytes read and item as a tuple
 
     >>> [r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'records')]
@@ -73,7 +75,11 @@ def iter_file(fd, root):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    reader = ijson.items(fd, f"{root}.item", map_type=OrderedDict)
+    prefix = f"{root}.item"
+    if multiple_values:
+        prefix = ""
+
+    reader = ijson.items(fd, prefix=prefix, multiple_values=multiple_values, map_type=OrderedDict)
     for item in reader:
         yield item
 
@@ -330,3 +336,12 @@ class RepeatFilter(logging.Filter):
             self.last_log = current_log
             return True
         return False
+
+
+def detect_multiple_values(path):
+    (
+        input_format,
+        _is_concatenated,
+        _is_array,
+    ) = detect_format(path)
+    return _is_concatenated
