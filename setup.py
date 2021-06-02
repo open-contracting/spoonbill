@@ -3,9 +3,13 @@ from setuptools import find_packages, setup
 with open("README.rst") as f:
     long_description = f.read()
 
+__pkg__ = "spoonbill"
+__version__ = "1.0.1b1"
+
+
 setup(
-    name="spoonbill",
-    version="1.0.1b1",
+    name=__pkg__,
+    version=__version__,
     author="Open Contracting Partnership",
     author_email="data@open-contracting.org",
     url="https://github.com/open-contracting/spoonbill",
