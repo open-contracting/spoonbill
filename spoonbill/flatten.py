@@ -231,9 +231,7 @@ class Flattener:
                     continue
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
-                    row = generate_row(
-                        table, ocid, record.get("id", ""), parent.get("id", ""), parent_table=parent_key, buyer=buyer
-                    )
+                    row = generate_row(table, ocid, record.get("id", ""), parent.get("id", ""), buyer=buyer)
                     only = self.options.selection[table.name].only
                     if only:
                         row = {col: col_v for col, col_v in row.items() if col in only}

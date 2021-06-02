@@ -256,11 +256,13 @@ def test_analyze_preview_rows(spec_analyzed, releases):
 
     for getter in (attrgetter("preview_rows"), attrgetter("preview_rows_combined")):
         for count, row in enumerate(getter(tenders)):
-            ocid, row_id = row["rowID"].split("/")
-            table_name, parent_id = row_id.split(":")
-            tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row_id]
-            items = [r for r in getter(tenders_items) if r["parentID"] == parent_id and r["parentTable"] == table_name]
-            items_class = [r for r in getter(tenders_items_class) if r["parentID"] == row_id]
+            tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row["rowID"]]
+            items = [r for r in getter(tenders_items) if r["parentID"] == row["rowID"]]
+            items_class = []
+            for it in items:
+                for r in getter(tenders_items_class):
+                    if r["parentID"] == it["rowID"]:
+                        items_class.append(r)
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables
@@ -330,24 +332,33 @@ def test_analyze_array_extentions_split(spec, releases):
 
     cols = spec.tables["tenders"]
 
-    assert "/tender/items/0/attributes/0/id" not in cols
-    assert "/tender/items/0/attributes/0/name" not in cols
-    assert "/tender/items/0/attributes/1/id" not in cols
-    assert "/tender/items/0/attributes/1/name" not in cols
-    assert "/tender/items/1/attributes/0/name" not in cols
-    assert "/tender/items/1/attributes/0/id" not in cols
-    assert "/tender/items/1/attributes/1/name" not in cols
-    assert "/tender/items/1/attributes/1/id" not in cols
+    for key in (
+        "/tender/items/0/attributes/0/id",
+        "/tender/items/0/attributes/1/id",
+        "/tender/items/1/attributes/0/id",
+        "/tender/items/1/attributes/1/id",
+        "/tender/items/0/attributes/0/name",
+        "/tender/items/0/attributes/1/name",
+        "/tender/items/1/attributes/0/name",
+        "/tender/items/1/attributes/1/name",
+    ):
+        assert key not in cols
 
     cols = spec.tables["tenders"].combined_columns
-    assert "/tender/items/0/attributes/0/id" in cols
-    assert "/tender/items/0/attributes/0/name" in cols
-    assert "/tender/items/0/attributes/1/id" in cols
-    assert "/tender/items/0/attributes/1/name" in cols
-    assert "/tender/items/1/attributes/0/name" not in cols
-    assert "/tender/items/1/attributes/0/id" not in cols
-    assert "/tender/items/1/attributes/1/name" not in cols
-    assert "/tender/items/1/attributes/1/id" not in cols
+    for key in (
+        "/tender/items/0/attributes/0/id",
+        "/tender/items/0/attributes/1/id",
+        "/tender/items/0/attributes/0/name",
+        "/tender/items/0/attributes/1/name",
+    ):
+        assert key in cols
+    for key in (
+        "/tender/items/1/attributes/0/name",
+        "/tender/items/1/attributes/0/id",
+        "/tender/items/1/attributes/1/name",
+        "/tender/items/1/attributes/1/id",
+    ):
+        assert key not in cols
 
     cols = spec.tables["tenders_items"]
     assert "/tender/items/attributes/0/id" not in cols

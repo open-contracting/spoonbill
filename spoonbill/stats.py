@@ -8,7 +8,7 @@ from typing import List, Mapping
 import jsonref
 from flatten_dict import flatten
 
-from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
+from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
 from spoonbill.i18n import LOCALE, _
 from spoonbill.spec import Table, add_child_table
 from spoonbill.utils import (
@@ -24,7 +24,6 @@ from spoonbill.utils import (
     validate_type,
 )
 
-PREVIEW_ROWS = 20
 LOGGER = logging.getLogger("spoonbill")
 LOGGER.addFilter(RepeatFilter())
 
@@ -194,14 +193,10 @@ class DataPreprocessor:
         :param buyer: The Buyer object if available
         """
         self.current_table.preview_rows.append(
-            generate_row(
-                self.current_table, ocid, item_id, parent_id=parent_id, parent_table=parent_table, buyer=buyer
-            )
+            generate_row(self.current_table, ocid, item_id, parent_id=parent_id, buyer=buyer)
         )
         self.current_table.preview_rows_combined.append(
-            generate_row(
-                self.current_table, ocid, item_id, parent_id=parent_id, parent_table=parent_table, buyer=buyer
-            )
+            generate_row(self.current_table, ocid, item_id, parent_id=parent_id, buyer=buyer)
         )
 
     def process_items(self, releases, with_preview=True):

@@ -33,6 +33,9 @@ COMBINED_TABLES = {
     ],
 }
 
+PREVIEW_ROWS = 5
+
+
 DEFAULT_FIELDS = ["ocid", "id", "rowID", "parentID"]
 DEFAULT_FIELDS_COMBINED = ["ocid", "id", "rowID", "parentID", "parentTable"]
 
