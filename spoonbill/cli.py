@@ -58,22 +58,23 @@ def get_selected_tables(base, selection):
     "--schema",
     help=_(
         "A JSON schema file URI. The URI can be a file path or an HTTP link. Spoonbill uses the schema to analyze the "
-        f"provided JSON file. Defaults to the OCDS {CURRENT_SCHEMA_TAG} release schema (requires internet connection)"
+        "provided JSON file. Defaults to the OCDS 1.1.5 release schema (requires internet connection)"
     ),
     type=str,
 )
 @click.option(
     "--selection",
     type=CommaSeparated(),
-    help=_(f"A comma-separated list of initial tables to write. Defaults to all: {','.join(ROOT_TABLES.keys())}"),
+    help=_("A comma-separated list of initial tables to write"),
+    default=",".join(ROOT_TABLES.keys()),
+    show_default=True,
 )
 @click.option(
     "--threshold",
-    help=_(
-        "The maximum number of elements in an array before its spitted into a table. " f"Defaults to {TABLE_THRESHOLD}"
-    ),
+    help=_("The maximum number of elements in an array before its spitted into a table"),
     type=int,
     default=TABLE_THRESHOLD,
+    show_default=True,
 )
 @click.option(
     "--state-file",
@@ -82,14 +83,14 @@ def get_selected_tables(base, selection):
 )
 @click.option(
     "--xlsx",
-    help=_("A file path to store the resulting xlsx file. Defaults to result.xlsx"),
+    help=_("A file path to store the resulting xlsx file"),
     type=click.Path(),
     default="result.xlsx",
 )
 @click.option(
     "--csv",
     help=_(
-        "An existing directory path. If set also generates CSV files in the given existing directory "
+        "An existing directory path. If set also generates CSV files in the given existing directory. "
         "Disabled by default"
     ),
     type=click.Path(),
@@ -99,10 +100,11 @@ def get_selected_tables(base, selection):
     "--combine",
     help=_(
         "A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
-        "from different locations (tender, awards, etc) into a single table. "
-        f"Defaults to all: {','.join(COMBINED_TABLES.keys())}"
+        "from different locations (tender, awards, etc) into a single table"
     ),
     type=CommaSeparated(),
+    default=",".join(COMBINED_TABLES.keys()),
+    show_default=True,
 )
 @click.option(
     "--exclude",
@@ -170,6 +172,7 @@ def get_selected_tables(base, selection):
     "--language",
     help=_("Use with --human, the language to use for the human-readable headings"),
     default=LOCALE.split("_")[0],
+    show_default=True,
     type=click.Choice(["en", "es"]),
 )
 @click_logging.simple_verbosity_option(LOGGER)
