@@ -348,7 +348,8 @@ def make_count_column(array):
     '/tender/itemsCount'
     >>> make_count_column('/tender/items/additionalClassifications')
     '/tender/items/additionalClassificationsCount'
+    >>> make_count_column('/tender/items/')
+    '/tender/itemsCount'
     """
-    parts = array.split("/")
-    parts[-1] = f"{parts[-1]}Count"
-    return "/".join(parts)
+
+    return array.rstrip("/") + "Count"
