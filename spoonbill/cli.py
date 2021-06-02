@@ -112,7 +112,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--unnest",
     help=_(
-        "A comma-separated list of columns names to copy from child tables into its parent table" "Disabled by default"
+        "A comma-separated list of columns names to copy from child tables into its parent table. Disabled by default"
     ),
     type=CommaSeparated(),
     default="",
