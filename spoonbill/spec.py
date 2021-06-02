@@ -184,12 +184,10 @@ class Table:
         :param path: The column's JSON path without array indexes
         """
         header = get_pointer(self, abs_path, path, True)
-        if header in self.columns:
-            self.columns[header].hits += 1
-        if header in self.combined_columns:
-            self.combined_columns[header].hits += 1
-        if header in self.additional_columns:
-            self.additional_columns[header].hits += 1
+        for headers in self.columns, self.combined_columns, self.additional_columns:
+            if header in headers:
+                headers[header].hits += 1
+
         if not self.is_root:
             self.parent.inc_column(abs_path, path)
 
