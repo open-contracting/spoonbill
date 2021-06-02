@@ -65,41 +65,43 @@ def get_selected_tables(base, selection):
 @click.option(
     "--selection",
     type=CommaSeparated(),
-    help=_("A comma-separated list of initial tables to write, Defaults to parties,planning,tenders,awards,contracts"),
+    help=_(
+        "A comma-separated list of initial tables to write. The available tables to select are: "
+        "parties, planning, tenders, awards, contracts"
+    ),
 )
 @click.option(
     "--threshold",
-    help=_("The maximum number of elements in an array before its spitted into a table"),
+    help=_("The maximum number of elements in an array before it is split into a table"),
     type=int,
     default=TABLE_THRESHOLD,
     show_default=True,
 )
 @click.option(
     "--state-file",
-    help=_("A file path URI to a previously generated state file. By default, a new state-file is generated"),
+    help=_("A file path URI to a previously generated state file. If not provided, a new state file is generated"),
     type=click.Path(exists=True),
 )
 @click.option(
     "--xlsx",
-    help=_("A file path to store the resulting xlsx file"),
+    help=_(
+        "A file path to store the resulting xlsx file. Default to result.xlsx. "
+        "Set to '' to disable the xlsx file generation"
+    ),
     type=click.Path(),
     default="result.xlsx",
-    show_default=True,
 )
 @click.option(
     "--csv",
-    help=_(
-        "An existing directory path. If set also generates CSV files in the given existing directory. "
-        "Disabled by default"
-    ),
+    help=_("An existing directory path. If set also generates CSV files in the given directory. Disabled by default"),
     type=click.Path(),
     required=False,
 )
 @click.option(
     "--combine",
     help=_(
-        "A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
-        "from different locations (tender, awards, etc) into a single table."
+        "A comma-separated list of tables. Combines same OCDS object types from different locations "
+        "(tender, awards, etc) into a single table. The available tables are: documents, milestones, and amendments"
     ),
     type=CommaSeparated(),
 )
@@ -112,7 +114,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--unnest",
     help=_(
-        "A comma-separated list of columns names to copy from child tables into its parent table. Disabled by default"
+        "A comma-separated list of column names to copy from child tables into their parent table. Disabled by default"
     ),
     type=CommaSeparated(),
     default="",
@@ -126,7 +128,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--only",
     help=_(
-        "A comma-separated list of a subset of columns to output, instead of all, in JSON path format, "
+        "A comma-separated list of a subset of columns to output instead of all, in JSON path format, "
         "e.g. /parties/name. Defaults to all the available columns"
     ),
     type=CommaSeparated(),
@@ -134,7 +136,7 @@ def get_selected_tables(base, selection):
 )
 @click.option(
     "--only-file",
-    help=_("Same as --only, but read the columns names from a file with one column per line"),
+    help=_("A file path directory. Same as --only, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
@@ -149,7 +151,7 @@ def get_selected_tables(base, selection):
 )
 @click.option(
     "--repeat-file",
-    help=_("Same as --repeat, but read the columns names from a file with one column per line"),
+    help=_("A file path directory. Same as --repeat, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
