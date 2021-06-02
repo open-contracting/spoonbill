@@ -3,6 +3,17 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.2b1 (2021-05-27)
+--------------------
+
+Fixed
+~~~~~
+
+* **analyze:** recalculate headers recursively (`ca1c521 <https://github.com/open-contracting/spoonbill/commit/ca1c521c74b638b427d40f43f7d0575238a57d1d>`__)
+* **stats:** pregenerate headers for exstention table when detected (`648485c <https://github.com/open-contracting/spoonbill/commit/648485c7539ba4c0c0af220587d347aaebba9aca>`__)
+* **stats:** fix inserting array columns into rolled up table columns (`d6d6195 <https://github.com/open-contracting/spoonbill/commit/d6d61951430bd2c049765e826957d3ae56c8cd20>`__)
+* Use correct type annotation for List (`9d16a3f <https://github.com/open-contracting/spoonbill/commit/9d16a3f26309cff54c31ac27adfd49e41ac09801>`__)
+
 1.0.1b1 (2021-05-27)
 --------------------
 
