@@ -1,4 +1,9 @@
 from collections import defaultdict
+from pathlib import PosixPath
+from typing import Dict, Tuple
+
+from spoonbill.flatten import FlattenOptions, TableFlattenConfig
+from spoonbill.spec import Table
 
 
 class BaseWriter:
@@ -6,7 +11,7 @@ class BaseWriter:
     Base writer class
     """
 
-    def __init__(self, workdir, tables, options):
+    def __init__(self, workdir: PosixPath, tables: Dict[str, Table], options: FlattenOptions) -> None:
         """
         :param workdir: Working directory
         :param tables: The table objects
@@ -19,7 +24,7 @@ class BaseWriter:
         self.headers = {}
         self.names_counter = defaultdict(int)
 
-    def get_headers(self, table, options):
+    def get_headers(self, table: Table, options: TableFlattenConfig) -> Dict[str, str]:
         """
         Return a table's headers, respecting the human and override options.
 
@@ -38,13 +43,13 @@ class BaseWriter:
                 headers[c] = h
         return headers
 
-    def _name_check(self, table_name):
+    def _name_check(self, table_name: str) -> str:
         self.names_counter[table_name] += 1
         if self.names_counter[table_name] > 1:
             table_name += str(self.names_counter[table_name] - 1)
         return table_name
 
-    def init_sheet(self, name, table):
+    def init_sheet(self, name: str, table: Table) -> Tuple[str, Dict[str, str]]:
         """
         Initialize a sheet, setting its headers and unique name.
 

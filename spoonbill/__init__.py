@@ -1,9 +1,11 @@
 import logging
-from pathlib import Path
+from pathlib import Path, PosixPath
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
-from spoonbill.flatten import Flattener
+from spoonbill.flatten import Flattener, FlattenOptions
 from spoonbill.i18n import LOCALE
+from spoonbill.spec import Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import iter_file
 from spoonbill.writers import CSVWriter, XlsxWriter
@@ -23,15 +25,15 @@ class FileAnalyzer:
 
     def __init__(
         self,
-        workdir,
-        schema=None,
-        state_file=None,
-        root_tables=ROOT_TABLES,
-        combined_tables=COMBINED_TABLES,
-        root_key="releases",
-        language=LOCALE,
-        table_threshold=TABLE_THRESHOLD,
-    ):
+        workdir: PosixPath,
+        schema: Optional[Dict[str, Any]] = None,
+        state_file: Optional[str] = None,
+        root_tables: Dict[str, List[str]] = ROOT_TABLES,
+        combined_tables: Dict[str, List[str]] = COMBINED_TABLES,
+        root_key: str = "releases",
+        language: str = LOCALE,
+        table_threshold: int = TABLE_THRESHOLD,
+    ) -> None:
         self.workdir = Path(workdir)
         if state_file:
             self.spec = DataPreprocessor.restore(state_file)
@@ -45,7 +47,9 @@ class FileAnalyzer:
             )
         self.root_key = root_key
 
-    def analyze_file(self, filename, with_preview=True):
+    def analyze_file(
+        self, filename: str, with_preview: bool = True
+    ) -> Iterator[Union[Iterator, Iterator[Tuple[int, int]]]]:
         """Analyze provided file
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
@@ -56,7 +60,7 @@ class FileAnalyzer:
             for count in self.spec.process_items(items, with_preview=with_preview):
                 yield fd.tell(), count
 
-    def dump_to_file(self, filename):
+    def dump_to_file(self, filename: PosixPath) -> None:
         """Save analyzed information to file
 
         :param filename: Output filename in working directory
@@ -76,7 +80,16 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, tables, root_key="releases", csv=None, xlsx="result.xlsx", language=LOCALE):
+    def __init__(
+        self,
+        workdir: PosixPath,
+        options: FlattenOptions,
+        tables: Dict[str, Table],
+        root_key: str = "releases",
+        csv: Union[None, bool, PosixPath] = None,
+        xlsx: Union[PosixPath, str] = "result.xlsx",
+        language: str = LOCALE,
+    ) -> None:
         self.flattener = Flattener(options, tables, language=language)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
@@ -85,7 +98,9 @@ class FileFlattener:
         self.csv = csv
         self.xlsx = xlsx
 
-    def _flatten(self, filename, writers):
+    def _flatten(
+        self, filename: Union[PosixPath, str], writers: Union[List[Union[CSVWriter, XlsxWriter]], List[XlsxWriter]]
+    ) -> Iterator[Union[Iterator, Iterator[int]]]:
         path = self.workdir / filename
         with open(path, "rb") as fd:
             items = iter_file(fd, self.root_key)
@@ -96,7 +111,7 @@ class FileFlattener:
                             wr.writerow(table, row)
                 yield count
 
-    def flatten_file(self, filename):
+    def flatten_file(self, filename: Union[PosixPath, str]) -> Iterator[Union[Iterator, Iterator[int]]]:
         """Flatten file
 
         :param filename: Input filename in working directory

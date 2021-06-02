@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass, field, is_dataclass
-from typing import List, Mapping, Sequence
+from typing import Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Union
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
 from spoonbill.i18n import _
@@ -71,7 +71,7 @@ class Table:
     preview_rows: Sequence[dict] = field(default_factory=list)
     preview_rows_combined: Sequence[dict] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for attr in (
             "columns",
             "combined_columns",
@@ -93,42 +93,42 @@ class Table:
                     self.combined_columns[col] = Column(col, "string", col)
                 self.titles[col] = _(col)
 
-    def _counter(self, split, cond):
+    def _counter(self, split: bool, cond: Callable) -> List[str]:
         cols = self.columns if split else self.combined_columns
         return [header for header, col in cols.items() if cond(col)]
 
-    def missing_rows(self, split=True):
+    def missing_rows(self, split: bool = True) -> List[str]:
         """
         Return the columns that are available in the schema, but not present in the analyzed data.
         """
 
         return self._counter(split, lambda c: c.hits == 0)
 
-    def available_rows(self, split=True):
+    def available_rows(self, split: bool = True) -> List[str]:
         """
         Return the columns that are available in the analyzed data.
         """
 
         return self._counter(split, lambda c: c.hits > 0)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Union[Iterator, Iterator[str]]]:
         for col in self.columns:
             yield col
 
-    def __getitem__(self, path):
+    def __getitem__(self, path: str) -> Column:
         return self.columns.get(path)
 
     def add_column(
         self,
-        path,
-        item_type,
-        title,
+        path: str,
+        item_type: Union[List[str], str],
+        title: str,
         *,
-        combined_only=False,
-        propagate=True,
-        additional=False,
-        abs_path=None,
-    ):
+        combined_only: bool = False,
+        propagate: bool = True,
+        additional: bool = False,
+        abs_path: Optional[str] = None,
+    ) -> None:
         """
         Add a new column to the table.
 
@@ -166,7 +166,7 @@ class Table:
                 abs_path=abs_path,
             )
 
-    def is_array(self, path):
+    def is_array(self, path: str) -> Union[bool, str]:
         """
         Check whether the given path is in any table's arrays.
         """
@@ -176,7 +176,7 @@ class Table:
                 return array
         return False
 
-    def inc_column(self, abs_path, path):
+    def inc_column(self, abs_path: str, path: str) -> None:
         """
         Increment the number of non-empty cells in the column.
 
@@ -191,12 +191,12 @@ class Table:
         if not self.is_root:
             self.parent.inc_column(abs_path, path)
 
-    def add_array(self, header):
+    def add_array(self, header: str) -> None:
         self.arrays[header] = 0
         if not self.is_root:
             self.parent.add_array(header)
 
-    def set_array(self, header, item):
+    def set_array(self, header: str, item: Union[List[Dict[str, str]], List[OrderedDict], List[int]]) -> bool:
         """
         Try to set the maximum length of an array.
 
@@ -213,7 +213,7 @@ class Table:
             return True
         return False
 
-    def inc(self):
+    def inc(self) -> None:
         """
         Increment the number of rows in the table.
         """
@@ -222,7 +222,7 @@ class Table:
         for col_name in DEFAULT_FIELDS_COMBINED:
             self.inc_column(col_name, col_name)
 
-    def set_preview_path(self, abs_path, path, value, max_items):
+    def set_preview_path(self, abs_path: str, path: str, value: Union[int, str], max_items: int) -> None:
         header = get_pointer(self, abs_path, path, True)
         array = self.is_array(path)
         self.preview_rows[-1][header] = value
@@ -233,7 +233,7 @@ class Table:
             self.parent.set_preview_path(abs_path, path, value, max_items)
 
 
-def add_child_table(table, pointer, parent_key, key):
+def add_child_table(table: Table, pointer: str, parent_key: str, key: str) -> Table:
     """
     Create and append a new child table to the given table.
 

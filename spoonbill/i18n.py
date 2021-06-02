@@ -3,9 +3,13 @@ import json
 import locale
 from collections import deque
 from functools import lru_cache
+from gettext import GNUTranslations
+from typing import Any, Dict, Iterator, Tuple, Union
 
 import jsonref
 import pkg_resources
+from _io import BufferedReader
+from jsonref import JsonRef
 
 from spoonbill.common import COMBINED_TABLES
 from spoonbill.utils import common_prefix, extract_type
@@ -19,7 +23,7 @@ if system_locale and system_locale[0]:
     LOCALE = system_locale[0]
 
 
-def translate(msg_id, lang=LOCALE):
+def translate(msg_id: str, lang: str = LOCALE) -> str:
     """Simple wrapper of python's gettext with ability to override desired language"""
     translator = _translation(lang)
     if translator:
@@ -28,7 +32,7 @@ def translate(msg_id, lang=LOCALE):
 
 
 @lru_cache(maxsize=None)
-def _translation(lang):
+def _translation(lang: str) -> GNUTranslations:
     return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
 
 
@@ -37,7 +41,9 @@ _ = translate
 
 # slightly modified version of ocds-babel's extract_schema
 # TODO: discuss upstreaming this extractor
-def extract_schema_po(fileobj, keywords, comment_tags, options):
+def extract_schema_po(
+    fileobj: BufferedReader, keywords: str, comment_tags: str, options: Dict[str, str]
+) -> Iterator[Union[Iterator, Iterator[Tuple[int, str, str, str]]]]:
     """
     Yields json path values of a JSON Schema file.
     """
@@ -51,7 +57,9 @@ def extract_schema_po(fileobj, keywords, comment_tags, options):
             else:
                 print(f"sp_schema: {table} is not combined table!")
 
-    def walk(prop, path="", parent_key=""):
+    def walk(
+        prop: Union[Dict[str, Any], JsonRef], path: str = "", parent_key: str = ""
+    ) -> Iterator[Union[Iterator, Iterator[str]]]:
         """Walk through schema"""
         todo = deque([(prop, "", "")])
         while todo:
