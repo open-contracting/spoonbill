@@ -65,9 +65,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--selection",
     type=CommaSeparated(),
-    help=_("A comma-separated list of initial tables to write"),
-    default=",".join(ROOT_TABLES.keys()),
-    show_default=True,
+    help=_("A comma-separated list of initial tables to write, Defaults to parties,planning,tenders,awards,contracts"),
 )
 @click.option(
     "--threshold",
@@ -86,6 +84,7 @@ def get_selected_tables(base, selection):
     help=_("A file path to store the resulting xlsx file"),
     type=click.Path(),
     default="result.xlsx",
+    show_default=True,
 )
 @click.option(
     "--csv",
@@ -100,11 +99,9 @@ def get_selected_tables(base, selection):
     "--combine",
     help=_(
         "A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
-        "from different locations (tender, awards, etc) into a single table"
+        "from different locations (tender, awards, etc) into a single table."
     ),
     type=CommaSeparated(),
-    default=",".join(COMBINED_TABLES.keys()),
-    show_default=True,
 )
 @click.option(
     "--exclude",
@@ -115,8 +112,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--unnest",
     help=_(
-        "A comma-separated list of columns names to copy from child tables into its parent table. "
-        "Disabled by default"
+        "A comma-separated list of columns names to copy from child tables into its parent table" "Disabled by default"
     ),
     type=CommaSeparated(),
     default="",
