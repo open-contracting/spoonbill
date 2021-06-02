@@ -11,8 +11,6 @@ from pathlib import Path
 import ijson
 import requests
 
-from spoonbill.common import DEFAULT_FIELDS_COMBINED
-
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
     "dict": "object",
@@ -220,53 +218,55 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(root, path, abs_path, key, item, should_split, separator="/"):
+def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
 
-    :param root: Table for which headers should be rebuild
+    :param table: Table for which headers should be rebuild
     :param abs_path: Full jsonpath to array
     :param key: Array field name
     :param item: Array items
     :param should_split: True if array should be separated into child table
     :param separator: header path separator
     """
-    head = OrderedDict()
-    tail = OrderedDict()
-    cols = head
+
+    def insert_after_key(columns, insert, last_key):
+        data = OrderedDict()
+        for key, val in columns.items():
+            data[key] = val
+            if key == last_key:
+                for k, v in insert.items():
+                    data[k] = v
+                    table.titles[k] = v.title
+        return data
+
     base_prefix = separator.join((abs_path, key))
-    zero_prefix = get_pointer(root, separator.join((base_prefix, "0")), path, True)
+    zero_prefix = get_pointer(table, separator.join((base_prefix, "0")), path, True)
 
     zero_cols = {
         col_p: col
-        for col_p, col in root.combined_columns.items()
-        if col_p not in DEFAULT_FIELDS_COMBINED and common_prefix(col_p, zero_prefix) == zero_prefix
+        for col_p, col in table.combined_columns.items()
+        if col_p.startswith(separator) and common_prefix(col_p, zero_prefix) == zero_prefix
     }
     new_cols = {}
     for col_i, _ in enumerate(item[1:], 1):
-        col_prefix = get_pointer(root, separator.join((base_prefix, str(col_i))), path, True)
+        col_prefix = get_pointer(table, separator.join((base_prefix, str(col_i))), path, True)
+
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
-    head_updated = False
-    for col_p, col in root.combined_columns.items():
-        if col_p in zero_cols and not head_updated:
-            head.update(zero_cols)
-            tail.update(new_cols)
-            head_updated = True
-            cols = tail
+
+    if new_cols:
+        last_key = list(zero_cols.keys())[-1]
+        table.combined_columns = insert_after_key(table.combined_columns, new_cols, last_key)
+        if should_split:
+            for col_path in chain(zero_cols, new_cols):
+                table.columns.pop(col_path, "")
         else:
-            if col_p not in cols:
-                cols[col_p] = col
-    if should_split:
-        for col_path in chain(zero_cols, new_cols):
-            root.columns.pop(col_path, "")
-    for col_path, col in chain(head.items(), tail.items()):
-        root.combined_columns[col_path] = col
-        root.titles[col_path] = col.title
-        if not should_split:
-            root.columns[col_path] = root.columns.get(col_path) or col
+            table.columns = insert_after_key(table.columns, new_cols, last_key)
+        if not table.is_root:
+            recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
 
 
 def resolve_file_uri(file_path):
@@ -278,7 +278,7 @@ def resolve_file_uri(file_path):
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd)
-    if file_path.startswith("http"):
+    if file_path.startswith("http://") or file_path.startswith("https://"):
         return requests.get(file_path).json()
 
 

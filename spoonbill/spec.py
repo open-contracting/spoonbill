@@ -1,11 +1,11 @@
 import logging
 from collections import OrderedDict
-from dataclasses import asdict, dataclass, field, is_dataclass
+from dataclasses import dataclass, field, is_dataclass
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
 from spoonbill.i18n import _
-from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer, get_root
+from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -184,14 +184,17 @@ class Table:
         :param path: The column's JSON path without array indexes
         """
         header = get_pointer(self, abs_path, path, True)
-        if header in self.columns:
-            self.columns[header].hits += 1
-        if header in self.combined_columns:
-            self.combined_columns[header].hits += 1
-        if header in self.additional_columns:
-            self.additional_columns[header].hits += 1
+        for headers in self.columns, self.combined_columns, self.additional_columns:
+            if header in headers:
+                headers[header].hits += 1
+
         if not self.is_root:
             self.parent.inc_column(abs_path, path)
+
+    def add_array(self, header):
+        self.arrays[header] = 0
+        if not self.is_root:
+            self.parent.add_array(header)
 
     def set_array(self, header, item):
         """
@@ -219,12 +222,6 @@ class Table:
         for col_name in DEFAULT_FIELDS_COMBINED:
             self.inc_column(col_name, col_name)
 
-    def dump(self):
-        data = asdict(self)
-        if data["parent"]:
-            data["parent"] = data["parent"]["name"]
-        return data
-
     def set_preview_path(self, abs_path, path, value, max_items):
         header = get_pointer(self, abs_path, path, True)
         array = self.is_array(path)
@@ -249,7 +246,5 @@ def add_child_table(table, pointer, parent_key, key):
     table_name = generate_table_name(table.name, parent_key, key)
     child_table = Table(table_name, [pointer], parent=table)
     table.child_tables.append(table_name)
-    for t in table, get_root(table):
-        t.arrays[pointer] = 0
-        t.arrays[pointer] = 0
+    table.add_array(pointer)
     return child_table

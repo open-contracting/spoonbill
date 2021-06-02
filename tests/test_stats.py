@@ -298,3 +298,67 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                                                     )
                                                     value = resolve_pointer(releases[count], path)
                                                     assert v == value
+
+
+def test_analyze_array_extentions_no_split(spec, releases):
+    attr = {"name": "Presentacion", "id": "1"}
+    items = releases[0]["tender"]["items"]
+    items[0]["attributes"] = [attr]
+    [_ for _ in spec.process_items(releases)]
+
+    for cols in spec.tables["tenders"], spec.tables["tenders"].combined_columns:
+        assert "/tender/items/0/attributes/0/id" in cols
+        assert "/tender/items/0/attributes/0/name" in cols
+        assert "/tender/items/1/attributes/0/name" not in cols
+        assert "/tender/items/0/attributes/1/name" not in cols
+        assert "/tender/items/1/attributes/1/name" not in cols
+    for cols in spec.tables["tenders_items"], spec.tables["tenders_items"].combined_columns:
+        assert "/tender/items/attributes/0/name" in cols
+        assert "/tender/items/attributes/0/name" in cols
+        assert "/tender/items/attributes/1/name" not in cols
+        assert "/tender/items/attributes/1/name" not in cols
+
+    for cols in spec.tables["tenders_items_attributes"], spec.tables["tenders_items_attributes"].combined_columns:
+        assert "/tender/items/attributes/name" in cols
+        assert "/tender/items/attributes/name" in cols
+
+
+def test_analyze_array_extentions_split(spec, releases):
+    attr = {"name": "Presentacion", "id": "1"}
+    items = releases[0]["tender"]["items"]
+    items[0]["attributes"] = [attr] * 10
+    releases[0]["tender"]["items"] = items
+    [_ for _ in spec.process_items(releases)]
+
+    cols = spec.tables["tenders"]
+
+    assert "/tender/items/0/attributes/0/id" not in cols
+    assert "/tender/items/0/attributes/0/name" not in cols
+    assert "/tender/items/0/attributes/1/id" not in cols
+    assert "/tender/items/0/attributes/1/name" not in cols
+    assert "/tender/items/1/attributes/0/name" not in cols
+    assert "/tender/items/1/attributes/0/id" not in cols
+    assert "/tender/items/1/attributes/1/name" not in cols
+    assert "/tender/items/1/attributes/1/id" not in cols
+
+    cols = spec.tables["tenders"].combined_columns
+    assert "/tender/items/0/attributes/0/id" in cols
+    assert "/tender/items/0/attributes/0/name" in cols
+    assert "/tender/items/0/attributes/1/id" in cols
+    assert "/tender/items/0/attributes/1/name" in cols
+    assert "/tender/items/1/attributes/0/name" not in cols
+    assert "/tender/items/1/attributes/0/id" not in cols
+    assert "/tender/items/1/attributes/1/name" not in cols
+    assert "/tender/items/1/attributes/1/id" not in cols
+
+    cols = spec.tables["tenders_items"]
+    assert "/tender/items/attributes/0/id" not in cols
+    assert "/tender/items/attributes/0/name" not in cols
+    assert "/tender/items/attributes/1/id" not in cols
+    assert "/tender/items/attributes/1/name" not in cols
+
+    cols = spec.tables["tenders_items"].combined_columns
+    assert "/tender/items/attributes/0/id" in cols
+    assert "/tender/items/attributes/0/name" in cols
+    assert "/tender/items/attributes/1/id" in cols
+    assert "/tender/items/attributes/1/name" in cols
