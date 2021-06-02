@@ -63,13 +63,15 @@ def get_selected_tables(base, selection):
     type=str,
 )
 @click.option(
-    "--selection", type=CommaSeparated(),
+    "--selection",
+    type=CommaSeparated(),
     help=_(f"A comma-separated list of initial tables to write. Defaults to all: {','.join(ROOT_TABLES.keys())}"),
 )
 @click.option(
     "--threshold",
-    help=_("The maximum number of elements in an array before its spitted into a table. "
-           f"Defaults to {TABLE_THRESHOLD}"),
+    help=_(
+        "The maximum number of elements in an array before its spitted into a table. " f"Defaults to {TABLE_THRESHOLD}"
+    ),
     type=int,
     default=TABLE_THRESHOLD,
 )
@@ -82,29 +84,38 @@ def get_selected_tables(base, selection):
     "--xlsx",
     help=_("A file path to store the resulting xlsx file. Defaults to result.xlsx"),
     type=click.Path(),
-    default="result.xlsx")
+    default="result.xlsx",
+)
 @click.option(
     "--csv",
-    help=_("An existing directory path. If set also generates CSV files in the given existing directory "
-           "Disabled by default"),
-    type=click.Path(), required=False)
+    help=_(
+        "An existing directory path. If set also generates CSV files in the given existing directory "
+        "Disabled by default"
+    ),
+    type=click.Path(),
+    required=False,
+)
 @click.option(
     "--combine",
-    help=_("A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
-           "from different locations (tender, awards, etc) into a single table. "
-           f"Defaults to all: {','.join(COMBINED_TABLES.keys())}"),
+    help=_(
+        "A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
+        "from different locations (tender, awards, etc) into a single table. "
+        f"Defaults to all: {','.join(COMBINED_TABLES.keys())}"
+    ),
     type=CommaSeparated(),
 )
 @click.option(
     "--exclude",
     help=_("A comma-separated list of tables to exclude from export. Disabled by default"),
     type=CommaSeparated(),
-    default=""
+    default="",
 )
 @click.option(
     "--unnest",
-    help=_("A comma-separated list of columns names to copy from child tables into its parent table. "
-           "Disabled by default"),
+    help=_(
+        "A comma-separated list of columns names to copy from child tables into its parent table. "
+        "Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
@@ -116,10 +127,13 @@ def get_selected_tables(base, selection):
 )
 @click.option(
     "--only",
-    help=_("A comma-separated list of a subset of columns to output, instead of all, in JSON path format, "
-           "e.g. /parties/name. Defaults to all the available columns"),
+    help=_(
+        "A comma-separated list of a subset of columns to output, instead of all, in JSON path format, "
+        "e.g. /parties/name. Defaults to all the available columns"
+    ),
     type=CommaSeparated(),
-    default="")
+    default="",
+)
 @click.option(
     "--only-file",
     help=_("Same as --only, but read the columns names from a file with one column per line"),
@@ -128,8 +142,10 @@ def get_selected_tables(base, selection):
 )
 @click.option(
     "--repeat",
-    help=_("A comma-separated list of columns to repeat from a parent table into its child tables, in JSON path format,"
-           "e.g. /parties/name. Disabled by default"),
+    help=_(
+        "A comma-separated list of columns to repeat from a parent table into its child tables, in JSON path format,"
+        "e.g. /parties/name. Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
@@ -143,7 +159,7 @@ def get_selected_tables(base, selection):
     "--count",
     help=_("For each array field, add a count column to its parent table. Disabled by default"),
     is_flag=True,
-    default=False
+    default=False,
 )
 @click.option(
     "--human",
