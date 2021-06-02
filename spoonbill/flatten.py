@@ -239,6 +239,11 @@ class Flattener:
                         "parentID": parent.get("id"),
                         "ocid": ocid,
                     }
+
+                    if self.options.selection[table.name].only:
+                        only_columns = self.options.selection[table.name].only
+                        new_row = {key: new_row[key] for key in only_columns if key in new_row}
+
                     if table.is_root:
                         repeat = {}
                     if repeat:

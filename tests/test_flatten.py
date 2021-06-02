@@ -284,3 +284,13 @@ def test_flatten_fields_compare(spec_analyzed, releases):
                             expected = JOINABLE_SEPARATOR.join(expected)
                         assert expected == value
                 counters[name] += 1
+
+
+def test_flatten_only_no_default_columns(spec_analyzed, releases):
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    for _count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            for row in rows:
+                assert len(rows) == 1
+                assert "/tender/id" in row
