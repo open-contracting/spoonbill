@@ -53,74 +53,122 @@ def get_selected_tables(base, selection):
 # TODO: generated state-file + schema how to validate
 
 
-@click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS datasets"))
+@click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS files"))
 @click.option(
     "--schema",
     help=_(
-        "Schema file uri. This option is used to provide OCDS schema which spoonbill requires to analyze dataset. URI "
-        "might be file path or HTTP link. Spoonbill will use default schema tag if not provided (requires internet "
-        "connection)"
+        "A JSON schema file URI. The URI can be a file path or an HTTP link. Spoonbill uses the schema to analyze the "
+        f"provided JSON file. Defaults to the OCDS {CURRENT_SCHEMA_TAG} release schema (requires internet connection)"
     ),
     type=str,
 )
-@click.option("--selection", type=CommaSeparated())
+@click.option(
+    "--selection",
+    type=CommaSeparated(),
+    help=_(f"A comma-separated list of initial tables to write. Defaults to all: {','.join(ROOT_TABLES.keys())}"),
+)
 @click.option(
     "--threshold",
-    help=_("Maximum number of elements in array before its spitted into table"),
+    help=_(
+        "The maximum number of elements in an array before its spitted into a table. " f"Defaults to {TABLE_THRESHOLD}"
+    ),
     type=int,
     default=TABLE_THRESHOLD,
 )
 @click.option(
     "--state-file",
-    help=_("Uri to previously generated state file"),
+    help=_("A file path URI to a previously generated state file. By default, a new state-file is generated"),
     type=click.Path(exists=True),
 )
-@click.option("--xlsx", help=_("Path to result xlsx file"), type=click.Path(), default="result.xlsx")
-@click.option("--csv", help=_("Path to directory for output csv files"), type=click.Path(), required=False)
-@click.option("--combine", help=_("Combine same objects to single table"), type=CommaSeparated())
-@click.option("--exclude", help=_("Exclude tables from export"), type=CommaSeparated(), default="")
+@click.option(
+    "--xlsx",
+    help=_("A file path to store the resulting xlsx file. Defaults to result.xlsx"),
+    type=click.Path(),
+    default="result.xlsx",
+)
+@click.option(
+    "--csv",
+    help=_(
+        "An existing directory path. If set also generates CSV files in the given existing directory "
+        "Disabled by default"
+    ),
+    type=click.Path(),
+    required=False,
+)
+@click.option(
+    "--combine",
+    help=_(
+        "A comma-separated list of tables. Combines same OCDS object types (documents, milestones, and amendments) "
+        "from different locations (tender, awards, etc) into a single table. "
+        f"Defaults to all: {','.join(COMBINED_TABLES.keys())}"
+    ),
+    type=CommaSeparated(),
+)
+@click.option(
+    "--exclude",
+    help=_("A comma-separated list of tables to exclude from export. Disabled by default"),
+    type=CommaSeparated(),
+    default="",
+)
 @click.option(
     "--unnest",
-    help=_("Extract columns form child tables to parent table"),
+    help=_(
+        "A comma-separated list of columns names to copy from child tables into its parent table. "
+        "Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
 @click.option(
     "--unnest-file",
-    help=_("Same as --unnest, but read columns from a file"),
+    help=_("A file path directory. Same as --unnest, but read column names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
-@click.option("--only", help=_("Specify which fields to output"), type=CommaSeparated(), default="")
+@click.option(
+    "--only",
+    help=_(
+        "A comma-separated list of a subset of columns to output, instead of all, in JSON path format, "
+        "e.g. /parties/name. Defaults to all the available columns"
+    ),
+    type=CommaSeparated(),
+    default="",
+)
 @click.option(
     "--only-file",
-    help=_("Same as --only, but read columns from a file"),
+    help=_("Same as --only, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
 @click.option(
     "--repeat",
-    help=_("Repeat a column from a parent sheet onto child tables"),
+    help=_(
+        "A comma-separated list of columns to repeat from a parent table into its child tables, in JSON path format,"
+        "e.g. /parties/name. Disabled by default"
+    ),
     type=CommaSeparated(),
     default="",
 )
 @click.option(
     "--repeat-file",
-    help=_("Same as --repeat, but read columns from a file"),
+    help=_("Same as --repeat, but read the columns names from a file with one column per line"),
     type=click.Path(exists=True),
     required=False,
 )
 @click.option(
-    "--count", help=_("For each array field, add a count column to the parent table"), is_flag=True, default=False
+    "--count",
+    help=_("For each array field, add a count column to its parent table. Disabled by default"),
+    is_flag=True,
+    default=False,
 )
 @click.option(
     "--human",
-    help=_("Use the schema's title properties for column headings"),
+    help=_("Change the tables headings to human-readable format, using the schema's title properties"),
     is_flag=True,
 )
 @click.option(
     "--language",
-    help=_("Language for headings"),
+    help=_("Use with --human, the language to use for the human-readable headings"),
     default=LOCALE.split("_")[0],
     type=click.Choice(["en", "es"]),
 )

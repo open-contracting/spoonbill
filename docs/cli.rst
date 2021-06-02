@@ -13,10 +13,12 @@ To flatten a file, run:
 
    spoonbill filename.json
 
+The inputs can be [concatenated JSON](https://en.wikipedia.org/wiki/JSON_streaming#Concatenated_JSON) or an OCDS [release](https://standard.open-contracting.org/latest/en/schema/release_package/) or [record package](https://standard.open-contracting.org/latest/en/schema/record_package/).
+
 Choose output formats
 ---------------------
 
-Spoonbill creates a ``result.xlsx`` file by default.
+Spoonbill creates a ``result.xlsx`` file in the current path by default.
 
 To change the name or location of the Excel file, use the `\--xlsx <#cmdoption-spoonbill-xlsx>`_ option. For example:
 
