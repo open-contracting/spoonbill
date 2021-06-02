@@ -263,8 +263,8 @@ def cli(
             table_threshold=threshold,
         )
         click.echo(_("Analyze options:"))
-        click.echo(_(" - table threshold => {}").format(click.style(str(threshold), fg="cyan")))
-        click.echo(_(" - language        => {}").format(click.style(language, fg="cyan")))
+        for name, option in ("threshold", str(threshold)), ("language", language):
+            click.echo(_(" - {:30} => {}").format(name, click.style(option, fg="cyan")))
         click.echo(_("Processing file: {}").format(click.style(str(path), fg="cyan")))
         total = path.stat().st_size
         progress = 0
@@ -352,13 +352,10 @@ def cli(
     click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
 
     click.echo(_("Processed tables:"))
-    for table in flattener.flattener.tables.keys():
-        message = _("{}: {} rows").format(table, flattener.flattener.tables[table].total_rows)
-        if not flattener.flattener.tables[table].is_root:
-            message = "└-----" + message
-            click.echo(message)
-        else:
-            click.echo(message)
+    for table_name, table in flattener.flattener.tables.items():
+        msg = _(" - {:30} => {} rows") if table.is_root else _(" ---- {:27} => {} rows")
+        message = msg.format(table_name, click.style(str(table.total_rows), fg="cyan"))
+        click.echo(message)
     click.echo(_("Flattening input file"))
     with click.progressbar(
         flattener.flatten_file(filename),
