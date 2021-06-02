@@ -408,3 +408,23 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
         assert name not in xlsx_reader
+
+
+def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir):
+    flatten_options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
+    flattener = Flattener(flatten_options, spec_analyzed.tables)
+    tables = prepare_tables(spec_analyzed, flatten_options)
+    workdir = Path(tmpdir)
+    with XlsxWriter(workdir, tables, flatten_options) as writer:
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
+
+    path = workdir / "result.xlsx"
+    xlsx_reader = openpyxl.load_workbook(path)
+    column = []
+    for row in xlsx_reader["tenders"].rows:
+        column.append(row[0].value)
+    assert column[0] == "/tender/id"
+    assert xlsx_reader["tenders"].max_column == 1
