@@ -318,6 +318,10 @@ def test_analyze_array_extentions_no_split(spec, releases):
         assert "/tender/items/attributes/1/name" not in cols
         assert "/tender/items/attributes/1/name" not in cols
 
+    for cols in spec.tables["tenders_items_attributes"], spec.tables["tenders_items_attributes"].combined_columns:
+        assert "/tender/items/attributes/name" in cols
+        assert "/tender/items/attributes/name" in cols
+
 
 def test_analyze_array_extentions_split(spec, releases):
     attr = {"name": "Presentacion", "id": "1"}
@@ -342,27 +346,19 @@ def test_analyze_array_extentions_split(spec, releases):
     assert "/tender/items/0/attributes/0/name" in cols
     assert "/tender/items/0/attributes/1/id" in cols
     assert "/tender/items/0/attributes/1/name" in cols
-    assert "/tender/items/1/attributes/0/name" in cols
-    assert "/tender/items/1/attributes/0/id" in cols
-    assert "/tender/items/1/attributes/1/name" in cols
-    assert "/tender/items/1/attributes/1/id" in cols
+    assert "/tender/items/1/attributes/0/name" not in cols
+    assert "/tender/items/1/attributes/0/id" not in cols
+    assert "/tender/items/1/attributes/1/name" not in cols
+    assert "/tender/items/1/attributes/1/id" not in cols
 
     cols = spec.tables["tenders_items"]
     assert "/tender/items/attributes/0/id" not in cols
     assert "/tender/items/attributes/0/name" not in cols
     assert "/tender/items/attributes/1/id" not in cols
     assert "/tender/items/attributes/1/name" not in cols
-    assert "/tender/items/attributes/0/name" not in cols
-    assert "/tender/items/attributes/0/id" not in cols
-    assert "/tender/items/attributes/1/name" not in cols
-    assert "/tender/items/attributes/1/id" not in cols
 
     cols = spec.tables["tenders_items"].combined_columns
     assert "/tender/items/attributes/0/id" in cols
     assert "/tender/items/attributes/0/name" in cols
     assert "/tender/items/attributes/1/id" in cols
     assert "/tender/items/attributes/1/name" in cols
-    assert "/tender/items/attributes/0/name" in cols
-    assert "/tender/items/attributes/0/id" in cols
-    assert "/tender/items/attributes/1/name" in cols
-    assert "/tender/items/attributes/1/id" in cols

@@ -111,7 +111,14 @@ def test_row_counters(root_table):
     assert not set(cols).difference(available)
 
     cols = root_table.missing_rows()
-    assert not set(cols).difference(["parentID", "/tender/awardCriteriaDetails", "/tender/items/0/id"])
+    assert not set(cols).difference(
+        [
+            "parentID",
+            "/tender/awardCriteriaDetails",
+            "/tender/items/0/id",
+            "/tender/items/0/additionalClassifications/0/id",
+        ]
+    )
 
 
 def test_set_array(root_table):

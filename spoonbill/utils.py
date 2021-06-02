@@ -230,9 +230,17 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
     :param should_split: True if array should be separated into child table
     :param separator: header path separator
     """
-    head = OrderedDict()
-    tail = OrderedDict()
-    cols = head
+
+    def insert_after_key(columns, insert, last_key):
+        data = OrderedDict()
+        for key, val in columns.items():
+            data[key] = val
+            if key == last_key:
+                for k, v in insert.items():
+                    data[k] = v
+                    table.titles[k] = v.title
+        return data
+
     base_prefix = separator.join((abs_path, key))
     zero_prefix = get_pointer(table, separator.join((base_prefix, "0")), path, True)
 
@@ -248,26 +256,17 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
-    head_updated = False
-    for col_p, col in table.combined_columns.items():
-        if col_p in zero_cols and not head_updated:
-            head.update(zero_cols)
-            tail.update(new_cols)
-            head_updated = True
-            cols = tail
+
+    if new_cols:
+        last_key = list(zero_cols.keys())[-1]
+        table.combined_columns = insert_after_key(table.combined_columns, new_cols, last_key)
+        if should_split:
+            for col_path in chain(zero_cols, new_cols):
+                table.columns.pop(col_path, "")
         else:
-            if col_p not in cols:
-                cols[col_p] = col
-    if should_split:
-        for col_path in chain(zero_cols, new_cols):
-            table.columns.pop(col_path, "")
-    for col_path, col in chain(head.items(), tail.items()):
-        table.combined_columns[col_path] = col
-        table.titles[col_path] = col.title
-        if not should_split:
-            table.columns[col_path] = table.columns.get(col_path) or col
-    if not table.is_root:
-        recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
+            table.columns = insert_after_key(table.columns, new_cols, last_key)
+        if not table.is_root:
+            recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
 
 
 def resolve_file_uri(file_path):
@@ -279,7 +278,7 @@ def resolve_file_uri(file_path):
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd)
-    if file_path.startswith("http://"):
+    if file_path.startswith("http://") or file_path.startswith("https://"):
         return requests.get(file_path).json()
 
 
