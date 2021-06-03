@@ -1,7 +1,7 @@
 import logging
-from collections import defaultdict, deque
+from collections import OrderedDict, defaultdict, deque
 from dataclasses import dataclass, field, is_dataclass
-from typing import List, Mapping
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.i18n import LOCALE, _
@@ -45,7 +45,7 @@ class FlattenOptions:
     exclude: List[str] = field(default_factory=list)
     count: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for name, table in self.selection.items():
             if not is_dataclass(table):
                 self.selection[name] = TableFlattenConfig(**table)
@@ -98,7 +98,9 @@ class Flattener:
                 self._init_child_tables(tables, table, c_table, options)
         self._init_options(self.tables)
 
-    def _init_child_tables(self, tables, table, c_table, options):
+    def _init_child_tables(
+        self, tables: Dict[str, Table], table: Table, c_table: Table, options: TableFlattenConfig
+    ) -> None:
         split = options.split
         only = options.only
 
@@ -118,23 +120,29 @@ class Flattener:
                 cc_table = tables[c_name]
                 self._init_child_tables(tables, table, cc_table, options)
 
-    def _init_cache(self, cache, paths, table, only=None):
+    def _init_cache(
+        self,
+        cache: Dict[str, Table],
+        paths: Union[Dict[str, Any], List[str], OrderedDict],
+        table: Table,
+        only: Optional[List] = None,
+    ) -> None:
         for path in paths:
             if path not in DEFAULT_FIELDS:
                 if not only or (only and path in only):
                     cache[path] = table
 
-    def _cache_path(self, table):
+    def _cache_path(self, table: Table) -> None:
         self._init_cache(self._path_cache, table.path, table)
 
-    def _cache_types(self, table):
+    def _cache_types(self, table: Table) -> None:
         self._init_cache(self._types_cache, table.types, table)
 
-    def _cache_cols(self, table, split):
+    def _cache_cols(self, table: Table, split: bool) -> None:
         cols = table if split else table.combined_columns
         self._init_cache(self._lookup_cache, cols, table)
 
-    def _init_table_cache(self, tables, table):
+    def _init_table_cache(self, tables: Dict[str, Table], table: Table) -> None:
         if table.total_rows == 0:
             return
 
@@ -147,7 +155,7 @@ class Flattener:
         self._cache_types(table)
         self._cache_cols(table, split)
 
-    def _init_options(self, tables):
+    def _init_options(self, tables: Dict[str, Table]) -> None:
         for table in tables.values():
 
             name = table.name
@@ -200,7 +208,7 @@ class Flattener:
                             child_table.combined_columns[col_id] = col
                             child_table.titles[col_id] = title
 
-    def _only(self, table, only, split):
+    def _only(self, table: Table, only: List[str], split: bool) -> None:
         only = only
         columns = table.columns
         if split:
@@ -212,7 +220,9 @@ class Flattener:
         table.combined_columns = columns
         table.types = not_columns
 
-    def flatten(self, releases):
+    def flatten(
+        self, releases: Union[Iterator, List[OrderedDict]]
+    ) -> Iterator[Union[Iterator, Iterator[Tuple[int, Dict]]]]:
         """Flatten releases
 
         :param releases: releases as iterable object

@@ -1,16 +1,18 @@
 import logging
 import pickle
-from collections import defaultdict, deque
+from collections import OrderedDict, defaultdict, deque
 from functools import lru_cache
-from pathlib import Path
-from typing import List, Mapping
+from pathlib import Path, PosixPath
+from typing import Dict, Iterator, List, Mapping, Optional, Union
 
 import jsonref
 from flatten_dict import flatten
+from py._path.local import LocalPath
 
 from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
 from spoonbill.i18n import LOCALE, _
 from spoonbill.spec import Table, add_child_table
+from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
     RepeatFilter,
@@ -69,17 +71,17 @@ class DataPreprocessor:
         if not self.tables:
             self.parse_schema()
 
-    def __getitem__(self, table):
+    def __getitem__(self, table: str) -> Table:
         return self.tables[table]
 
-    def name_check(self, parent_key, key):
+    def name_check(self, parent_key: str, key: str) -> str:
         table_name = generate_table_name(self.current_table.name, parent_key, key)
         self.names_counter[table_name] += 1
         if self.names_counter[table_name] > 1:
             key = key[:4] + str(self.names_counter[table_name] - 1)
         return key
 
-    def init_tables(self, tables, is_combined=False):
+    def init_tables(self, tables: Dict[str, List[str]], is_combined: bool = False) -> None:
         """
         Initialize the root tables with default fields.
         """
@@ -87,7 +89,7 @@ class DataPreprocessor:
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
 
-    def parse_schema(self):
+    def parse_schema(self) -> None:
         """
         Extract information from the schema.
         """
@@ -145,12 +147,20 @@ class DataPreprocessor:
                 # TODO: not sure what to do here
                 continue
 
-    def _add_table(self, table, pointer):
+    def _add_table(self, table: Table, pointer: str) -> None:
         self.tables[table.name] = table
         self.current_table = table
         self.get_table.cache_clear()
 
-    def _add_additional_table(self, pointer, abs_pointer, parent_key, key, item, separator="/"):
+    def _add_additional_table(
+        self,
+        pointer: str,
+        abs_pointer: str,
+        parent_key: str,
+        key: str,
+        item: List[Dict[str, str]],
+        separator: str = "/",
+    ) -> None:
         LOGGER.debug(_("Detected additional table: %s") % pointer)
         self.current_table.types[pointer] = ["array"]
         self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
@@ -170,7 +180,7 @@ class DataPreprocessor:
                     )
 
     @lru_cache(maxsize=None)
-    def get_table(self, path):
+    def get_table(self, path: str) -> Optional[Table]:
         """
         Get the table that best matches the given path.
 
@@ -182,7 +192,14 @@ class DataPreprocessor:
             return
         return candidates[0]
 
-    def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=""):
+    def add_preview_row(
+        self,
+        ocid: str,
+        item_id: Union[List[str], None, str],
+        row_id: str,
+        parent_id: Optional[str],
+        parent_table: Union[bool, str] = "",
+    ) -> None:
         """
         Append a mostly-empty row to the previews.
 
@@ -200,7 +217,9 @@ class DataPreprocessor:
         self.current_table.preview_rows.append(defaults)
         self.current_table.preview_rows_combined.append(defaults)
 
-    def process_items(self, releases, with_preview=True):
+    def process_items(
+        self, releases: Union[Iterator, List[OrderedDict]], with_preview: bool = True
+    ) -> Iterator[Union[Iterator, Iterator[int]]]:
         """
         Analyze releases.
 
@@ -331,7 +350,7 @@ class DataPreprocessor:
             yield count
         self.total_items = count
 
-    def dump(self, path):
+    def dump(self, path: Union[PosixPath, LocalPath]) -> None:
         """
         Dump the data processor's state to a file.
 
@@ -344,7 +363,7 @@ class DataPreprocessor:
             LOGGER.error(_("Failed to dump DataPreprocessor to file. Error: {}").format(e))
 
     @classmethod
-    def restore(_cls, path):
+    def restore(_cls: type, path: Union[LocalPath, str]) -> Optional[DataPreprocessor]:
         """
         Restore a data preprocessor's state from a file.
 

@@ -2,9 +2,11 @@
 import logging
 import pathlib
 from itertools import chain
+from typing import Dict, List, Optional
 
 import click
 import click_logging
+from click.core import Context, Option
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -29,19 +31,19 @@ class CommaSeparated(click.ParamType):
 
     name = "comma"
 
-    def convert(self, value, param, ctx):  # noqa
+    def convert(self, value: str, param: Option, ctx: Context) -> List[str]:  # noqa
         if not value:
             return []
         return [v for v in value.split(",")]
 
 
-def read_option_file(option, option_file):
+def read_option_file(option: List[str], option_file: Optional[str]) -> List[str]:
     if option_file:
         option = read_lines(option_file)
     return option
 
 
-def get_selected_tables(base, selection):
+def get_selected_tables(base: Dict[str, List[str]], selection: List[str]) -> Dict[str, List[str]]:
     for name in selection:
         if name not in base:
             msg = _("Wrong selection, table '{}' does not exist").format(name)

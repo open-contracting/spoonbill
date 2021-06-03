@@ -5,11 +5,16 @@ import logging
 from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
+from logging import LogRecord
 from numbers import Number
-from pathlib import Path
+from pathlib import Path, PosixPath
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import ijson
 import requests
+from _io import BufferedReader
+
+from spoonbill.spec import Column, Table
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -33,7 +38,7 @@ ABBREVIATION_TABLE_NAME = {
 
 
 @functools.lru_cache(maxsize=None)
-def common_prefix(path, subpath, separator="/"):
+def common_prefix(path: str, subpath: str, separator: str = "/") -> str:
     """Given two paths, returns the longest common sub-path.
 
     >>> common_prefix('/contracts', '/contracts/items')
@@ -59,7 +64,7 @@ def common_prefix(path, subpath, separator="/"):
     return separator.join(common)
 
 
-def iter_file(fd, root):
+def iter_file(fd: BufferedReader, root: str) -> Iterator[Union[Iterator, Iterator[OrderedDict]]]:
     """Iterate over `root` array in file provided by `filename` using ijson
 
     :param bytes fd: File descriptor
@@ -76,7 +81,7 @@ def iter_file(fd, root):
         yield item
 
 
-def extract_type(item):
+def extract_type(item: Optional[Dict[str, Any]]) -> List[str]:
     """Extract item possible types from jsonschema definition.
     >>> extract_type({'type': 'string'})
     ['string']
@@ -95,7 +100,7 @@ def extract_type(item):
     return type_
 
 
-def validate_type(type_, item):
+def validate_type(type_: List[str], item: Any) -> bool:
     """Validate if python object corresponds to provided type
     >>> validate_type(['string'], 'test_string')
     True
@@ -122,14 +127,14 @@ def validate_type(type_, item):
     return True
 
 
-def get_root(table):
+def get_root(table: Table) -> Table:
     """Extract top level toot table of `table`"""
     while table.parent:
         table = table.parent
     return table
 
 
-def combine_path(root, path, index="0", separator="/"):
+def combine_path(root: Table, path: str, index: str = "0", separator: str = "/") -> str:
     """Generates index based header for combined column"""
     combined_path = path
     for array in sorted(root.arrays, reverse=True):
@@ -139,7 +144,7 @@ def combine_path(root, path, index="0", separator="/"):
     return combined_path
 
 
-def get_matching_tables(tables, path):
+def get_matching_tables(tables: Dict[str, Table], path: str) -> List[Table]:
     """Get list of matching tables for provided path
 
     Return list is sorted by longest matching path part
@@ -156,7 +161,7 @@ def get_matching_tables(tables, path):
     return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
 
-def generate_table_name(parent_table, parent_key, key):
+def generate_table_name(parent_table: str, parent_key: str, key: str) -> str:
     """Generates name for non root table, to be used as sheet name
 
     :param str parent_table: Parent table name
@@ -193,7 +198,9 @@ def generate_table_name(parent_table, parent_key, key):
     return table_name
 
 
-def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
+def generate_row_id(
+    ocid: str, item_id: Union[List[str], str], parent_key: str = None, top_level_id: str = None
+) -> str:
     """Generates uniq rowID for table row
 
     :param str ocid: OCID of release
@@ -218,7 +225,15 @@ def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
     return f"{ocid}/{tail}"
 
 
-def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
+def recalculate_headers(
+    table: Table,
+    path: str,
+    abs_path: str,
+    key: str,
+    item: Union[List[Dict[str, str]], List[OrderedDict]],
+    should_split: bool,
+    separator: str = "/",
+) -> None:
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
@@ -231,7 +246,7 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
     :param separator: header path separator
     """
 
-    def insert_after_key(columns, insert, last_key):
+    def insert_after_key(columns: OrderedDict, insert: Dict[str, Column], last_key: str) -> OrderedDict:
         data = OrderedDict()
         for key, val in columns.items():
             data[key] = val
@@ -269,7 +284,7 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
             recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
 
 
-def resolve_file_uri(file_path):
+def resolve_file_uri(file_path: Union[PosixPath, str]) -> Dict[str, Any]:
     """Read json file from provided uri
 
     :param file_path: URI to file, could be url or path
@@ -282,13 +297,15 @@ def resolve_file_uri(file_path):
         return requests.get(file_path).json()
 
 
-def read_lines(path):
+def read_lines(path: str) -> List[str]:
     """Read file as lines"""
     with open(path) as fd:
         return [line.strip() for line in fd.readlines()]
 
 
-def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
+def get_pointer(
+    table: Table, abs_path: str, path: str, split: bool, *, separator: str = "/", index: Optional[str] = None
+) -> str:
     """Combine path and abs_path in order to fit table columns
 
     For example /tender/items/0/id should be /tender/items/0/id for tenders table
@@ -324,7 +341,7 @@ class RepeatFilter(logging.Filter):
     Logger filter to avoid repeating of same messages during file processing
     """
 
-    def filter(self, record):
+    def filter(self, record: LogRecord) -> bool:
         current_log = (record.module, record.levelno, record.msg)
         if current_log != getattr(self, "last_log", None):
             self.last_log = current_log

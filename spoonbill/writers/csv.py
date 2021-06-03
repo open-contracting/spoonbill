@@ -1,8 +1,13 @@
 import csv
 import logging
+from pathlib import PosixPath
+from typing import Any, Dict, Optional
 
+from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import _
+from spoonbill.spec import Table
 from spoonbill.writers.base_writer import BaseWriter
+from spoonbill.writers.csv import CSVWriter
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -16,7 +21,7 @@ class CSVWriter(BaseWriter):
 
     name = "csv"
 
-    def __init__(self, workdir, tables, options):
+    def __init__(self, workdir: PosixPath, tables: Dict[str, Table], options: FlattenOptions) -> None:
         """
         :param workdir: Working directory
         :param tables: The table objects
@@ -27,7 +32,7 @@ class CSVWriter(BaseWriter):
         self.writers = {}
         self.fds = []
 
-    def __enter__(self):
+    def __enter__(self) -> Optional[CSVWriter]:
         """
         Write the headers to the output file.
         """
@@ -54,7 +59,7 @@ class CSVWriter(BaseWriter):
                 LOGGER.error(_("Failed to headers with error {}").format(err))
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         """
         Close the CSV files.
         """
@@ -62,7 +67,7 @@ class CSVWriter(BaseWriter):
         for fd in self.fds:
             fd.close()
 
-    def writerow(self, table, row):
+    def writerow(self, table: str, row: Dict[str, str]) -> None:
         """
         Write a row to the output file.
         """
