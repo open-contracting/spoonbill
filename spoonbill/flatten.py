@@ -5,8 +5,9 @@ from typing import List, Mapping
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.i18n import LOCALE, _
+from spoonbill.rowdata import Rows
 from spoonbill.spec import Table
-from spoonbill.utils import generate_row, get_pointer, get_root, make_count_column
+from spoonbill.utils import get_pointer, get_root, make_count_column
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -216,11 +217,9 @@ class Flattener:
         """
 
         for counter, release in enumerate(releases):
-            rows = defaultdict(list)
             to_flatten = deque([("", "", "", {}, release, {})])
             separator = "/"
-            ocid = release["ocid"]
-            buyer = release.get("buyer", {})
+            rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
 
             while to_flatten:
                 abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
@@ -231,7 +230,7 @@ class Flattener:
                     continue
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
-                    row = generate_row(table, ocid, record.get("id", ""), parent.get("id", ""), buyer=buyer)
+                    row = rows.new_row(table, record.get("id", ""), parent_key)
                     only = self.options.selection[table.name].only
                     if only:
                         row = {col: col_v for col, col_v in row.items() if col in only}
@@ -239,7 +238,7 @@ class Flattener:
                         repeat = {}
                     if repeat:
                         row.update(repeat)
-                    rows[table.name].append(row)
+                    rows.data[table.name].append(row)
                 for key, item in record.items():
                     pointer = separator.join((path, key))
                     abs_pointer = separator.join((abs_path, key))
@@ -259,7 +258,7 @@ class Flattener:
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
                             value = JOINABLE_SEPARATOR.join(item)
-                            rows[table.name][-1][pointer] = value
+                            rows.data[table.name][-1][pointer] = value
                         else:
                             if self.options.count and pointer not in table.path and split and table.should_split:
                                 abs_pointer = get_pointer(
@@ -271,7 +270,7 @@ class Flattener:
                                 )
                                 abs_pointer += "Count"
                                 if abs_pointer in table:
-                                    rows[table.name][-1][abs_pointer] = len(item)
+                                    rows.data[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
                                     abs_pointer = get_pointer(
@@ -297,8 +296,8 @@ class Flattener:
                             root = get_root(table)
                             unnest = self.options.selection[root.name].unnest
                             if unnest and abs_pointer in unnest:
-                                rows[root.name][-1][abs_pointer] = item
+                                rows.data[root.name][-1][abs_pointer] = item
                                 continue
                         pointer = get_pointer(table, abs_pointer, pointer, split, separator=separator)
-                        rows[table.name][-1][pointer] = item
+                        rows.data[table.name][-1][pointer] = item
             yield counter, rows

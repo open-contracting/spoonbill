@@ -194,40 +194,6 @@ def generate_table_name(parent_table, parent_key, key):
     return table_name
 
 
-def generate_row(table, ocid, item_id, parent_id=None, buyer=None):
-    """Generates uniq rowID for table row
-
-    :param str ocid: OCID of release
-    :param str item_id: Corresponding object id for current row, e.g. tender/id
-    :param str parent_id: Parent object id
-    :param str parent_key: Parent table name
-    :return: Generated row
-    """
-    name = table.name
-    parent_table = table.parent
-    head = ocid
-    row = OrderedDict(
-        {
-            "id": item_id,
-            "ocid": ocid,
-        }
-    )
-    if not table.is_root:
-        if parent_table:
-            head = f"{head}/{parent_table.name}:{parent_id}"
-            row["parentTable"] = parent_table.name
-            row["parentID"] = head
-    row["rowID"] = f"{head}/{name}:{item_id}"
-
-    if table.name == "parties" and buyer:
-        # it works and we bind to OCDS anyway
-        # but this is a hack
-        # and its a good idea to find better way of doing it in future
-        row["/buyer/id"] = buyer.get("id")
-        row["/buyer/name"] = buyer.get("name")
-    return row
-
-
 def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 

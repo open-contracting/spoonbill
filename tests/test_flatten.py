@@ -48,6 +48,27 @@ def test_flatten(spec_analyzed, releases):
                     count[name] += 1
 
 
+def test_flatten_row_id_parent_id_relation(spec, releases):
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
+    releases[0]["tender"]["items"][0]["additionalClassifications"] = (
+        releases[0]["tender"]["items"][0]["additionalClassifications"] * 6
+    )
+    for _ in spec.process_items(releases):
+        pass
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    flattener = Flattener(options, spec.tables)
+    all_rows = defaultdict(list)
+    for count, flat in flattener.flatten(releases):
+        for name, rows in flat.items():
+            all_rows[name].extend(rows)
+
+    for row in all_rows["tenders_items_class"]:
+        parent_id = row["parentID"]
+        items = [i for i in all_rows["tenders_items"] if i["rowID"] == parent_id]
+        assert items
+
+
 def test_flattener_generate_count_columns(spec, releases):
     releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
     for _ in spec.process_items(releases):

@@ -263,6 +263,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                 for r in getter(tenders_items_class):
                     if r["parentID"] == it["rowID"]:
                         items_class.append(r)
+
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables
