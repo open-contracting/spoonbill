@@ -309,32 +309,32 @@ def cli(
             "pretty_headers": human,
         }
         if not analyzer.spec[name].is_combined:
-            unnest = [col for col in unnest if col in table.combined_columns]
-            if unnest:
+            unnest_in_table = [col for col in unnest if col in table.combined_columns]
+            if unnest_in_table:
                 click.echo(
                     _("Unnesting columns {} for table {}").format(
-                        click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
+                        click.style(",".join(unnest_in_table), fg="cyan"), click.style(name, fg="cyan")
                     )
                 )
 
-            only = [col for col in only if col in table]
-            if only:
+            only_in_table = [col for col in only if col in table]
+            if only_in_table:
                 click.echo(
                     _("Using only columns {} for table {}").format(
-                        click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
+                        click.style(",".join(only_in_table), fg="cyan"), click.style(name, fg="cyan")
                     )
                 )
 
-            repeat = [col for col in repeat if col in table]
-            if repeat:
+            repeat_in_table = [col for col in repeat if col in table]
+            if repeat_in_table:
                 click.echo(
                     _("Repeating columns {} in all child table of {}").format(
-                        click.style(",".join(repeat), fg="cyan"), click.style(name, fg="cyan")
+                        click.style(",".join(repeat_in_table), fg="cyan"), click.style(name, fg="cyan")
                     )
                 )
-            options["selection"][name]["only"] = only
-            options["selection"][name]["repeat"] = repeat
-            options["selection"][name]["unnest"] = unnest
+            options["selection"][name]["only"] = only_in_table
+            options["selection"][name]["repeat"] = repeat_in_table
+            options["selection"][name]["unnest"] = unnest_in_table
 
     options = FlattenOptions(**options)
     flattener = FileFlattener(
