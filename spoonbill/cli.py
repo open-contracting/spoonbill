@@ -1,7 +1,7 @@
 """cli.py - Command line interface related routines"""
 import logging
 import pathlib
-from itertools import chain
+from operator import attrgetter
 
 import click
 import click_logging
@@ -47,6 +47,28 @@ def get_selected_tables(base, selection):
             msg = _("Wrong selection, table '{}' does not exist").format(name)
             raise click.BadParameter(msg)
     return {name: tab for name, tab in base.items() if name in selection}
+
+
+def parse_schema_option(input_format, schema=None):
+    if schema:
+        schema = resolve_file_uri(schema)
+    if "release" in input_format:
+        pkg_type = "releases"
+        getter = attrgetter("release_package_schema")
+    else:
+        pkg_type = "records"
+        getter = attrgetter("record_package_schema")
+    if not schema:
+        click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
+        profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+        schema = getter(profile)()
+    title = schema.get("title", "").lower()
+    if not title:
+        raise ValueError(_("Incomplete schema, please make sure your data is correct"))
+    if "package" in title:
+        # TODO: is is a good way to get release/record schema
+        schema = schema["properties"][pkg_type]["items"]
+    return schema, pkg_type
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS files"))
@@ -210,31 +232,13 @@ def cli(
             raise click.BadParameter(_("Desired location {} does not exists").format(xlsx.parent))
     click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
     is_package = "package" in input_format
-    combine_choice = combine if combine else ""
+
     if not is_package:
         # TODO: fix this
         click.echo("Single releases are not supported by now")
         return
-    if schema:
-        schema = resolve_file_uri(schema)
-    if "release" in input_format:
-        root_key = "releases"
-        if not schema:
-            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
-            schema = profile.release_package_schema()
-    else:
-        root_key = "records"
-        if not schema:
-            click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
-            schema = profile.record_package_schema()
-    title = schema.get("title", "").lower()
-    if not title:
-        raise ValueError(_("Incomplete schema, please make sure your data is correct"))
-    if "package" in title:
-        # TODO: is is a good way to get release/record schema
-        schema = schema["properties"][root_key]["items"]
+
+    schema, root_key = parse_schema_option(input_format, schema)
 
     path = pathlib.Path(filename)
     workdir = path.parent
@@ -295,43 +299,43 @@ def cli(
     repeat = read_option_file(repeat, repeat_file)
     only = read_option_file(only, only_file)
 
-    for name in selection:
+    for name in list(selection) + list(combine):
         table = analyzer.spec[name]
         if table.total_rows == 0:
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
-
-        unnest = [col for col in unnest if col in table.combined_columns]
-        if unnest:
-            click.echo(
-                _("Unnesting columns {} for table {}").format(
-                    click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
-        only = [col for col in only if col in table]
-        if only:
-            click.echo(
-                _("Using only columns {} for table {}").format(
-                    click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
-        repeat = [col for col in repeat if col in table]
-        if repeat:
-            click.echo(
-                _("Repeating columns {} in all child table of {}").format(
-                    click.style(",".join(repeat), fg="cyan"), click.style(name, fg="cyan")
-                )
-            )
-
         options["selection"][name] = {
             "split": analyzer.spec[name].should_split,
             "pretty_headers": human,
-            "unnest": unnest,
-            "only": only,
-            "repeat": repeat,
         }
+        if not analyzer.spec[name].is_combined:
+            unnest = [col for col in unnest if col in table.combined_columns]
+            if unnest:
+                click.echo(
+                    _("Unnesting columns {} for table {}").format(
+                        click.style(",".join(unnest), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+
+            only = [col for col in only if col in table]
+            if only:
+                click.echo(
+                    _("Using only columns {} for table {}").format(
+                        click.style(",".join(only), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+
+            repeat = [col for col in repeat if col in table]
+            if repeat:
+                click.echo(
+                    _("Repeating columns {} in all child table of {}").format(
+                        click.style(",".join(repeat), fg="cyan"), click.style(name, fg="cyan")
+                    )
+                )
+            options["selection"][name]["only"] = only
+            options["selection"][name]["repeat"] = repeat
+            options["selection"][name]["unnest"] = unnest
+
     options = FlattenOptions(**options)
     flattener = FileFlattener(
         workdir,
@@ -343,10 +347,9 @@ def cli(
         language=language,
     )
 
-    all_tables = chain([table for table in flattener.flattener.tables.keys()], combine_choice)
-
-    click.echo(_("Going to export tables: {}").format(click.style(",".join(all_tables), fg="magenta")))
-
+    click.echo(
+        _("Going to export tables: {}").format(click.style(",".join(flattener.flattener.tables.keys()), fg="magenta"))
+    )
     click.echo(_("Processed tables:"))
     for table_name, table in flattener.flattener.tables.items():
         msg = _(" - {:30} => {} rows") if table.is_root else _(" ---- {:27} => {} rows")
