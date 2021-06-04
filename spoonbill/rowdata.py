@@ -50,7 +50,7 @@ class Rows(MappingBase):
     data: Mapping[str, List[Row]] = field(default_factory=list)
     row: Row = ""
 
-    def new_row(self, table, item_id, parent_key):
+    def new_row(self, table, item_id):
         name = table.name
         head = self.ocid
         row = OrderedDict(
@@ -59,19 +59,20 @@ class Rows(MappingBase):
                 "ocid": self.ocid,
             }
         )
-        parent_row = ""
+        parent_row = self.row
 
         if table.is_combined:
-            # this works because nested combined tables
-            # like contracts_implementation are abbreviated
-            # so parent_key is always correct table name
-            row["parentTable"] = parent_key
-
-        if not table.is_root:
-            parent_row = self.row
-            while parent_row and parent_row.table_name == table.name:
+            while parent_row.parent:
                 parent_row = parent_row.parent
             row["parentTable"] = parent_row.table_name
+
+        if not table.is_root:
+            parent_table = table.parent
+            while parent_row.parent:
+                if parent_row.table_name == parent_table.name:
+                    break
+                parent_row = parent_row.parent
+            row["parentTable"] = parent_table.name
             parent_id = parent_row.row_id
             row["parentID"] = parent_id
             head = parent_id

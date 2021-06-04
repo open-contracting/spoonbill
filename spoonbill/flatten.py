@@ -230,7 +230,7 @@ class Flattener:
                     continue
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
-                    row = rows.new_row(table, record.get("id", ""), parent_key)
+                    row = rows.new_row(table, record.get("id", ""))
                     only = self.options.selection[table.name].only
                     if only:
                         row = {col: col_v for col, col_v in row.items() if col in only}
@@ -292,6 +292,9 @@ class Flattener:
                                         )
                                     )
                     else:
+                        if table.is_combined:
+                            pointer = separator + separator.join((parent_key, key))
+                            abs_pointer = pointer
                         if not table.is_root:
                             root = get_root(table)
                             unnest = self.options.selection[root.name].unnest

@@ -271,7 +271,7 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
     but /tender/items/id for tenders_items table
     """
     array = table.is_array(path)
-    if index and array:
+    if index and (array or table.is_combined):
         return separator.join((abs_path, index))
     if table.is_root:
         return abs_path

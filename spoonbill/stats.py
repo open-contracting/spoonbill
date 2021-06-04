@@ -194,7 +194,7 @@ class DataPreprocessor:
         """
         table = self.current_table
         for p_rows in table.preview_rows, table.preview_rows_combined:
-            p_rows.append(rows.new_row(table, item_id, parent_key).as_dict())
+            p_rows.append(rows.new_row(table, item_id).as_dict())
 
     def process_items(self, releases, with_preview=True):
         """

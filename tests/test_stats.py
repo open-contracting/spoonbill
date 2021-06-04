@@ -263,7 +263,6 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                 for r in getter(tenders_items_class):
                     if r["parentID"] == it["rowID"]:
                         items_class.append(r)
-
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables
@@ -275,6 +274,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                     assert item == expected
                     if "tenderers" in key:
                         for index, tenderer in enumerate(reversed(tenderers)):
+                            assert tenderer["parentTable"] == "tenders"
                             for k, v in tenderer.items():
                                 if "/" in k:
                                     path = k.replace("/tender/tenderers", f"/tender/tenderers/{index}")
@@ -283,6 +283,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
 
                     if "/tender/items/" in key:
                         for index, it in enumerate(reversed(items)):
+                            assert it["parentTable"] == "tenders"
                             for k, v in it.items():
                                 if "/" in k:
                                     path = k.replace("/tender/items", f"/tender/items/{index}")
@@ -290,6 +291,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                                     assert value == v
                                     if "additionalClassifications" in k:
                                         for i, cls in enumerate(reversed(items_class)):
+                                            assert cls["parentTable"] == "tenders_items"
                                             for k, v in cls.items():
                                                 if "/" in k:
                                                     path = k.replace("/tender/items", f"/tender/items/{index}")
