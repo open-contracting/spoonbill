@@ -195,10 +195,11 @@ class DataPreprocessor:
         :param parent_table: The parent table's name
         """
         defaults = {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
+        defaults_combined = {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
         if parent_table:
             defaults["parentTable"] = parent_table
         self.current_table.preview_rows.append(defaults)
-        self.current_table.preview_rows_combined.append(defaults)
+        self.current_table.preview_rows_combined.append(defaults_combined)
 
     def process_items(self, releases, with_preview=True):
         """
@@ -328,6 +329,8 @@ class DataPreprocessor:
                         self.current_table.inc_column(abs_pointer, pointer)
                         if item and with_preview and count < PREVIEW_ROWS:
                             self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
+
+            self.preview_clean_up()
             yield count
         self.total_items = count
 
@@ -355,3 +358,14 @@ class DataPreprocessor:
                 return pickle.load(fd)
         except (TypeError, pickle.UnpicklingError):
             LOGGER.error(_("Invalid pickle file. Can't restore."))
+
+    def preview_clean_up(self):
+        """
+        Cleaning preview rows of root table after split
+        """
+        for name, table in self.tables.items():
+            if table.is_root:
+                for row in table.preview_rows:
+                    remove = [key for key in row.keys() if key not in table.columns.keys()]
+                    for key in remove:
+                        del row[key]

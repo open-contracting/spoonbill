@@ -294,3 +294,23 @@ def test_flatten_only_no_default_columns(spec_analyzed, releases):
             for row in rows:
                 assert len(rows) == 1
                 assert "/tender/id" in row
+
+
+def test_preview_rows(spec_analyzed):
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    flattener = Flattener(options, spec_analyzed.tables)
+    table = flattener.tables["tenders"]
+    columns = table.columns
+    combined_columns = table.combined_columns
+    preview_rows = table.preview_rows
+    preview_rows_combined = table.preview_rows_combined
+
+    for row in preview_rows:
+        for key, value in row.items():
+            assert key in columns.keys()
+
+    for row in preview_rows_combined:
+        for key, value in row.items():
+            assert key in combined_columns.keys()
+    assert len(max(preview_rows, key=len)) < len(columns)
+    assert len(max(preview_rows_combined, key=len)) < len(combined_columns)

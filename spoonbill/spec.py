@@ -225,10 +225,10 @@ class Table:
     def set_preview_path(self, abs_path, path, value, max_items):
         header = get_pointer(self, abs_path, path, True)
         array = self.is_array(path)
-        self.preview_rows[-1][header] = value
+        self.preview_rows_combined[-1][header] = value
         if header in self.combined_columns:
             if not array or (array and self.arrays[array] < max_items):
-                self.preview_rows_combined[-1][header] = value
+                self.preview_rows[-1][header] = value
         if not self.is_root:
             self.parent.set_preview_path(abs_path, path, value, max_items)
 
