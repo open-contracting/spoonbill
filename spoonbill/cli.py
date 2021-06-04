@@ -49,10 +49,6 @@ def get_selected_tables(base, selection):
     return {name: tab for name, tab in base.items() if name in selection}
 
 
-# TODO: we could provide two commands: flatten and analyze
-# TODO: generated state-file + schema how to validate
-
-
 @click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS files"))
 @click.option(
     "--schema",
