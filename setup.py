@@ -17,6 +17,7 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["tests", "tests.*"]),
     long_description=long_description,
+    include_package_data=True,
     install_requires=[
         "click",
         "click_logging",
