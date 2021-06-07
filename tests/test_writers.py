@@ -373,7 +373,7 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                     str_row["/tender/hasEnquiries"] = str(row["/tender/hasEnquiries"])
                     assert line == str_row
                 else:
-                    assert line == row
+                    assert line == row.as_dict()
                 counter[name] += 1
 
 

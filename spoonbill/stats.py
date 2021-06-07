@@ -8,14 +8,14 @@ from typing import List, Mapping
 import jsonref
 from flatten_dict import flatten
 
-from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, TABLE_THRESHOLD
+from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
 from spoonbill.i18n import LOCALE, _
+from spoonbill.rowdata import Rows
 from spoonbill.spec import Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
     RepeatFilter,
     extract_type,
-    generate_row_id,
     generate_table_name,
     get_matching_tables,
     get_root,
@@ -24,7 +24,6 @@ from spoonbill.utils import (
     validate_type,
 )
 
-PREVIEW_ROWS = 20
 LOGGER = logging.getLogger("spoonbill")
 LOGGER.addFilter(RepeatFilter())
 
@@ -113,7 +112,6 @@ class DataPreprocessor:
                         continue
                     if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
                         continue
-
                     typeset = extract_type(item)
                     pointer = separator.join([path, key])
                     self.current_table = self.get_table(pointer)
@@ -182,7 +180,7 @@ class DataPreprocessor:
             return
         return candidates[0]
 
-    def add_preview_row(self, ocid, item_id, row_id, parent_id, parent_table=""):
+    def add_preview_row(self, rows, item_id, parent_key):
         """
         Append a mostly-empty row to the previews.
 
@@ -190,15 +188,13 @@ class DataPreprocessor:
 
         :param ocid: The row's ocid
         :param item_id: The current object's id
-        :param row_id: The unique row id
         :param parent_id: The parent object's id
         :param parent_table: The parent table's name
+        :param buyer: The Buyer object if available
         """
-        defaults = {"ocid": ocid, "rowID": row_id, "parentID": parent_id, "id": item_id}
-        if parent_table:
-            defaults["parentTable"] = parent_table
-        self.current_table.preview_rows.append(defaults)
-        self.current_table.preview_rows_combined.append(defaults)
+        table = self.current_table
+        for p_rows in table.preview_rows, table.preview_rows_combined:
+            p_rows.append(rows.new_row(table, item_id).as_dict())
 
     def process_items(self, releases, with_preview=True):
         """
@@ -213,8 +209,7 @@ class DataPreprocessor:
         separator = self.header_separator
         for count, release in enumerate(releases):
             to_analyze = deque([("", "", "", {}, release)])
-            ocid = release["ocid"]
-            top_level_id = release["id"]
+            rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
 
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
@@ -224,15 +219,13 @@ class DataPreprocessor:
                     if not self.current_table:
                         continue
                     item_type = self.current_table.types.get(pointer)
-                    if pointer in self.current_table.path:
+                    if pointer in self.current_table.path and pointer != "/buyer":
                         # strict match like /parties, /tender
-                        row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
                         c = item if isinstance(item, list) else [item]
                         for _nop in c:
                             self.current_table.inc()
                             if with_preview and count < PREVIEW_ROWS:
-                                parent_table = not self.current_table.is_root and parent_key
-                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
+                                self.add_preview_row(rows, record.get("id", ""), parent_key)
 
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
@@ -288,8 +281,7 @@ class DataPreprocessor:
                                 parent_table = self.current_table
                                 # TODO: do we need to mark this table as additional
                                 self._add_additional_table(pointer, abs_pointer, parent_key, key, item)
-                                self.add_preview_row(ocid, record.get("id"), row_id, parent.get("id"), parent_table)
-
+                                self.add_preview_row(rows, record.get("id", ""), parent_key)
                             if parent_table.set_array(pointer, item):
                                 should_split = len(item) >= self.table_threshold
                                 if should_split:
@@ -327,7 +319,8 @@ class DataPreprocessor:
                             )
                         self.current_table.inc_column(abs_pointer, pointer)
                         if item and with_preview and count < PREVIEW_ROWS:
-                            self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
+                            if not pointer.startswith("/buyer"):
+                                self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
         self.total_items = count
 
