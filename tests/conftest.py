@@ -84,6 +84,14 @@ def root_table():
                         id="/tender/items/0/id",
                     ),
                 ),
+                (
+                    "/tender/items/0/additionalClassifications/0/id",
+                    Column(
+                        title="Tender Item Classification id",
+                        type="string",
+                        id="/tender/items/0/additionalClassifications/0/id",
+                    ),
+                ),
             ]
         ),
         combined_columns=OrderedDict(

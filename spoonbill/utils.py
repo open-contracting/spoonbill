@@ -10,9 +10,6 @@ from pathlib import Path
 
 import ijson
 import requests
-from ocdskit.util import detect_format
-
-from spoonbill.common import DEFAULT_FIELDS_COMBINED
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -75,11 +72,9 @@ def iter_file(fd, root, multiple_values=False):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    prefix = f"{root}.item"
-    if multiple_values:
-        prefix = ""
-
-    reader = ijson.items(fd, prefix=prefix, multiple_values=multiple_values, map_type=OrderedDict)
+    reader = ijson.items(
+        fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values, map_type=OrderedDict
+    )
     for item in reader:
         yield item
 
@@ -161,6 +156,7 @@ def get_matching_tables(tables, path):
         for candidate in table.path:
             if common_prefix(candidate, path) == candidate:
                 candidates.append(table)
+
     return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
 
@@ -201,78 +197,55 @@ def generate_table_name(parent_table, parent_key, key):
     return table_name
 
 
-def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
-    """Generates uniq rowID for table row
-
-    :param str ocid: OCID of release
-    :param str item_id: Corresponding object id for current row, e.g. tender/id
-    :param str parent_key: Corresponding field name for current object frow which row is constructed, e.g. documents
-    :param top_level_id: The ID of whole release
-    :return: Generated rowID
-    :rtype: str
-
-    >>> generate_row_id('ocid', 'item', 'documens', 'top')
-    'ocid/top/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '1')
-    'ocid/1/item'
-    >>> generate_row_id('ocid', 'item', 'documens', '')
-    'ocid/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '')
-    'ocid/item'
-    """
-    tail = f"{parent_key}:{item_id}" if parent_key else item_id
-    if top_level_id:
-        return f"{ocid}/{top_level_id}/{tail}"
-    return f"{ocid}/{tail}"
-
-
-def recalculate_headers(root, path, abs_path, key, item, should_split, separator="/"):
+def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
     """Rebuild table headers when array is expanded with attempt to preserve order
 
     Also deletes combined columns from tables columns if array becomes bigger than threshold
 
-    :param root: Table for which headers should be rebuild
+    :param table: Table for which headers should be rebuild
     :param abs_path: Full jsonpath to array
     :param key: Array field name
     :param item: Array items
     :param should_split: True if array should be separated into child table
     :param separator: header path separator
     """
-    head = OrderedDict()
-    tail = OrderedDict()
-    cols = head
+
+    def insert_after_key(columns, insert, last_key):
+        data = OrderedDict()
+        for key, val in columns.items():
+            data[key] = val
+            if key == last_key:
+                for k, v in insert.items():
+                    data[k] = v
+                    table.titles[k] = v.title
+        return data
+
     base_prefix = separator.join((abs_path, key))
-    zero_prefix = get_pointer(root, separator.join((base_prefix, "0")), path, True)
+    zero_prefix = get_pointer(table, separator.join((base_prefix, "0")), path, True)
 
     zero_cols = {
         col_p: col
-        for col_p, col in root.combined_columns.items()
-        if col_p not in DEFAULT_FIELDS_COMBINED and common_prefix(col_p, zero_prefix) == zero_prefix
+        for col_p, col in table.combined_columns.items()
+        if col_p.startswith(separator) and common_prefix(col_p, zero_prefix) == zero_prefix
     }
     new_cols = {}
     for col_i, _ in enumerate(item[1:], 1):
-        col_prefix = get_pointer(root, separator.join((base_prefix, str(col_i))), path, True)
+        col_prefix = get_pointer(table, separator.join((base_prefix, str(col_i))), path, True)
+
         for col_p, col in zero_cols.items():
             col_id = col.id.replace(zero_prefix, col_prefix)
             new_cols[col_id] = replace(col, id=col_id, hits=0)
-    head_updated = False
-    for col_p, col in root.combined_columns.items():
-        if col_p in zero_cols and not head_updated:
-            head.update(zero_cols)
-            tail.update(new_cols)
-            head_updated = True
-            cols = tail
+
+    if new_cols:
+        last_key = list(zero_cols.keys())[-1]
+        table.combined_columns = insert_after_key(table.combined_columns, new_cols, last_key)
+        if should_split:
+            for col_path in chain(zero_cols, new_cols):
+                table.columns.pop(col_path, "")
         else:
-            if col_p not in cols:
-                cols[col_p] = col
-    if should_split:
-        for col_path in chain(zero_cols, new_cols):
-            root.columns.pop(col_path, "")
-    for col_path, col in chain(head.items(), tail.items()):
-        root.combined_columns[col_path] = col
-        root.titles[col_path] = col.title
-        if not should_split:
-            root.columns[col_path] = root.columns.get(col_path) or col
+            table.columns = insert_after_key(table.columns, new_cols, last_key)
+        if not table.is_root:
+            recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
 
 
 def resolve_file_uri(file_path):
@@ -283,8 +256,8 @@ def resolve_file_uri(file_path):
     """
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
-            return json.load(fd)
-    if file_path.startswith("http"):
+            return json.load(fd, object_pairs_hook=OrderedDict)
+    if file_path.startswith("http://") or file_path.startswith("https://"):
         return requests.get(file_path).json()
 
 
@@ -301,7 +274,7 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
     but /tender/items/id for tenders_items table
     """
     array = table.is_array(path)
-    if index and array:
+    if index and (array or table.is_combined):
         return separator.join((abs_path, index))
     if table.is_root:
         return abs_path
@@ -338,10 +311,15 @@ class RepeatFilter(logging.Filter):
         return False
 
 
-def detect_multiple_values(path):
-    (
-        input_format,
-        _is_concatenated,
-        _is_array,
-    ) = detect_format(path)
-    return _is_concatenated
+def make_count_column(array):
+    """Make column name for arrays elements count
+
+    >>> make_count_column('/tender/items')
+    '/tender/itemsCount'
+    >>> make_count_column('/tender/items/additionalClassifications')
+    '/tender/items/additionalClassificationsCount'
+    >>> make_count_column('/tender/items/')
+    '/tender/itemsCount'
+    """
+
+    return array.rstrip("/") + "Count"

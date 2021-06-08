@@ -7,7 +7,7 @@ ROOT_TABLES = {
     "awards": ["/awards"],
     "contracts": ["/contracts"],
     "planning": ["/planning"],
-    "parties": ["/parties"],
+    "parties": ["/parties", "/buyer"],
 }
 # TODO: extract types from schema? items and additionalClassifications as table?
 COMBINED_TABLES = {
@@ -33,6 +33,9 @@ COMBINED_TABLES = {
     ],
 }
 
+PREVIEW_ROWS = 5
+
+
 DEFAULT_FIELDS = ["ocid", "id", "rowID", "parentID"]
 DEFAULT_FIELDS_COMBINED = ["ocid", "id", "rowID", "parentID", "parentTable"]
 
@@ -41,3 +44,4 @@ ARRAY = "array of {}"
 JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
 TABLE_THRESHOLD = 5
+CURRENT_SCHEMA_TAG = "1__1__5"

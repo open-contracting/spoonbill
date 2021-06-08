@@ -1,25 +1,20 @@
 """cli.py - Command line interface related routines"""
 import logging
 import pathlib
-from operator import attrgetter
 
 import click
 import click_logging
-from ijson.common import IncompleteJSONError
-from ocdsextensionregistry import ProfileBuilder
-from ocdskit.util import detect_format
 
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import FlattenOptions
 from spoonbill.i18n import LOCALE, _
-from spoonbill.utils import read_lines, resolve_file_uri
+from spoonbill.utils import read_lines
 
 LOGGER = logging.getLogger("spoonbill")
 click_logging.basic_config(LOGGER)
 
 
-CURRENT_SCHEMA_TAG = "1__1__5"
 ANALYZED_LABEL = _("  Processed {} objects")
 FLATTENED_LABEL = _("  Flattened {} objects")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -48,28 +43,6 @@ def get_selected_tables(base, selection):
             msg = _("Wrong selection, table '{}' does not exist").format(name)
             raise click.BadParameter(msg)
     return {name: tab for name, tab in base.items() if name in selection}
-
-
-def parse_schema_option(input_format, schema=None):
-    if schema:
-        schema = resolve_file_uri(schema)
-    if "release" in input_format:
-        pkg_type = "releases"
-        getter = attrgetter("release_package_schema")
-    else:
-        pkg_type = "records"
-        getter = attrgetter("record_package_schema")
-    if not schema:
-        click.echo(_("No schema provided, using version {}").format(click.style(CURRENT_SCHEMA_TAG, fg="cyan")))
-        profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
-        schema = getter(profile)()
-    title = schema.get("title", "").lower()
-    if not title:
-        raise ValueError(_("Incomplete schema, please make sure your data is correct"))
-    if "package" in title:
-        # TODO: is is a good way to get release/record schema
-        schema = schema["properties"][pkg_type]["items"]
-    return schema, pkg_type
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help=_("CLI tool to flatten OCDS files"))
@@ -215,16 +188,6 @@ def cli(
     language,
 ):
     """Spoonbill cli entry point"""
-    click.echo(_("Detecting input file format"))
-    try:
-        (
-            input_format,
-            _is_concatenated,
-            _is_array,
-        ) = detect_format(filename)
-    except IncompleteJSONError as error:
-        click.echo(error)
-        click.echo("Please make sure that valid file provided")
     if csv:
         csv = pathlib.Path(csv).resolve()
         if not csv.exists():
@@ -233,9 +196,6 @@ def cli(
         xlsx = pathlib.Path(xlsx).resolve()
         if not xlsx.parent.exists():
             raise click.BadParameter(_("Desired location {} does not exists").format(xlsx.parent))
-    click.echo(_("Input file is {}").format(click.style(input_format, fg="green")))
-
-    schema, root_key = parse_schema_option(input_format, schema)
 
     path = pathlib.Path(filename)
     workdir = path.parent
@@ -253,7 +213,6 @@ def cli(
         analyzer = FileAnalyzer(
             workdir,
             schema=schema,
-            root_key=root_key,
             root_tables=root_tables,
             combined_tables=combined_tables,
             language=language,
@@ -337,12 +296,10 @@ def cli(
     flattener = FileFlattener(
         workdir,
         options,
-        analyzer.spec.tables,
-        root_key=root_key,
+        analyzer,
         csv=csv,
         xlsx=xlsx,
         language=language,
-        multiple_values=analyzer.multiple_values,
     )
 
     click.echo(

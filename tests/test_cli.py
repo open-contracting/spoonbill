@@ -13,7 +13,6 @@ LOGGER.addFilter(RepeatFilter())
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 FILENAME_JSONL = pathlib.Path("tests/data/ocds-sample-data.jsonl").absolute()
-FILENAME_GARBAGE = pathlib.Path("tests/data/trailing_garbage.json").absolute()
 EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
 ANALYZED = pathlib.Path("tests/data/analyzed.state").absolute()
@@ -108,7 +107,6 @@ def test_state_file():
         shutil.copyfile(ANALYZED, "analyzed.json")
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
         assert result.exit_code == 0
-        assert "Input file is release package" in result.output
         assert "Restoring from provided state file" in result.output
         assert "Going to export tables: tenders,awards,contracts,planning,parties" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
@@ -194,13 +192,22 @@ def test_table_stats():
     with runner.isolated_filesystem():
         shutil.copyfile(FILENAME, "data.json")
         result = runner.invoke(cli, ["data.json"])
-        assert "Processed tables:" in result.output
-        assert "tenders: 4 rows" in result.output
-        assert "awards: 3 rows" in result.output
-        assert "contracts: 2 rows" in result.output
-        assert "planning: 1 rows" in result.output
-        assert "parties: 8 rows" in result.output
-        assert "└-----parties_ids: 14 rows" in result.output
+        for msg in (
+            "Analyze options:",
+            " - threshold                      => 5",
+            " - language                       => en",
+        ):
+            assert msg in result.output
+        for msg in (
+            "Processed tables:",
+            " - tenders                        => 4 rows",
+            " - awards                         => 3 rows",
+            " - contracts                      => 2 rows",
+            " - planning                       => 1 rows",
+            " - parties                        => 8 rows",
+            " ---- parties_ids                 => 14 rows",
+        ):
+            assert msg in result.output
 
 
 def test_message_repeat(capsys):
@@ -220,7 +227,6 @@ def test_xlsx():
         shutil.copyfile(ANALYZED, "analyzed.json")
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "--xlsx", "test.xlsx", "data.json"])
         assert result.exit_code == 0
-        assert "Input file is release package" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
         path = pathlib.Path("test.xlsx")
         assert path.resolve().exists()
@@ -234,7 +240,6 @@ def test_csv():
         os.mkdir("test")
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "--csv", "test", "data.json"])
         assert result.exit_code == 0
-        assert "Input file is release package" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
         path = pathlib.Path("test").resolve() / "tenders.csv"
         assert path.resolve().exists()
@@ -264,12 +269,3 @@ def test_jsonl():
         result = runner.invoke(cli, ["data.json"])
         assert "Input file is release" in result.output
         assert result.exit_code == 0
-
-
-def test_ijson_parse_error():
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-        shutil.copyfile(FILENAME_GARBAGE, "data.json")
-        result = runner.invoke(cli, ["data.json"])
-        assert "Please make sure that valid file provided" in result.output
-        assert result.exit_code == 1

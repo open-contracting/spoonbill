@@ -3,6 +3,35 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.3b2 (2021-06-07)
+--------------------
+
+Added
+~~~~~
+
+*  add Row and Rows containers to keep rows data and their relations
+   (`4e8a385 <https://github.com/open-contracting/spoonbill/commit/4e8a3857c8767f5f74ba7a614782c921563b34b7>`__)
+
+Fixed
+~~~~~
+
+*  **cli:** fixed variable shadowing in a loop (`1a55141 <https://github.com/open-contracting/spoonbill/commit/1a5514104086259a4c57ca33866dcb2f7822bcb6>`__)
+*  fix parentTable generation for combined tables (`5e06bf0 <https://github.com/open-contracting/spoonbill/commit/5e06bf09088307b94afa26e223a9aae8d10df12a>`__)
+*  parentID should be rowID for parent table (`c429309 <https://github.com/open-contracting/spoonbill/commit/c429309d3b265fdb2d7fb632e83bb7d2a373b7fc>`__)
+*  .xlsx writer ``only`` error handling (`ebc2ad0 <https://github.com/open-contracting/spoonbill/commit/ebc2ad0456e33ba8d81eacee51fec0974640e0ba>`__)
+*  **setup:** add include_package_data to setup.py (`db8b63b <https://github.com/open-contracting/spoonbill/commit/db8b63b3150166e5589d9dbd675547a3f709436c>`__)
+
+1.0.2b1 (2021-06-02)
+--------------------
+
+Fixed
+~~~~~
+
+* **analyze:** recalculate headers recursively (`ca1c521 <https://github.com/open-contracting/spoonbill/commit/ca1c521c74b638b427d40f43f7d0575238a57d1d>`__)
+* **stats:** pregenerate headers for exstention table when detected (`648485c <https://github.com/open-contracting/spoonbill/commit/648485c7539ba4c0c0af220587d347aaebba9aca>`__)
+* **stats:** fix inserting array columns into rolled up table columns (`d6d6195 <https://github.com/open-contracting/spoonbill/commit/d6d61951430bd2c049765e826957d3ae56c8cd20>`__)
+* Use correct type annotation for List (`9d16a3f <https://github.com/open-contracting/spoonbill/commit/9d16a3f26309cff54c31ac27adfd49e41ac09801>`__)
+
 1.0.1b1 (2021-05-27)
 --------------------
 
@@ -11,7 +40,7 @@ Fixed
 
 * **flatten:** strict columns match in only option
 
-1.0.0b1 (2021-05-27)
+1.0.0b1 (2021-05-26)
 --------------------
 
 Added

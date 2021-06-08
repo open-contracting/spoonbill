@@ -4,7 +4,7 @@ from unittest.mock import call, patch
 
 import openpyxl
 
-from spoonbill import FileFlattener
+from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
@@ -151,7 +151,8 @@ def test_writers_flatten_count(spec, tmpdir, releases):
     )
 
     workdir = Path(tmpdir)
-    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True)
+    analyzer = FileAnalyzer(workdir)
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass
@@ -373,7 +374,7 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                     str_row["/tender/hasEnquiries"] = str(row["/tender/hasEnquiries"])
                     assert line == str_row
                 else:
-                    assert line == row
+                    assert line == row.as_dict()
                 counter[name] += 1
 
 
@@ -408,3 +409,23 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
     xlsx_reader = openpyxl.load_workbook(path)
     for name in test_arrays:
         assert name not in xlsx_reader
+
+
+def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir):
+    flatten_options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
+    flattener = Flattener(flatten_options, spec_analyzed.tables)
+    tables = prepare_tables(spec_analyzed, flatten_options)
+    workdir = Path(tmpdir)
+    with XlsxWriter(workdir, tables, flatten_options) as writer:
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                for row in rows:
+                    writer.writerow(name, row)
+
+    path = workdir / "result.xlsx"
+    xlsx_reader = openpyxl.load_workbook(path)
+    column = []
+    for row in xlsx_reader["tenders"].rows:
+        column.append(row[0].value)
+    assert column[0] == "/tender/id"
+    assert xlsx_reader["tenders"].max_column == 1

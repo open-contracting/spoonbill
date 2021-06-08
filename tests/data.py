@@ -1,10 +1,8 @@
-TEST_ROOT_TABLES = {
-    "tenders": ["/tender"],
-    "awards": ["/awards"],
-    "contracts": ["/contracts"],
-    "planning": ["/planning"],
-    "parties": ["/parties"],
-}
+from copy import deepcopy
+
+from spoonbill.common import ROOT_TABLES
+
+TEST_ROOT_TABLES = deepcopy(ROOT_TABLES)
 TEST_COMBINED_TABLES = {
     "documents": [
         "/planning/documents",

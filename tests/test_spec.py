@@ -111,7 +111,14 @@ def test_row_counters(root_table):
     assert not set(cols).difference(available)
 
     cols = root_table.missing_rows()
-    assert not set(cols).difference(["parentID", "/tender/awardCriteriaDetails", "/tender/items/0/id"])
+    assert not set(cols).difference(
+        [
+            "parentID",
+            "/tender/awardCriteriaDetails",
+            "/tender/items/0/id",
+            "/tender/items/0/additionalClassifications/0/id",
+        ]
+    )
 
 
 def test_set_array(root_table):
@@ -138,14 +145,11 @@ def test_is_array(root_table):
 
 
 def test_add_child_table(root_table):
-    data = root_table.dump()
-    assert not data["parent"]
     child = add_child_table(root_table, "/tender/tenderers", "", "tenderers")
     assert child.name == "tenders_tenderers"
     assert child.name in root_table.child_tables
     assert child.total_rows == 0
-    data = child.dump()
-    data["parent"] == root_table.name
+    child.parent == root_table.name
 
 
 def test_get_pointer(root_table):
