@@ -192,13 +192,22 @@ def test_table_stats():
     with runner.isolated_filesystem():
         shutil.copyfile(FILENAME, "data.json")
         result = runner.invoke(cli, ["data.json"])
-        assert "Processed tables:" in result.output
-        assert "tenders: 4 rows" in result.output
-        assert "awards: 3 rows" in result.output
-        assert "contracts: 2 rows" in result.output
-        assert "planning: 1 rows" in result.output
-        assert "parties: 8 rows" in result.output
-        assert "└-----parties_ids: 14 rows" in result.output
+        for msg in (
+            "Analyze options:",
+            " - threshold                      => 5",
+            " - language                       => en",
+        ):
+            assert msg in result.output
+        for msg in (
+            "Processed tables:",
+            " - tenders                        => 4 rows",
+            " - awards                         => 3 rows",
+            " - contracts                      => 2 rows",
+            " - planning                       => 1 rows",
+            " - parties                        => 8 rows",
+            " ---- parties_ids                 => 14 rows",
+        ):
+            assert msg in result.output
 
 
 def test_message_repeat(capsys):

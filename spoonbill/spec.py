@@ -85,7 +85,9 @@ class Table:
                         col = Column(**col)
                     init[name] = col
                 setattr(self, attr, init)
-            cols = DEFAULT_FIELDS if self.is_root else DEFAULT_FIELDS_COMBINED
+            cols = DEFAULT_FIELDS_COMBINED
+            if self.is_root and not self.is_combined:
+                cols = DEFAULT_FIELDS
             for col in cols:
                 if col not in self.columns:
                     self.columns[col] = Column(col, "string", col)

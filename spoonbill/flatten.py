@@ -5,8 +5,9 @@ from typing import List, Mapping
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR
 from spoonbill.i18n import LOCALE, _
+from spoonbill.rowdata import Rows
 from spoonbill.spec import Table
-from spoonbill.utils import generate_row_id, get_pointer, get_root
+from spoonbill.utils import get_pointer, get_root, make_count_column
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -89,7 +90,7 @@ class Flattener:
             only = options.only
             if only:
                 self._only(table, only, split)
-            self._init_table_cache(self.tables, table)
+            self._init_table_lookup(self.tables, table)
             for c_name in table.child_tables:
                 if c_name in self.options.exclude:
                     continue
@@ -106,7 +107,7 @@ class Flattener:
             if c_table.name not in self.options.selection:
                 options = TableFlattenConfig(split=True)
                 self.options.selection[c_table.name] = options
-            self._init_table_cache(self.tables, c_table)
+            self._init_table_lookup(self.tables, c_table)
         else:
             # use parent table
             self._init_cache(self._types_cache, c_table.types, table, only=only)
@@ -134,7 +135,7 @@ class Flattener:
         cols = table if split else table.combined_columns
         self._init_cache(self._lookup_cache, cols, table)
 
-    def _init_table_cache(self, tables, table):
+    def _init_table_lookup(self, tables, table):
         if table.total_rows == 0:
             return
 
@@ -159,9 +160,7 @@ class Flattener:
 
             if count:
                 for array in table.arrays:
-                    parts = array.split("/")
-                    parts[-1] = f"{parts[-1]}Count"
-                    path = "/".join(parts)
+                    path = make_count_column(array)
                     target = self._types_cache.get(array) or table
                     combined = split and table.should_split
                     if combined:
@@ -185,7 +184,7 @@ class Flattener:
             if repeat:
                 for col_id in repeat:
                     columns = table.columns if split else table.combined_columns
-                    title = table.titles.get(col_id)
+                    title = _(col_id)
                     col = columns.get(col_id)
                     if not col:
                         LOGGER.warning(
@@ -195,22 +194,20 @@ class Flattener:
                     for c_name in table.child_tables:
                         child_table = self.tables.get(c_name)
                         if child_table:
-                            # if false means table isnt rolled up
                             child_table.columns[col_id] = col
                             child_table.combined_columns[col_id] = col
                             child_table.titles[col_id] = title
 
     def _only(self, table, only, split):
-        only = only
         columns = table.columns
         if split:
             columns = table.combined_columns
-        not_columns = {c_id: c for c_id, c in table.types.items() if c_id not in columns}
+        paths = {c_id: c for c_id, c in table.types.items() if c_id not in columns}
         columns = {c_id: c for c_id, c in columns.items() if c_id in only}
-        not_columns.update(columns)
+        paths.update(columns)
         table.columns = columns
         table.combined_columns = columns
-        table.types = not_columns
+        table.types = paths
 
     def flatten(self, releases):
         """Flatten releases
@@ -220,36 +217,28 @@ class Flattener:
         """
 
         for counter, release in enumerate(releases):
-            rows = defaultdict(list)
             to_flatten = deque([("", "", "", {}, release, {})])
             separator = "/"
-            ocid = release["ocid"]
-            top_level_id = release["id"]
+            rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
 
             while to_flatten:
                 abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
 
                 table = self._path_cache.get(path)
+                if path == "/buyer":
+                    # only useful in analysis
+                    continue
                 if table:
                     # Strict match /tender /parties etc., so this is a new row
-                    row_id = generate_row_id(ocid, record.get("id", ""), parent_key, top_level_id)
-                    new_row = {
-                        "rowID": row_id,
-                        "id": top_level_id,
-                        "parentID": parent.get("id"),
-                        "ocid": ocid,
-                    }
-
-                    if self.options.selection[table.name].only:
-                        only_columns = self.options.selection[table.name].only
-                        new_row = {key: new_row[key] for key in only_columns if key in new_row}
-
+                    row = rows.new_row(table, record.get("id", ""))
+                    only = self.options.selection[table.name].only
+                    if only:
+                        row = {col: col_v for col, col_v in row.items() if col in only}
                     if table.is_root:
                         repeat = {}
                     if repeat:
-                        new_row.update(repeat)
-                    rows[table.name].append(new_row)
-
+                        row.update(repeat)
+                    rows.data[table.name].append(row)
                 for key, item in record.items():
                     pointer = separator.join((path, key))
                     abs_pointer = separator.join((abs_path, key))
@@ -261,7 +250,6 @@ class Flattener:
                     item_type = table.types.get(pointer)
                     options = self.options.selection[table.name]
                     split = options.split
-
                     if pointer in options.repeat:
                         repeat[pointer] = item
 
@@ -270,7 +258,7 @@ class Flattener:
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
                             value = JOINABLE_SEPARATOR.join(item)
-                            rows[table.name][-1][pointer] = value
+                            rows.data[table.name][-1][pointer] = value
                         else:
                             if self.options.count and pointer not in table.path and split and table.should_split:
                                 abs_pointer = get_pointer(
@@ -282,7 +270,7 @@ class Flattener:
                                 )
                                 abs_pointer += "Count"
                                 if abs_pointer in table:
-                                    rows[table.name][-1][abs_pointer] = len(item)
+                                    rows.data[table.name][-1][abs_pointer] = len(item)
                             for index, value in enumerate(item):
                                 if isinstance(value, dict):
                                     abs_pointer = get_pointer(
@@ -304,12 +292,15 @@ class Flattener:
                                         )
                                     )
                     else:
+                        if table.is_combined:
+                            pointer = separator + separator.join((parent_key, key))
+                            abs_pointer = pointer
                         if not table.is_root:
                             root = get_root(table)
                             unnest = self.options.selection[root.name].unnest
                             if unnest and abs_pointer in unnest:
-                                rows[root.name][-1][abs_pointer] = item
+                                rows.data[root.name][-1][abs_pointer] = item
                                 continue
                         pointer = get_pointer(table, abs_pointer, pointer, split, separator=separator)
-                        rows[table.name][-1][pointer] = item
+                        rows.data[table.name][-1][pointer] = item
             yield counter, rows

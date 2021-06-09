@@ -153,6 +153,7 @@ def get_matching_tables(tables, path):
         for candidate in table.path:
             if common_prefix(candidate, path) == candidate:
                 candidates.append(table)
+
     return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
 
 
@@ -191,31 +192,6 @@ def generate_table_name(parent_table, parent_key, key):
             table_name = f"{parent_table}_{parent_key[:5]}_{key[:5]}"
 
     return table_name
-
-
-def generate_row_id(ocid, item_id, parent_key=None, top_level_id=None):
-    """Generates uniq rowID for table row
-
-    :param str ocid: OCID of release
-    :param str item_id: Corresponding object id for current row, e.g. tender/id
-    :param str parent_key: Corresponding field name for current object frow which row is constructed, e.g. documents
-    :param top_level_id: The ID of whole release
-    :return: Generated rowID
-    :rtype: str
-
-    >>> generate_row_id('ocid', 'item', 'documens', 'top')
-    'ocid/top/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '1')
-    'ocid/1/item'
-    >>> generate_row_id('ocid', 'item', 'documens', '')
-    'ocid/documens:item'
-    >>> generate_row_id('ocid', 'item', '', '')
-    'ocid/item'
-    """
-    tail = f"{parent_key}:{item_id}" if parent_key else item_id
-    if top_level_id:
-        return f"{ocid}/{top_level_id}/{tail}"
-    return f"{ocid}/{tail}"
 
 
 def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
@@ -277,7 +253,7 @@ def resolve_file_uri(file_path):
     """
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
-            return json.load(fd)
+            return json.load(fd, object_pairs_hook=OrderedDict)
     if file_path.startswith("http://") or file_path.startswith("https://"):
         return requests.get(file_path).json()
 
@@ -295,7 +271,7 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
     but /tender/items/id for tenders_items table
     """
     array = table.is_array(path)
-    if index and array:
+    if index and (array or table.is_combined):
         return separator.join((abs_path, index))
     if table.is_root:
         return abs_path
@@ -330,3 +306,17 @@ class RepeatFilter(logging.Filter):
             self.last_log = current_log
             return True
         return False
+
+
+def make_count_column(array):
+    """Make column name for arrays elements count
+
+    >>> make_count_column('/tender/items')
+    '/tender/itemsCount'
+    >>> make_count_column('/tender/items/additionalClassifications')
+    '/tender/items/additionalClassificationsCount'
+    >>> make_count_column('/tender/items/')
+    '/tender/itemsCount'
+    """
+
+    return array.rstrip("/") + "Count"

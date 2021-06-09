@@ -4,7 +4,7 @@ with open("README.rst") as f:
     long_description = f.read()
 
 __pkg__ = "spoonbill"
-__version__ = "1.0.2b1"
+__version__ = "1.0.3b2"
 
 
 setup(
@@ -17,6 +17,7 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["tests", "tests.*"]),
     long_description=long_description,
+    include_package_data=True,
     install_requires=[
         "click",
         "click_logging",
