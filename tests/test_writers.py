@@ -4,7 +4,7 @@ from unittest.mock import call, patch
 
 import openpyxl
 
-from spoonbill import FileFlattener
+from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
@@ -151,7 +151,8 @@ def test_writers_flatten_count(spec, tmpdir, releases):
     )
 
     workdir = Path(tmpdir)
-    flattener = FileFlattener(workdir, options, spec.tables, root_key="releases", csv=True)
+    analyzer = FileAnalyzer(workdir)
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass

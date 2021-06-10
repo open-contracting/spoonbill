@@ -1,11 +1,15 @@
 import logging
+from operator import attrgetter
 from pathlib import Path
 
-from spoonbill.common import COMBINED_TABLES, ROOT_TABLES, TABLE_THRESHOLD
+from ocdsextensionregistry import ProfileBuilder
+from ocdskit.util import detect_format
+
+from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import Flattener
-from spoonbill.i18n import LOCALE
+from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file
+from spoonbill.utils import iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -18,7 +22,7 @@ class FileAnalyzer:
     :param schema: Json schema file to use with data
     :param root_tables: Path configuration which should become root tables
     :param combined_tables: Path configuration for tables with multiple sources
-    :param root_key: Field name to access records
+    :param pkg_type: Field name to access records
     """
 
     def __init__(
@@ -28,22 +32,22 @@ class FileAnalyzer:
         state_file=None,
         root_tables=ROOT_TABLES,
         combined_tables=COMBINED_TABLES,
-        root_key="releases",
+        pkg_type="releases",
         language=LOCALE,
         table_threshold=TABLE_THRESHOLD,
     ):
         self.workdir = Path(workdir)
+        self.multiple_values = False
+        self.schema = schema
+        self.root_tables = root_tables
+        self.combined_tables = combined_tables
+        self.language = language
+        self.table_threshold = table_threshold
         if state_file:
             self.spec = DataPreprocessor.restore(state_file)
         else:
-            self.spec = DataPreprocessor(
-                schema,
-                root_tables,
-                combined_tables=combined_tables,
-                language=language,
-                table_threshold=table_threshold,
-            )
-        self.root_key = root_key
+            self.spec = None
+        self.pkg_type = pkg_type
 
     def analyze_file(self, filename, with_preview=True):
         """Analyze provided file
@@ -51,8 +55,24 @@ class FileAnalyzer:
         :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
+        (
+            input_format,
+            _is_concatenated,
+            _is_array,
+        ) = detect_format(filename)
+        LOGGER.info(_("Input file is {}").format(input_format))
+        self.multiple_values = _is_concatenated
+        self.parse_schema(input_format, self.schema)
+        if self.spec is None:
+            self.spec = DataPreprocessor(
+                self.schema,
+                self.root_tables,
+                combined_tables=self.combined_tables,
+                language=self.language,
+                table_threshold=self.table_threshold,
+            )
         with open(path, "rb") as fd:
-            items = iter_file(fd, self.root_key)
+            items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
             for count in self.spec.process_items(items, with_preview=with_preview):
                 yield fd.tell(), count
 
@@ -64,31 +84,55 @@ class FileAnalyzer:
         path = self.workdir / filename
         self.spec.dump(path)
 
+    def parse_schema(self, input_format, schema=None):
+        if schema:
+            schema = resolve_file_uri(schema)
+        if "release" in input_format:
+            pkg_type = "releases"
+            getter = attrgetter("release_package_schema")
+        else:
+            pkg_type = "records"
+            getter = attrgetter("record_package_schema")
+        if not schema:
+            LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
+            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+            schema = getter(profile)()
+        title = schema.get("title", "").lower()
+        if not title:
+            raise ValueError(_("Incomplete schema, please make sure your data is correct"))
+        if "package" in title:
+            # TODO: is is a good way to get release/record schema
+            schema = schema["properties"][pkg_type]["items"]
+
+        self.schema = schema
+        self.pkg_type = pkg_type
+
 
 class FileFlattener:
     """Main utility for flattening files
 
     :param workdir: Working directory
     :param options: Flattening configuration
-    :param tables: Analyzed tables data
-    :param root_key: Field name to access records
+    :param analyzer: Analyzed data object
     :param csv: If True generate cvs files
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, tables, root_key="releases", csv=None, xlsx="result.xlsx", language=LOCALE):
-        self.flattener = Flattener(options, tables, language=language)
+    def __init__(self, workdir, options, analyzer, csv=None, xlsx="result.xlsx", language=LOCALE, tables=None):
+        self.tables = tables if tables else analyzer.spec.tables
+        self.flattener = Flattener(options, self.tables, language=language)
         self.workdir = Path(workdir)
         # TODO: detect package, where?
-        self.root_key = root_key
         self.writers = []
         self.csv = csv
         self.xlsx = xlsx
+        self.multiple_values = analyzer.multiple_values
+        self.pkg_type = analyzer.pkg_type
 
     def _flatten(self, filename, writers):
         path = self.workdir / filename
         with open(path, "rb") as fd:
-            items = iter_file(fd, self.root_key)
+            items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
             for count, data in self.flattener.flatten(items):
                 for table, rows in data.items():
                     for row in rows:

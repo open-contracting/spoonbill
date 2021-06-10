@@ -59,11 +59,12 @@ def common_prefix(path, subpath, separator="/"):
     return separator.join(common)
 
 
-def iter_file(fd, root):
+def iter_file(fd, root, multiple_values=False):
     """Iterate over `root` array in file provided by `filename` using ijson
 
     :param bytes fd: File descriptor
     :param str root: Array field name inside file
+    :param bool multiple_values: Determine line-delimited JSON
     :return: Iterator of bytes read and item as a tuple
 
     >>> [r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'records')]
@@ -71,7 +72,9 @@ def iter_file(fd, root):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    reader = ijson.items(fd, f"{root}.item", map_type=OrderedDict)
+    reader = ijson.items(
+        fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values, map_type=OrderedDict
+    )
     for item in reader:
         yield item
 

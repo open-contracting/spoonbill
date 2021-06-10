@@ -44,3 +44,4 @@ ARRAY = "array of {}"
 JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
 TABLE_THRESHOLD = 5
+CURRENT_SCHEMA_TAG = "1__1__5"
