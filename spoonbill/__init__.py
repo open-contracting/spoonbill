@@ -118,7 +118,18 @@ class FileFlattener:
     :param xlsx: Generate combined xlsx table
     """
 
-    def __init__(self, workdir, options, analyzer, csv=None, xlsx="result.xlsx", language=LOCALE, tables=None):
+    def __init__(
+        self,
+        workdir,
+        options,
+        analyzer=None,
+        tables=None,
+        pkg_type="releases",
+        csv=None,
+        xlsx="result.xlsx",
+        language=LOCALE,
+        multiple_values=False,
+    ):
         self.tables = tables if tables else analyzer.spec.tables
         self.flattener = Flattener(options, self.tables, language=language)
         self.workdir = Path(workdir)
@@ -126,8 +137,8 @@ class FileFlattener:
         self.writers = []
         self.csv = csv
         self.xlsx = xlsx
-        self.multiple_values = analyzer.multiple_values
-        self.pkg_type = analyzer.pkg_type
+        self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
+        self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
 
     def _flatten(self, filename, writers):
         path = self.workdir / filename
