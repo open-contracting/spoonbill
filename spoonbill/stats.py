@@ -52,12 +52,14 @@ class DataPreprocessor:
         total_items=0,
         header_separator="/",
         language=LOCALE,
+        multiple_values=False,
     ):
         self.schema = schema
         self.root_tables = root_tables
         self.combined_tables = combined_tables or {}
         self.tables = tables or {}
         self.table_threshold = table_threshold
+        self.multiple_values = multiple_values
 
         self.header_separator = header_separator
         self.total_items = total_items

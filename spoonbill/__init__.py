@@ -70,6 +70,7 @@ class FileAnalyzer:
                 combined_tables=self.combined_tables,
                 language=self.language,
                 table_threshold=self.table_threshold,
+                multiple_values=self.multiple_values,
             )
         with open(path, "rb") as fd:
             items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
