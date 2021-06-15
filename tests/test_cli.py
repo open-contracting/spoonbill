@@ -13,6 +13,7 @@ LOGGER.addFilter(RepeatFilter())
 
 FILENAME = pathlib.Path("tests/data/ocds-sample-data.json").absolute()
 FILENAME_JSONL = pathlib.Path("tests/data/ocds-sample-data.jsonl").absolute()
+FILENAME_GZ = pathlib.Path("tests/data/ocds-sample-data.json.gz").absolute()
 EMPTY_LIST_FILE = pathlib.Path("tests/data/empty_list.json").absolute()
 SCHEMA = pathlib.Path("tests/data/ocds-simplified-schema.json").absolute()
 ANALYZED = pathlib.Path("tests/data/analyzed.state").absolute()
@@ -268,4 +269,12 @@ def test_jsonl():
         shutil.copyfile(FILENAME_JSONL, "data.json")
         result = runner.invoke(cli, ["data.json"])
         assert "Input file is release" in result.output
+        assert result.exit_code == 0
+
+
+def test_gz():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME_GZ, "data.json.gz")
+        result = runner.invoke(cli, ["data.json.gz"])
         assert result.exit_code == 0

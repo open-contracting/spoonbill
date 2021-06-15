@@ -9,7 +9,7 @@ from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, T
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file, resolve_file_uri
+from spoonbill.utils import get_reader, iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -55,11 +55,13 @@ class FileAnalyzer:
         :param with_preview: Generate preview during analysis
         """
         path = self.workdir / filename
+
         (
             input_format,
             _is_concatenated,
             _is_array,
-        ) = detect_format(filename)
+        ) = detect_format(path=filename, reader=get_reader(path))
+
         LOGGER.info(_("Input file is {}").format(input_format))
         self.multiple_values = _is_concatenated
         self.parse_schema(input_format, self.schema)
@@ -71,7 +73,8 @@ class FileAnalyzer:
                 language=self.language,
                 table_threshold=self.table_threshold,
             )
-        with open(path, "rb") as fd:
+        reader = get_reader(path)
+        with reader(path, "rb") as fd:
             items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
             for count in self.spec.process_items(items, with_preview=with_preview):
                 yield fd.tell(), count
@@ -142,7 +145,8 @@ class FileFlattener:
 
     def _flatten(self, filename, writers):
         path = self.workdir / filename
-        with open(path, "rb") as fd:
+        reader = get_reader(path)
+        with reader(path, "rb") as fd:
             items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
             for count, data in self.flattener.flatten(items):
                 for table, rows in data.items():
