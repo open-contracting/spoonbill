@@ -4,7 +4,7 @@ with open("README.rst") as f:
     long_description = f.read()
 
 __pkg__ = "spoonbill"
-__version__ = "1.0.3b2"
+__version__ = "1.0.3b3"
 
 
 setup(

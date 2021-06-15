@@ -3,6 +3,20 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.3b3 (2021-06-15)
+--------------------
+
+Added
+~~~~~
+
+*  added jsonl support (`59ec81c <https://github.com/open-contracting/spoonbill/commit/59ec81c1742daca043c233a29b7aeb48c9934b98>`__)
+
+Fixed
+~~~~~
+
+*  fix `FileFlattener` input (`acacd87 <https://github.com/open-contracting/spoonbill/commit/acacd870409fe5bdd88e1f0c10f12bc915983167>`__)
+
+
 1.0.3b2 (2021-06-07)
 --------------------
 
