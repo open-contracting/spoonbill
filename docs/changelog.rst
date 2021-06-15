@@ -3,6 +3,13 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.4b3 (2021-06-15)
+--------------------
+
+Fixed
+~~~~~
+*   pass `multiple_values` via `DataPreprocessor` (`509a06d <https://github.com/open-contracting/spoonbill/commit/509a06de79ca32d04e83b101a9eb55019b7c3d88>`__)
+
 1.0.3b3 (2021-06-15)
 --------------------
 
