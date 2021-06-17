@@ -7,7 +7,6 @@ from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
-from os.path import splitext
 from pathlib import Path
 
 import ijson
@@ -32,6 +31,8 @@ ABBREVIATION_TABLE_NAME = {
     "contracts_implementation": "implementation",
     "contracts_implementation_transactions": "transactions",
 }
+
+GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
 
 
 @functools.lru_cache(maxsize=None)
@@ -333,8 +334,8 @@ def get_reader(path):
     :param path: path to a file
     :return: reader function
     """
-    _, extension = splitext(path)
-    if extension == ".gz":
+    first_bytes = open(path, "rb").read(2)
+    if (first_bytes[0:1], first_bytes[1:2]) == GZIP_MAGIC_NUMBER:
         return gzip.open
     else:
         return open
