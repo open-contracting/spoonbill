@@ -25,7 +25,7 @@ setup(
         "jsonpointer",
         "jsonref",
         "ocdsextensionregistry",
-        "ocdskit",
+        "ocdskit>=1.0.1",
         "requests",
         "xlsxwriter",
         'dataclasses;python_version<"3.7"',

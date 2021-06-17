@@ -1,11 +1,13 @@
 import codecs
 import functools
+import gzip
 import json
 import logging
 from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
+from os.path import splitext
 from pathlib import Path
 
 import ijson
@@ -323,3 +325,16 @@ def make_count_column(array):
     """
 
     return array.rstrip("/") + "Count"
+
+
+def get_reader(path):
+    """
+    Get reader function for a respective file format
+    :param path: path to a file
+    :return: reader function
+    """
+    _, extension = splitext(path)
+    if extension == ".gz":
+        return gzip.open
+    else:
+        return open
