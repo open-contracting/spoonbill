@@ -13,7 +13,7 @@ To flatten a file, run:
 
    spoonbill filename.json
 
-The inputs can be [concatenated JSON](https://en.wikipedia.org/wiki/JSON_streaming#Concatenated_JSON) or an OCDS [release](https://standard.open-contracting.org/latest/en/schema/release_package/) or [record package](https://standard.open-contracting.org/latest/en/schema/record_package/).
+The inputs can be `concatenated JSON <https://en.wikipedia.org/wiki/JSON_streaming#Concatenated_JSON>`_ or an OCDS `release <https://standard.open-contracting.org/latest/en/schema/release_package/>`_ or `record package <https://standard.open-contracting.org/latest/en/schema/record_package/>`_.
 
 Choose output formats
 ---------------------
@@ -33,6 +33,8 @@ To *also* write CSV files to an existing directory, use the `\--csv <#cmdoption-
    spoonbill --csv directory/ filename.json
 
 To *only* write CSV files, set ``--xlsx ""``, for example:
+
+.. code-block:: bash
 
    spoonbill --csv directory/ --xlsx "" filename.json
 

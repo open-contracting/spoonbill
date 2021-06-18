@@ -40,7 +40,7 @@ Run the tests:
 
    pytest
 
-Run the linters:
+If you want to lint the working copy, use following command:
 
 .. code-block:: bash
 
@@ -64,11 +64,11 @@ To prepare a changelog for a new release from the commit history, you can use `s
 
 To create new release use:
 
-   .. code-block:: bash
+.. code-block:: bash
 
    semantic-release version
 
-   .. note::
+.. note::
       Please keep in mind than semantic-release does not recognize `pre-release <https://github.com/relekang/python-semantic-release/issues/267>`_ versions.
 
 You can then convert the file to reStructuredText with `pandoc <https://pandoc.org>`_:
