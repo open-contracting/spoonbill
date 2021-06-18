@@ -129,6 +129,28 @@ To disable this feature, set the threshold to 1. For example:
 
    spoonbill --threshold 1 filename.json
 
+Storing objects that follow the same schema in the same table
+-------------------------------------------------------------
+
+OCDS JSON format is described using JSON Schema, and reuses the same schema in multiple locations. For example, an array of ``document`` objects is allowed under five different objects (Award, Contract, etc.).
+
+``spoobill`` would combine those five ``document`` locations into a single table, in cases where the user research indicates this preference.
+
+Currently, ``spoonbill`` supports combining following object types:
+
+.. hlist::
+   :columns: 1
+
+   -  documents
+   -  ammendments
+   -  milestones
+
+This behavior can be overitten, by invoking ``combine`` command. To combine only ``document`` arrays, and ommit ``milestones, ammendments``, use:
+
+.. code-block:: bash
+
+   spoonbill --combine documents filename.json
+
 Select which data to output
 ---------------------------
 
