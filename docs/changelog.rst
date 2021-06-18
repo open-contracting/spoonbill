@@ -3,6 +3,14 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.5b4 (2021-06-18)
+--------------------
+Fixed
+~~~~~
+
+*  `.gz` format recognition enhancement (`9283ba4 <https://github.com/open-contracting/spoonbill/commit/9283ba451008b5542a73feceb7e4189d47862bcb>`__)
+
+
 1.0.4b4 (2021-06-17)
 --------------------
 Added
