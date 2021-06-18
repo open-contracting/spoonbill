@@ -49,42 +49,50 @@ class FileAnalyzer:
             self.spec = None
         self.pkg_type = pkg_type
 
-    def analyze_file(self, filename, with_preview=True):
+    def analyze_file(self, filenames, with_preview=True):
+
         """Analyze provided file
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
         """
-        path = self.workdir / filename
+        if not isinstance(filenames, list):
+            filenames = [filenames]
 
+        path = self.workdir / filenames[0]
         (
             input_format,
             _is_concatenated,
             _is_array,
-        ) = detect_format(path=filename, reader=get_reader(path))
-
+        ) = detect_format(path=filenames[0], reader=get_reader(path))
         LOGGER.info(_("Input file is {}").format(input_format))
         self.multiple_values = _is_concatenated
         self.parse_schema(input_format, self.schema)
-        if self.spec is None:
-            self.spec = DataPreprocessor(
-                self.schema,
-                self.root_tables,
-                combined_tables=self.combined_tables,
-                language=self.language,
-                table_threshold=self.table_threshold,
-                multiple_values=self.multiple_values,
-            )
-        reader = get_reader(path)
-        with reader(path, "rb") as fd:
-            items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
-            for count in self.spec.process_items(items, with_preview=with_preview):
-                yield fd.tell(), count
 
-    def dump_to_file(self, filename):
+        for filename in filenames:
+            path = self.workdir / filename
+            if self.spec is None:
+                self.spec = DataPreprocessor(
+                    self.schema,
+                    self.root_tables,
+                    combined_tables=self.combined_tables,
+                    language=self.language,
+                    table_threshold=self.table_threshold,
+                    multiple_values=self.multiple_values,
+                )
+            reader = get_reader(path)
+            with reader(path, "rb") as fd:
+                items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
+                for count in self.spec.process_items(items, with_preview=with_preview):
+                    yield fd.tell(), count
+
+    def dump_to_file(self, filenames):
         """Save analyzed information to file
 
         :param filename: Output filename in working directory
         """
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        filename = filenames[0] / str(len(filenames)) if len(filenames) > 1 else ""
         path = self.workdir / filename
         self.spec.dump(path)
 
@@ -144,17 +152,20 @@ class FileFlattener:
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
 
-    def _flatten(self, filename, writers):
-        path = self.workdir / filename
-        reader = get_reader(path)
-        with reader(path, "rb") as fd:
-            items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
-            for count, data in self.flattener.flatten(items):
-                for table, rows in data.items():
-                    for row in rows:
-                        for wr in writers:
-                            wr.writerow(table, row)
-                yield count
+    def _flatten(self, filenames, writers):
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        for filename in filenames:
+            path = self.workdir / filename
+            reader = get_reader(path)
+            with reader(path, "rb") as fd:
+                items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
+                for count, data in self.flattener.flatten(items):
+                    for table, rows in data.items():
+                        for row in rows:
+                            for wr in writers:
+                                wr.writerow(table, row)
+                    yield count
 
     def flatten_file(self, filename):
         """Flatten file

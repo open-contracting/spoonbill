@@ -429,3 +429,28 @@ def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir):
         column.append(row[0].value)
     assert column[0] == "/tender/id"
     assert xlsx_reader["tenders"].max_column == 1
+
+
+def test_flatten_multiple_files(spec, tmpdir, releases):
+    for _ in spec.process_items(releases):
+        pass
+    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+
+    workdir = Path(tmpdir)
+    analyzer = FileAnalyzer(workdir)
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
+    xlsx = workdir / "result.xlsx"
+    sheet = "tenders"
+    for _ in flattener.flatten_file(releases_path):
+        pass
+    wb = openpyxl.load_workbook(xlsx)
+    ws = wb[sheet]
+    line_number = ws.max_row - 1
+    assert ws.max_row - 1 == 4
+
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
+    for _ in flattener.flatten_file([releases_path, releases_path]):
+        pass
+    wb = openpyxl.load_workbook(xlsx)
+    ws = wb[sheet]
+    assert ws.max_row - 1 == line_number * 2
