@@ -9,7 +9,7 @@ from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, T
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import iter_file, resolve_file_uri
+from spoonbill.utils import get_reader, iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -48,29 +48,28 @@ class FileAnalyzer:
         else:
             self.spec = None
         self.pkg_type = pkg_type
-        self.schema_is_parsed = False
 
-    def analyze_file(self, filename, with_preview=True):
+    def analyze_file(self, filenames, with_preview=True):
 
         """Analyze provided file
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
         """
-        file_list = []
-        file_list.extend(filename) if isinstance(filename, list) else file_list.append(filename)
+        if not isinstance(filenames, list):
+            filenames = [filenames]
 
-        for file in file_list:
-            path = self.workdir / file
-            (
-                input_format,
-                _is_concatenated,
-                _is_array,
-            ) = detect_format(file)
-            LOGGER.info(_("Input file is {}").format(input_format))
-            self.multiple_values = _is_concatenated
+        path = self.workdir / filenames[0]
+        (
+            input_format,
+            _is_concatenated,
+            _is_array,
+        ) = detect_format(path=filenames[0], reader=get_reader(path))
+        LOGGER.info(_("Input file is {}").format(input_format))
+        self.multiple_values = _is_concatenated
+        self.parse_schema(input_format, self.schema)
 
-            if not self.schema_is_parsed:
-                self.parse_schema(input_format, self.schema)
+        for filename in filenames:
+            path = self.workdir / filename
             if self.spec is None:
                 self.spec = DataPreprocessor(
                     self.schema,
@@ -80,17 +79,21 @@ class FileAnalyzer:
                     table_threshold=self.table_threshold,
                     multiple_values=self.multiple_values,
                 )
-            with open(path, "rb") as fd:
+            reader = get_reader(path)
+            with reader(path, "rb") as fd:
                 items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
                 for count in self.spec.process_items(items, with_preview=with_preview):
                     yield fd.tell(), count
 
-    def dump_to_file(self, filename):
+    def dump_to_file(self, filenames):
         """Save analyzed information to file
 
         :param filename: Output filename in working directory
         """
-        path = self.workdir / str(filename[0] + "_merged") if isinstance(filename, list) else filename
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        filename = filenames[0] / str(len(filenames)) if len(filenames) > 1 else ""
+        path = self.workdir / filename
         self.spec.dump(path)
 
     def parse_schema(self, input_format, schema=None):
@@ -115,7 +118,6 @@ class FileAnalyzer:
 
         self.schema = schema
         self.pkg_type = pkg_type
-        self.schema_is_parsed = True
 
 
 class FileFlattener:
@@ -150,12 +152,13 @@ class FileFlattener:
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
 
-    def _flatten(self, filename, writers):
-        file_list = []
-        file_list.extend(filename) if isinstance(filename, list) else file_list.append(filename)
-        for file in file_list:
-            path = self.workdir / file
-            with open(path, "rb") as fd:
+    def _flatten(self, filenames, writers):
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        for filename in filenames:
+            path = self.workdir / filename
+            reader = get_reader(path)
+            with reader(path, "rb") as fd:
                 items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
                 for count, data in self.flattener.flatten(items):
                     for table, rows in data.items():

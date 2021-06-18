@@ -1,5 +1,6 @@
 import codecs
 import functools
+import gzip
 import json
 import logging
 from collections import OrderedDict
@@ -30,6 +31,8 @@ ABBREVIATION_TABLE_NAME = {
     "contracts_implementation": "implementation",
     "contracts_implementation_transactions": "transactions",
 }
+
+GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
 
 
 @functools.lru_cache(maxsize=None)
@@ -323,3 +326,16 @@ def make_count_column(array):
     """
 
     return array.rstrip("/") + "Count"
+
+
+def get_reader(path):
+    """
+    Get reader function for a respective file format
+    :param path: path to a file
+    :return: reader function
+    """
+    first_bytes = open(path, "rb").read(2)
+    if (first_bytes[0:1], first_bytes[1:2]) == GZIP_MAGIC_NUMBER:
+        return gzip.open
+    else:
+        return open

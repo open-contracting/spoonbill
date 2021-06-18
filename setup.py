@@ -4,7 +4,7 @@ with open("README.rst") as f:
     long_description = f.read()
 
 __pkg__ = "spoonbill"
-__version__ = "1.0.4b3"
+__version__ = "1.0.5b4"
 
 
 setup(
@@ -25,7 +25,7 @@ setup(
         "jsonpointer",
         "jsonref",
         "ocdsextensionregistry",
-        "ocdskit",
+        "ocdskit>=1.0.1",
         "requests",
         "xlsxwriter",
         'dataclasses;python_version<"3.7"',
