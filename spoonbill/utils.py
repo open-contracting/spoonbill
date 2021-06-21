@@ -65,7 +65,7 @@ def common_prefix(path, subpath, separator="/"):
 def iter_file(fd, root, multiple_values=False):
     """Iterate over `root` array in file provided by `filename` using ijson
 
-    :param bytes fd: File descriptor
+    :param fd: File descriptor
     :param str root: Array field name inside file
     :param bool multiple_values: Determine line-delimited JSON
     :return: Iterator of bytes read and item as a tuple

@@ -135,11 +135,12 @@ class Table:
         Add a new column to the table.
 
         :param path: The column's path
-        :param item: Object schema description
         :param item_type: The column's expected type
-        :param parent: Parent object schema description
+        :param title: Column title
         :param combined_only: Make this column available only in combined version of table
+        :param propagate: Add column to parent table
         :param additional: Mark this column as missing in schema
+        :param abs_path: The column's full JSON path
         """
         is_array = self.is_array(path)
         combined_path = combine_path(self, path)
@@ -239,7 +240,7 @@ def add_child_table(table, pointer, parent_key, key):
     """
     Create and append a new child table to the given table.
 
-    :param current_table: The parent table to the newly created table
+    :param table: The parent table to the newly created table
     :param pointer: Path to which table should match
     :param parent_key: New table parent object filed name, used to generate table name
     :param key: New table field name object filed name, used to generate table name

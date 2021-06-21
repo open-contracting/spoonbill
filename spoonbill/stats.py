@@ -40,6 +40,7 @@ class DataPreprocessor:
     :param tables: Use these tables objects instead of parsing the schema
     :param table_threshold: The maximum array length, before it is recommended to split out a child table
     :param total_items: The total objects processed
+    :param language: Language to use for the human-readable headings
     """
 
     def __init__(
@@ -188,11 +189,8 @@ class DataPreprocessor:
 
         This is important to do, because other code uses an index of -1 to access and update the current row.
 
-        :param ocid: The row's ocid
-        :param item_id: The current object's id
-        :param parent_id: The parent object's id
-        :param parent_table: The parent table's name
-        :param buyer: The Buyer object if available
+        :param rows: The Rows object
+        :param item_id: Object id
         """
         table = self.current_table
         for p_rows in table.preview_rows, table.preview_rows_combined:

@@ -22,6 +22,7 @@ class TableFlattenConfig:
     :param unnest: List of columns to output from child to parent table
     :param repeat: List of columns to clone in child tables
     :param only: List of columns to output
+    :param name: Overwrite table name
     """
 
     split: bool
@@ -67,6 +68,7 @@ class Flattener:
 
     :param options: Flattening options
     :param tables: Analyzed tables data
+    :param language: Language to use for the human-readable headings
     """
 
     def __init__(self, options: FlattenOptions, tables: Mapping[str, Table], language=LOCALE):
