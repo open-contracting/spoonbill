@@ -52,6 +52,7 @@ Each non-root table contains ``parentTable`` column, which corresponse to the na
    :caption: Contents
 
    cli
+   library
    api
    tables
    contributing
