@@ -53,6 +53,7 @@ Each non-root table contains ``parentTable`` column, which corresponse to the na
 
    cli
    api
+   tables
    contributing
    changelog
 
