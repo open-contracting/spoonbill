@@ -55,6 +55,10 @@ To change the headings to human-readable Spanish text, run:
 
    spoonbill --human --language es filename.json
 
+.. warning::
+
+    Please note, ``-- language`` would not do any changes unless used in combination with ``-- human``.
+
 .. _combine-tables:
 
 Combine related tables
