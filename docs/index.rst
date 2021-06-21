@@ -34,12 +34,27 @@ Spoonbill aims to improve the user experience when working with tables by:
 
 -  Providing :doc:`options <cli>` to customize the layout of the tables to fit your needs.
 
+Row relations through parentID and rowID
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If ``id`` column is equal to the ``id`` column of table object (For example ``items/id``) than the ``rowID`` is a concatenation of ``{ocid}/{field_name}:{id}`` for root tables and ``{parentID}/{field_name}:{id}`` for child tables.
+
+The ``field_name`` is the field name of the array, and the ``id`` is the value of the ``id`` field of the item in the array.
+
+For example, the contracts table for a compiled release might have a rowID of ``ocds-lcuori-1/contracts:1`` then, the contracts items table might have a rowID of ``ocds-lcuori-1/contracts:1/items:1`` and so on.
+
+Similar to ``rowID``, each child table contains ``parentID`` column, which is corresponding ``rowID`` of parent table.
+
+Each non-root table contains ``parentTable`` column, which corresponse to the name of the sheet.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents
 
    cli
+   library
    api
+   tables
    contributing
    changelog
 

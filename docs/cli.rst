@@ -13,7 +13,7 @@ To flatten a file, run:
 
    spoonbill filename.json
 
-The inputs can be [concatenated JSON](https://en.wikipedia.org/wiki/JSON_streaming#Concatenated_JSON) or an OCDS [release](https://standard.open-contracting.org/latest/en/schema/release_package/) or [record package](https://standard.open-contracting.org/latest/en/schema/record_package/).
+The inputs can be `concatenated JSON <https://en.wikipedia.org/wiki/JSON_streaming#Concatenated_JSON>`_ or an OCDS `release <https://standard.open-contracting.org/latest/en/schema/release_package/>`_ or `record package <https://standard.open-contracting.org/latest/en/schema/record_package/>`_.
 
 Choose output formats
 ---------------------
@@ -34,6 +34,8 @@ To *also* write CSV files to an existing directory, use the `\--csv <#cmdoption-
 
 To *only* write CSV files, set ``--xlsx ""``, for example:
 
+.. code-block:: bash
+
    spoonbill --csv directory/ --xlsx "" filename.json
 
 Change column headings
@@ -52,6 +54,10 @@ To change the headings to human-readable Spanish text, run:
 .. code-block:: bash
 
    spoonbill --human --language es filename.json
+
+.. warning::
+
+    Please note, ``-- language`` would not do any changes unless used in combination with ``-- human``.
 
 .. _combine-tables:
 
@@ -128,6 +134,28 @@ To disable this feature, set the threshold to 1. For example:
 .. code-block:: bash
 
    spoonbill --threshold 1 filename.json
+
+Storing objects that follow the same schema in the same table
+-------------------------------------------------------------
+
+OCDS JSON format is described using JSON Schema, and reuses the same schema in multiple locations. For example, an array of ``document`` objects is allowed under five different objects (Award, Contract, etc.).
+
+``spoobill`` would combine those five ``document`` locations into a single table, in cases where the user research indicates this preference.
+
+Currently, ``spoonbill`` supports combining following object types:
+
+.. hlist::
+   :columns: 1
+
+   -  documents
+   -  ammendments
+   -  milestones
+
+This behavior can be overitten, by invoking ``combine`` command. To combine only ``document`` arrays, and ommit ``milestones, ammendments``, use:
+
+.. code-block:: bash
+
+   spoonbill --combine documents filename.json
 
 Select which data to output
 ---------------------------

@@ -23,6 +23,8 @@ class FileAnalyzer:
     :param root_tables: Path configuration which should become root tables
     :param combined_tables: Path configuration for tables with multiple sources
     :param pkg_type: Field name to access records
+    :param language: Language to use for the human-readable headings
+    :param table_threshold: The maximum number of elements in an array before it is split into a table
     """
 
     def __init__(
@@ -126,8 +128,10 @@ class FileFlattener:
     :param workdir: Working directory
     :param options: Flattening configuration
     :param analyzer: Analyzed data object
+    :param pkg_type: Field name to access records
     :param csv: If True generate cvs files
     :param xlsx: Generate combined xlsx table
+    :param language: Language to use for the human-readable headings
     """
 
     def __init__(
