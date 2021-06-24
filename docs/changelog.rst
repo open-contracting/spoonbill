@@ -3,6 +3,12 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.5b5 (2021-06-24)
+--------------------
+Added
+~~~~~
+*  multiple file input support  (`225c570 <https://github.com/mariob0y/spoonbill/commit/225c570ade34f02dddedcf85344d80f97a7ee449>`__)
+
 1.0.5b4 (2021-06-18)
 --------------------
 Fixed
