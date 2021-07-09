@@ -3,6 +3,7 @@ import os
 import pathlib
 import shutil
 
+import openpyxl
 from click.testing import CliRunner
 
 from spoonbill.cli import cli
@@ -72,7 +73,7 @@ def test_with_combine():
         assert "Input file is release package" in result.output
         assert "Dumping analyzed data" in result.output
         assert (
-            "Going to export tables: tenders,awards,contracts,planning,parties,parties_ids,documents" in result.output
+            "Going to export tables: parties,parties_ids,planning,tenders,awards,contracts,documents" in result.output
         )
         assert "Done flattening. Flattened objects: 6" in result.output
 
@@ -109,7 +110,7 @@ def test_state_file():
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
         assert result.exit_code == 0
         assert "Restoring from provided state file" in result.output
-        assert "Going to export tables: tenders,awards,contracts,planning,parties" in result.output
+        assert "Going to export tables: parties,parties_ids,planning" in result.output
         assert "Done flattening. Flattened objects: 6" in result.output
 
 
@@ -278,3 +279,50 @@ def test_gz():
         shutil.copyfile(FILENAME_GZ, "data.json.gz")
         result = runner.invoke(cli, ["data.json.gz"])
         assert result.exit_code == 0
+
+
+def test_sheet_order():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert result.exit_code == 0
+        path = pathlib.Path("result.xlsx")
+        assert path.resolve().exists()
+        workbook = openpyxl.load_workbook(path)
+        sheets = [name for name in workbook.sheetnames]
+        assert sheets == [
+            "parties",
+            "parties_ids",
+            "planning",
+            "tenders",
+            "awards",
+            "contracts",
+            "documents",
+            "milestones",
+            "amendments",
+        ]
+
+
+def test_sheet_order_state_file():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        shutil.copyfile(ANALYZED, "analyzed.json")
+        result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
+        assert result.exit_code == 0
+        path = pathlib.Path("result.xlsx")
+        assert path.resolve().exists()
+        workbook = openpyxl.load_workbook(path)
+        sheets = [name for name in workbook.sheetnames]
+        assert sheets == [
+            "parties",
+            "parties_ids",
+            "planning",
+            "tenders",
+            "awards",
+            "contracts",
+            "documents",
+            "milestones",
+            "amendments",
+        ]
