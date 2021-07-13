@@ -1,0 +1,111 @@
+name: push_tag
+on:
+  workflow_dispatch:
+  push:
+    tags:
+       - '*'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ secrets.CACHE_NAME }}-${{ hashFiles('**/setup.cfg') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ secrets.CACHE_NAME }}-
+      - name: Run pre-commit
+        run: |
+            pip install pre-commit
+            pre-commit autoupdate
+            pre-commit run --all-files
+  tests:
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version:  ${{ matrix.python-version }}
+      - name: Install requirements
+        run: |
+              pip install .[test]
+              pip install tox
+      - name: Run linux test
+        if: matrix.os == 'ubuntu-latest'
+        run: tox -e py"${PYVER//.}"
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Run windows test
+        if: matrix.os == 'windows-latest'
+        run: tox -e py${env:PYVER//.}
+        env:
+           PYVER: ${{ matrix.python-version }}
+      - name: Upload to coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github
+  build_tag:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      SHA8: ${GITHUB_SHA::8}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: "Push source and download translate files from transifex"
+        uses: docker://sergioisidoro/github-transifex-action:v0.2.0
+        with:
+            TX_TOKEN: ${{ secrets.TX_TOKEN }}
+            git_flow: false
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            pull_translations: true
+            pull_sources: false
+            push_translations: false
+            push_sources: true
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.PAT }}
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/spoonbill:${{ env.RELEASE_VERSION }}
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - run: |
+              pip install --upgrade setuptools wheel
+              python setup.py sdist bdist_wheel
