@@ -3,6 +3,12 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.5b6 (2021-07-14)
+--------------------
+Added
+~~~~~
+*  ordering tables according to schema  (`894d399 <https://github.com/open-contracting/spoonbill/commit/894d399bda27d8b7cbee718e42026cb2b962a91e>`__)
+
 1.0.5b5 (2021-06-24)
 --------------------
 Added
