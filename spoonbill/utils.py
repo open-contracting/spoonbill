@@ -12,6 +12,8 @@ from pathlib import Path
 import ijson
 import requests
 
+from spoonbill.common import COMBINED_TABLES
+
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
     "dict": "object",
@@ -339,3 +341,11 @@ def get_reader(path):
         return gzip.open
     else:
         return open
+
+
+def get_order(properties):
+    order = [name for name in properties]
+    order.extend(COMBINED_TABLES.keys())
+    if "tender" in order:
+        order[order.index("tender")] = "tenders"
+    return order

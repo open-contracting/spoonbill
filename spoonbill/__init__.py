@@ -9,7 +9,7 @@ from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, T
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import get_reader, iter_file, resolve_file_uri
+from spoonbill.utils import get_order, get_reader, iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
@@ -47,9 +47,11 @@ class FileAnalyzer:
         self.table_threshold = table_threshold
         if state_file:
             self.spec = DataPreprocessor.restore(state_file)
+            self.sort_tables()
         else:
             self.spec = None
         self.pkg_type = pkg_type
+        self.order = None
 
     def analyze_file(self, filenames, with_preview=True):
 
@@ -86,6 +88,7 @@ class FileAnalyzer:
                 items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
                 for count in self.spec.process_items(items, with_preview=with_preview):
                     yield fd.tell(), count
+        self.sort_tables()
 
     def dump_to_file(self, filenames):
         """Save analyzed information to file
@@ -120,6 +123,29 @@ class FileAnalyzer:
 
         self.schema = schema
         self.pkg_type = pkg_type
+
+    def sort_tables(self):
+        """
+        Sort tables according to order of arrays in schema
+        :return:
+        """
+        self.order = get_order(self.spec.schema["properties"].keys())
+        out_schema_tables = {
+            name: table for name, table in self.spec.tables.items() if name.split("_")[0] not in self.order
+        }
+        within_schema_tables = {
+            name: table for name, table in self.spec.tables.items() if name.split("_")[0] in self.order
+        }
+
+        sorted_tables = dict(
+            sorted(
+                within_schema_tables.items(),
+                key=lambda sheet: self.order.index(sheet[0].split("_")[0])
+                if sheet[0].split("_")[0] in self.order
+                else -1,
+            )
+        )
+        self.spec.tables = {**sorted_tables, **out_schema_tables}
 
 
 class FileFlattener:
