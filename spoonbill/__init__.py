@@ -2,6 +2,7 @@ import logging
 from operator import attrgetter
 from pathlib import Path
 
+import jsonref
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -119,6 +120,7 @@ class FileAnalyzer:
             raise ValueError(_("Incomplete schema, please make sure your data is correct"))
         if "package" in title:
             # TODO: is is a good way to get release/record schema
+            schema = jsonref.JsonRef.replace_refs(schema)
             schema = schema["properties"][pkg_type]["items"]
 
         self.schema = schema
