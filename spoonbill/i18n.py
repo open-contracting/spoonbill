@@ -21,7 +21,13 @@ if system_locale and system_locale[0]:
 
 def translate(msg_id, lang=LOCALE):
     """Simple wrapper of python's gettext with ability to override desired language"""
-    translator = _translation(lang)
+    try:
+        translator = _translation(lang)
+    except FileNotFoundError:
+        LOCALE = "en_US"
+        lang = LOCALE
+        translator = _translation(lang)
+
     if translator:
         return translator.gettext(msg_id)
     return msg_id
