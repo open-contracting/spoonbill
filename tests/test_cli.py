@@ -2,6 +2,7 @@ import logging
 import os
 import pathlib
 import shutil
+from unittest import mock
 
 import openpyxl
 from click.testing import CliRunner
@@ -326,3 +327,13 @@ def test_sheet_order_state_file():
             "milestones",
             "amendments",
         ]
+
+
+@mock.patch.dict(os.environ, {"LANG": "uk_UA"})
+def test_locale_not_found():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["data.json"])
+        assert result.exit_code == 0
+        assert "Input file is release package" in result.output
