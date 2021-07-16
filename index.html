@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>OCDS Spoonbill 1.0.5b6 &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command-Line Interface" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>OCDS Spoonbill 1.0.5b6</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ocds-spoonbill-release">
+<h1>OCDS Spoonbill 1.0.5b6<a class="headerlink" href="#ocds-spoonbill-release" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://pypi.org/project/spoonbill/"><img alt="PyPI Version" src="https://img.shields.io/pypi/v/spoonbill.svg" /></a> <a class="reference external" href="https://github.com/open-contracting/spoonbill/actions/workflows/push.yaml"><img alt="Build Status" src="https://github.com/open-contracting/spoonbill/actions/workflows/push.yaml/badge.svg" /></a> <a class="reference external" href="https://coveralls.io/github/open-contracting/spoonbill?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/open-contracting/spoonbill/badge.svg?branch=main" /></a> <a class="reference external" href="https://pypi.org/project/spoonbill/"><img alt="Python Version" src="https://img.shields.io/pypi/pyversions/spoonbill.svg" /></a></p>
+<p>Spoonbill converts data that conforms to the <a class="reference external" href="https://standard.open-contracting.org/latest/en/">Open Contracting Data Standard (OCDS)</a> from JSON to Excel / CSV (“tables”, hereafter). This is also known as “flattening” a JSON file.</p>
+<p>If you are viewing this on GitHub or PyPI, open the <a class="reference external" href="https://open-contracting.github.io/spoonbill/">full documentation</a> for additional details.</p>
+<p>This documentation describes the <a class="reference internal" href="cli.html"><span class="doc">command-line tool</span></a> and <a class="reference internal" href="api.html"><span class="doc">Python library</span></a>. Spoonbill is also accessible as a web application (URL pending).</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>From the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install spoonbill
+</pre></div>
+</div>
+<p>Spoonbill requires Python 3.6 or greater.</p>
+</div>
+<div class="section" id="how-it-works">
+<span id="id1"></span><h2>How it works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
+<p>Spoonbill reads the JSON file once to <strong>analyze</strong> its structure. It stores the results of its analysis in a “state file”. It then reads the JSON file a second time to <strong>write</strong> the tables.</p>
+<p>Spoonbill aims to improve the user experience when working with tables by:</p>
+<ul class="simple">
+<li><p>Reducing the number of Excel sheets and/or CSV files you need to work with.</p>
+<ul>
+<li><p>OCDS allows arrays of <code class="docutils literal notranslate"><span class="pre">Document</span></code> objects in five locations (under <code class="docutils literal notranslate"><span class="pre">planning</span></code>, <code class="docutils literal notranslate"><span class="pre">tender</span></code>, etc.). Instead of creating one table per location, Spoonbill combines documents into one table. It does the same for milestones and amendments.</p></li>
+<li><p>Some arrays always have few entries within a given dataset: for example, an organization’s identifiers. Instead of creating a new table, Spoonbill merges short arrays into their parent table.</p></li>
+</ul>
+</li>
+<li><p>Providing <a class="reference internal" href="cli.html"><span class="doc">options</span></a> to customize the layout of the tables to fit your needs.</p></li>
+</ul>
+<div class="section" id="row-relations-through-parentid-and-rowid">
+<h3>Row relations through parentID and rowID<a class="headerlink" href="#row-relations-through-parentid-and-rowid" title="Permalink to this headline">¶</a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">id</span></code> column is equal to the <code class="docutils literal notranslate"><span class="pre">id</span></code> column of table object (For example <code class="docutils literal notranslate"><span class="pre">items/id</span></code>) than the <code class="docutils literal notranslate"><span class="pre">rowID</span></code> is a concatenation of <code class="docutils literal notranslate"><span class="pre">{ocid}/{field_name}:{id}</span></code> for root tables and <code class="docutils literal notranslate"><span class="pre">{parentID}/{field_name}:{id}</span></code> for child tables.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">field_name</span></code> is the field name of the array, and the <code class="docutils literal notranslate"><span class="pre">id</span></code> is the value of the <code class="docutils literal notranslate"><span class="pre">id</span></code> field of the item in the array.</p>
+<p>For example, the contracts table for a compiled release might have a rowID of <code class="docutils literal notranslate"><span class="pre">ocds-lcuori-1/contracts:1</span></code> then, the contracts items table might have a rowID of <code class="docutils literal notranslate"><span class="pre">ocds-lcuori-1/contracts:1/items:1</span></code> and so on.</p>
+<p>Similar to <code class="docutils literal notranslate"><span class="pre">rowID</span></code>, each child table contains <code class="docutils literal notranslate"><span class="pre">parentID</span></code> column, which is corresponding <code class="docutils literal notranslate"><span class="pre">rowID</span></code> of parent table.</p>
+<p>Each non-root table contains <code class="docutils literal notranslate"><span class="pre">parentTable</span></code> column, which corresponse to the name of the sheet.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#choose-output-formats">Choose output formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#change-column-headings">Change column headings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#combine-related-tables">Combine related tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#storing-objects-that-follow-the-same-schema-in-the-same-table">Storing objects that follow the same schema in the same table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#select-which-data-to-output">Select which data to output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#copy-data-between-tables">Copy data between tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#add-calculated-values">Add calculated values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#advanced-features">Advanced features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="library.html#file-analyzer">File Analyzer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library.html#flattener">Flattener</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-spoonbill.flatten">Flatten module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-spoonbill.cli">CLI module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-spoonbill.spec">Spec module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-spoonbill.stats">Stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-spoonbill.writers.base_writer">Writer modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#commit-messages">Commit messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#package-releases">Package releases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b6-2021-07-14">1.0.5b6 (2021-07-14)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b5-2021-06-24">1.0.5b5 (2021-06-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b4-2021-06-18">1.0.5b4 (2021-06-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b4-2021-06-17">1.0.4b4 (2021-06-17)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b3-2021-06-15">1.0.4b3 (2021-06-15)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id4">1.0.3b3 (2021-06-15)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b2-2021-06-07">1.0.3b2 (2021-06-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b1-2021-06-02">1.0.2b1 (2021-06-02)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b1-2021-05-27">1.0.1b1 (2021-05-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#b1-2021-05-26">1.0.0b1 (2021-05-26)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Copyright (c) 2021 Open Contracting Partnership, released under the BSD license</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="cli.html" class="btn btn-neutral float-right" title="Command-Line Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

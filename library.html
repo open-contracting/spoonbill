@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Library Usage &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Command-Line Interface" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Library Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-analyzer">File Analyzer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#analyze-file">Analyze file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#storing-state">Storing state</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#flattener">Flattener</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flattening-options">Flattening options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flatten-file">Flatten file</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Library Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/library.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="library-usage">
+<h1>Library Usage<a class="headerlink" href="#library-usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="file-analyzer">
+<h2>File Analyzer<a class="headerlink" href="#file-analyzer" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="analyze-file">
+<h3>Analyze file<a class="headerlink" href="#analyze-file" title="Permalink to this headline">¶</a></h3>
+<p>To create analyzer object, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">spoonbill</span> <span class="kn">import</span>  <span class="n">FileAnalyzer</span>
+<span class="kn">from</span> <span class="nn">spoonbill.common</span> <span class="kn">import</span> <span class="n">ROOT_TABLES</span><span class="p">,</span> <span class="n">COMBINED_TABLES</span>
+
+<span class="n">analyzer</span> <span class="o">=</span> <span class="n">FileAnalyzer</span><span class="p">(</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="n">path_to_schema</span><span class="p">,</span>
+    <span class="n">root_tables</span><span class="o">=</span><span class="n">ROOT_TABLES</span><span class="p">,</span>
+    <span class="n">combined_tables</span><span class="o">=</span><span class="n">COMBINED_TABLES</span><span class="p">,</span>
+    <span class="n">language</span><span class="o">=</span><span class="s1">&#39;en&#39;</span><span class="p">,</span>
+    <span class="n">table_threshold</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To analyze file and track progress, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">bytes_read</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_file</span><span class="p">(</span><span class="n">path_to_file</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;analyzed </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">bytes_read</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="storing-state">
+<h3>Storing state<a class="headerlink" href="#storing-state" title="Permalink to this headline">¶</a></h3>
+<p>To dump state file after analysis, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">analyzer</span><span class="o">.</span><span class="n">dump_to_file</span><span class="p">(</span><span class="s1">&#39;analyzed.state&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This sile may be re-used for new instance of analyzer. Can be used to omit anlysis step in case of multiple flatteting of the same file.</p>
+</div>
+<p>To restore from state, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">FileAnalyzer</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">state_file</span><span class="o">=</span><span class="s1">&#39;analyzed.state&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="flattener">
+<h2>Flattener<a class="headerlink" href="#flattener" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="flattening-options">
+<h3>Flattening options<a class="headerlink" href="#flattening-options" title="Permalink to this headline">¶</a></h3>
+<p>To create flattening options and extract only table and split if its possible,(<em>for example, tenders</em>) use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">spoonbill.flatten</span> <span class="kn">import</span> <span class="n">FlattenOptions</span>
+
+<span class="n">options</span> <span class="o">=</span> <span class="n">FlattenOptions</span><span class="p">({</span><span class="s2">&quot;selection&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tenders&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}}})</span>
+</pre></div>
+</div>
+<p>To select multiple tables (<em>for example, tender and parties</em>), use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">spoonbill.flatten</span> <span class="kn">import</span> <span class="n">FlattenOptions</span>
+
+<span class="n">options</span> <span class="o">=</span> <span class="n">FlattenOptions</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;selection&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;tenders&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="s2">&quot;parties&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="flatten-file">
+<h3>Flatten file<a class="headerlink" href="#flatten-file" title="Permalink to this headline">¶</a></h3>
+<p>To flatten file, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">spoonbill</span> <span class="kn">import</span> <span class="n">FileFlattener</span>
+
+<span class="n">flattener</span> <span class="o">=</span> <span class="n">FileFlattener</span><span class="p">(</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="p">,</span>
+    <span class="n">analyzer</span><span class="p">,</span>
+    <span class="n">csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># Generate csv files</span>
+    <span class="n">xlsx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># Generate xlsx files</span>
+    <span class="n">language</span><span class="o">=</span><span class="s1">&#39;en&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">flattener</span><span class="o">.</span><span class="n">flatten_file</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Flattened </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1"> items&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please note that flattening routine requires data to be analyzed beforehand.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cli.html" class="btn btn-neutral float-left" title="Command-Line Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

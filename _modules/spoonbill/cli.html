@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>spoonbill.cli &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>spoonbill.cli</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for spoonbill.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;cli.py - Command line interface related routines&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">click_logging</span>
+
+<span class="kn">from</span> <span class="nn">spoonbill</span> <span class="kn">import</span> <span class="n">FileAnalyzer</span><span class="p">,</span> <span class="n">FileFlattener</span>
+<span class="kn">from</span> <span class="nn">spoonbill.common</span> <span class="kn">import</span> <span class="n">COMBINED_TABLES</span><span class="p">,</span> <span class="n">ROOT_TABLES</span><span class="p">,</span> <span class="n">TABLE_THRESHOLD</span>
+<span class="kn">from</span> <span class="nn">spoonbill.flatten</span> <span class="kn">import</span> <span class="n">FlattenOptions</span>
+<span class="kn">from</span> <span class="nn">spoonbill.i18n</span> <span class="kn">import</span> <span class="n">LOCALE</span><span class="p">,</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">spoonbill.utils</span> <span class="kn">import</span> <span class="n">read_lines</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;spoonbill&quot;</span><span class="p">)</span>
+<span class="n">click_logging</span><span class="o">.</span><span class="n">basic_config</span><span class="p">(</span><span class="n">LOGGER</span><span class="p">)</span>
+
+
+<span class="n">ANALYZED_LABEL</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;  Processed </span><span class="si">{}</span><span class="s2"> objects&quot;</span><span class="p">)</span>
+<span class="n">FLATTENED_LABEL</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;  Flattened </span><span class="si">{}</span><span class="s2"> objects&quot;</span><span class="p">)</span>
+<span class="n">CONTEXT_SETTINGS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">help_option_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-h&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="CommaSeparated"><a class="viewcode-back" href="../../api.html#spoonbill.cli.CommaSeparated">[docs]</a><span class="k">class</span> <span class="nc">CommaSeparated</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">ParamType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Click option type to convert comma separated string into list&quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;comma&quot;</span>
+
+<div class="viewcode-block" id="CommaSeparated.convert"><a class="viewcode-back" href="../../api.html#spoonbill.cli.CommaSeparated.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>  <span class="c1"># noqa</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="read_option_file"><a class="viewcode-back" href="../../api.html#spoonbill.cli.read_option_file">[docs]</a><span class="k">def</span> <span class="nf">read_option_file</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">option_file</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">option_file</span><span class="p">:</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">read_lines</span><span class="p">(</span><span class="n">option_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">option</span></div>
+
+
+<div class="viewcode-block" id="get_selected_tables"><a class="viewcode-back" href="../../api.html#spoonbill.cli.get_selected_tables">[docs]</a><span class="k">def</span> <span class="nf">get_selected_tables</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Wrong selection, table &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">tab</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tab</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">}</span></div>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="n">CONTEXT_SETTINGS</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;CLI tool to flatten OCDS files&quot;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--schema&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A JSON schema file URI. The URI can be a file path or an HTTP link. Spoonbill uses the schema to analyze the &quot;</span>
+        <span class="s2">&quot;provided JSON file. Defaults to the OCDS 1.1.5 release schema (requires internet connection)&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--selection&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A comma-separated list of initial tables to write. The available tables to select are: &quot;</span>
+        <span class="s2">&quot;parties, planning, tenders, awards, contracts&quot;</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--threshold&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;The maximum number of elements in an array before it is split into a table&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">TABLE_THRESHOLD</span><span class="p">,</span>
+    <span class="n">show_default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--state-file&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;A file path URI to a previously generated state file. If not provided, a new state file is generated&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--xlsx&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A file path to store the resulting xlsx file. Default to result.xlsx. &quot;</span>
+        <span class="s2">&quot;Set to &#39;&#39; to disable the xlsx file generation&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;result.xlsx&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--csv&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;An existing directory path. If set also generates CSV files in the given directory. Disabled by default&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(),</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--combine&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A comma-separated list of tables. Combines same OCDS object types from different locations &quot;</span>
+        <span class="s2">&quot;(tender, awards, etc) into a single table. The available tables are: documents, milestones, and amendments&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--exclude&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;A comma-separated list of tables to exclude from export. Disabled by default&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--unnest&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A comma-separated list of column names to copy from child tables into their parent table. Disabled by default&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--unnest-file&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;A file path directory. Same as --unnest, but read column names from a file with one column per line&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--only&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A comma-separated list of a subset of columns to output instead of all, in JSON path format, &quot;</span>
+        <span class="s2">&quot;e.g. /parties/name. Defaults to all the available columns&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--only-file&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;A file path directory. Same as --only, but read the columns names from a file with one column per line&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--repeat&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span>
+        <span class="s2">&quot;A comma-separated list of columns to repeat from a parent table into its child tables, in JSON path format,&quot;</span>
+        <span class="s2">&quot;e.g. /parties/name. Disabled by default&quot;</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">CommaSeparated</span><span class="p">(),</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--repeat-file&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;A file path directory. Same as --repeat, but read the columns names from a file with one column per line&quot;</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--count&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;For each array field, add a count column to its parent table. Disabled by default&quot;</span><span class="p">),</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--human&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Change the tables headings to human-readable format, using the schema&#39;s title properties&quot;</span><span class="p">),</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--language&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Use with --human, the language to use for the human-readable headings&quot;</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">LOCALE</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">show_default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">]),</span>
+<span class="p">)</span>
+<span class="nd">@click_logging</span><span class="o">.</span><span class="n">simple_verbosity_option</span><span class="p">(</span><span class="n">LOGGER</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">cli</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">selection</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">,</span>
+    <span class="n">state_file</span><span class="p">,</span>
+    <span class="n">xlsx</span><span class="p">,</span>
+    <span class="n">csv</span><span class="p">,</span>
+    <span class="n">combine</span><span class="p">,</span>
+    <span class="n">exclude</span><span class="p">,</span>
+    <span class="n">unnest</span><span class="p">,</span>
+    <span class="n">unnest_file</span><span class="p">,</span>
+    <span class="n">only</span><span class="p">,</span>
+    <span class="n">only_file</span><span class="p">,</span>
+    <span class="n">repeat</span><span class="p">,</span>
+    <span class="n">repeat_file</span><span class="p">,</span>
+    <span class="n">count</span><span class="p">,</span>
+    <span class="n">human</span><span class="p">,</span>
+    <span class="n">language</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Spoonbill cli entry point&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">csv</span><span class="p">:</span>
+        <span class="n">csv</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">csv</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">csv</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Desired location </span><span class="si">{}</span><span class="s2"> does not exists&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">csv</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">xlsx</span><span class="p">:</span>
+        <span class="n">xlsx</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">xlsx</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">xlsx</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Desired location </span><span class="si">{}</span><span class="s2"> does not exists&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xlsx</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">workdir</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">selection</span> <span class="o">=</span> <span class="n">selection</span> <span class="ow">or</span> <span class="n">ROOT_TABLES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">combine</span> <span class="o">=</span> <span class="n">combine</span> <span class="ow">or</span> <span class="n">COMBINED_TABLES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">root_tables</span> <span class="o">=</span> <span class="n">get_selected_tables</span><span class="p">(</span><span class="n">ROOT_TABLES</span><span class="p">,</span> <span class="n">selection</span><span class="p">)</span>
+    <span class="n">combined_tables</span> <span class="o">=</span> <span class="n">get_selected_tables</span><span class="p">(</span><span class="n">COMBINED_TABLES</span><span class="p">,</span> <span class="n">combine</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">state_file</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Restoring from provided state file&quot;</span><span class="p">),</span> <span class="n">bold</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">analyzer</span> <span class="o">=</span> <span class="n">FileAnalyzer</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">state_file</span><span class="o">=</span><span class="n">state_file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;State file not supplied, going to analyze input file first&quot;</span><span class="p">),</span> <span class="n">bold</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">analyzer</span> <span class="o">=</span> <span class="n">FileAnalyzer</span><span class="p">(</span>
+            <span class="n">workdir</span><span class="p">,</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">root_tables</span><span class="o">=</span><span class="n">root_tables</span><span class="p">,</span>
+            <span class="n">combined_tables</span><span class="o">=</span><span class="n">combined_tables</span><span class="p">,</span>
+            <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span>
+            <span class="n">table_threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Analyze options:&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;language&quot;</span><span class="p">,</span> <span class="n">language</span><span class="p">):</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot; - </span><span class="si">{:30}</span><span class="s2"> =&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)))</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Processing file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)))</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Progress bar not showing with small files</span>
+        <span class="c1"># https://github.com/pallets/click/pull/1296/files</span>
+        <span class="k">with</span> <span class="n">click</span><span class="o">.</span><span class="n">progressbar</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show_percent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">total</span><span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">read</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">with_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">ANALYZED_LABEL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">number</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">))</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">read</span> <span class="o">-</span> <span class="n">progress</span><span class="p">)</span>
+                <span class="n">progress</span> <span class="o">=</span> <span class="n">read</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+            <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Done processing. Analyzed objects: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;green&quot;</span>
+        <span class="p">)</span>
+        <span class="n">state_file</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.state&quot;</span><span class="p">)</span>
+        <span class="n">state_file_path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">state_file</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Dumping analyzed data to &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">state_file_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)))</span>
+        <span class="n">analyzer</span><span class="o">.</span><span class="n">dump_to_file</span><span class="p">(</span><span class="n">state_file</span><span class="p">)</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Flattening file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">unnest</span> <span class="ow">and</span> <span class="n">unnest_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">UsageError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Conflicting options: unnest and unnest-file&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">repeat</span> <span class="ow">and</span> <span class="n">repeat_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">UsageError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Conflicting options: repeat and repeat-file&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">only</span> <span class="ow">and</span> <span class="n">only_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">UsageError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Conflicting options: only and only-file&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">exclude</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Ignoring tables (excluded by user): </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exclude</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)))</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;selection&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span> <span class="s2">&quot;exclude&quot;</span><span class="p">:</span> <span class="n">exclude</span><span class="p">}</span>
+    <span class="n">unnest</span> <span class="o">=</span> <span class="n">read_option_file</span><span class="p">(</span><span class="n">unnest</span><span class="p">,</span> <span class="n">unnest_file</span><span class="p">)</span>
+    <span class="n">repeat</span> <span class="o">=</span> <span class="n">read_option_file</span><span class="p">(</span><span class="n">repeat</span><span class="p">,</span> <span class="n">repeat_file</span><span class="p">)</span>
+    <span class="n">only</span> <span class="o">=</span> <span class="n">read_option_file</span><span class="p">(</span><span class="n">only</span><span class="p">,</span> <span class="n">only_file</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">combine</span><span class="p">):</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">total_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Ignoring empty table </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)))</span>
+            <span class="k">continue</span>
+        <span class="n">options</span><span class="p">[</span><span class="s2">&quot;selection&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">should_split</span><span class="p">,</span>
+            <span class="s2">&quot;pretty_headers&quot;</span><span class="p">:</span> <span class="n">human</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">is_combined</span><span class="p">:</span>
+            <span class="n">unnest_in_table</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">unnest</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">unnest_in_table</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+                    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Unnesting columns </span><span class="si">{}</span><span class="s2"> for table </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unnest_in_table</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">),</span> <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">only_in_table</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">only</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">only_in_table</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+                    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Using only columns </span><span class="si">{}</span><span class="s2"> for table </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">only_in_table</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">),</span> <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">repeat_in_table</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">repeat</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">repeat_in_table</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+                    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Repeating columns </span><span class="si">{}</span><span class="s2"> in all child table of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">repeat_in_table</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">),</span> <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;selection&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;only&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">only_in_table</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;selection&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;repeat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">repeat_in_table</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;selection&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;unnest&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unnest_in_table</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">FlattenOptions</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">flattener</span> <span class="o">=</span> <span class="n">FileFlattener</span><span class="p">(</span>
+        <span class="n">workdir</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">,</span>
+        <span class="n">analyzer</span><span class="p">,</span>
+        <span class="n">csv</span><span class="o">=</span><span class="n">csv</span><span class="p">,</span>
+        <span class="n">xlsx</span><span class="o">=</span><span class="n">xlsx</span><span class="p">,</span>
+        <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Going to export tables: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flattener</span><span class="o">.</span><span class="n">flattener</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;magenta&quot;</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Processed tables:&quot;</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">flattener</span><span class="o">.</span><span class="n">flattener</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot; - </span><span class="si">{:30}</span><span class="s2"> =&gt; </span><span class="si">{}</span><span class="s2"> rows&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">is_root</span> <span class="k">else</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot; ---- </span><span class="si">{:27}</span><span class="s2"> =&gt; </span><span class="si">{}</span><span class="s2"> rows&quot;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">total_rows</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">))</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Flattening input file&quot;</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">click</span><span class="o">.</span><span class="n">progressbar</span><span class="p">(</span>
+        <span class="n">flattener</span><span class="o">.</span><span class="n">flatten_file</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+        <span class="n">length</span><span class="o">=</span><span class="n">analyzer</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">total_items</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">show_percent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">bar</span><span class="p">:</span>
+            <span class="n">bar</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">FLATTENED_LABEL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">))</span>
+
+    <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Done flattening. Flattened objects: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">click</span><span class="o">.</span><span class="n">style</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)),</span> <span class="n">fg</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

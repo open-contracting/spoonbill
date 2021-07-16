@@ -1,0 +1,462 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>spoonbill.spec &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>spoonbill.spec</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for spoonbill.spec</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">is_dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span> <span class="nn">spoonbill.common</span> <span class="kn">import</span> <span class="n">DEFAULT_FIELDS</span><span class="p">,</span> <span class="n">DEFAULT_FIELDS_COMBINED</span>
+<span class="kn">from</span> <span class="nn">spoonbill.i18n</span> <span class="kn">import</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">spoonbill.utils</span> <span class="kn">import</span> <span class="n">combine_path</span><span class="p">,</span> <span class="n">common_prefix</span><span class="p">,</span> <span class="n">generate_table_name</span><span class="p">,</span> <span class="n">get_pointer</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;spoonbill&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Column"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Column">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Column</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container for column information.</span>
+
+<span class="sd">    :param title: The human-friendly title</span>
+<span class="sd">    :param type: The expected type</span>
+<span class="sd">    :param id: The JSON path</span>
+<span class="sd">    :param hits: The number of times the column contains data during analysis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">hits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Table"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Table</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container for table information.</span>
+
+<span class="sd">    :param name: Table name</span>
+<span class="sd">    :param path: List of paths to gather data to this table</span>
+<span class="sd">    :param total_rows: Total available rows in this table</span>
+<span class="sd">    :param parent: Parent table, None if this table is root table</span>
+<span class="sd">    :param is_root: This table is root table</span>
+<span class="sd">    :param is_combined: This table contains data collected from different paths</span>
+<span class="sd">    :param should_split: This table should be splitted</span>
+<span class="sd">    :param roll_up: This table should be separated from its parent</span>
+<span class="sd">    :param columns: Columns extracted from schema for split version of this table</span>
+<span class="sd">    :param combined_columns: Columns extracted from schema for unsplit version of this table</span>
+<span class="sd">    :param additional_columns: Columns identified in dataset but not in schema</span>
+<span class="sd">    :param arrays: Table array columns and maximum items (not the total count) in each array</span>
+<span class="sd">    :param titles: All human-friendly column titles, extracted from the schema</span>
+<span class="sd">    :param child_tables: List of possible child tables</span>
+<span class="sd">    :param types: All paths matched to this table with corresponding object type on each path</span>
+<span class="sd">    :param preview_rows: Generated preview for split version of this table</span>
+<span class="sd">    :param preview_rows_combined: Generated preview for unsplit version of this table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">total_rows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># `parent` is a Table object, but dataclasses don&#39;t play well with recursion.</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">is_root</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">should_split</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">roll_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Column</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+    <span class="n">combined_columns</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Column</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+    <span class="n">additional_columns</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Column</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+    <span class="n">arrays</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">titles</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">child_tables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">types</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="n">preview_rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">preview_rows_combined</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;columns&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;combined_columns&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;additional_columns&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="n">init</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+                        <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="o">**</span><span class="n">col</span><span class="p">)</span>
+                    <span class="n">init</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">col</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">init</span><span class="p">)</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="n">DEFAULT_FIELDS_COMBINED</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_combined</span><span class="p">:</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="n">DEFAULT_FIELDS</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">titles</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_counter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">cond</span><span class="p">):</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">split</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">header</span> <span class="k">for</span> <span class="n">header</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">cond</span><span class="p">(</span><span class="n">col</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="Table.missing_rows"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.missing_rows">[docs]</a>    <span class="k">def</span> <span class="nf">missing_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the columns that are available in the schema, but not present in the analyzed data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">hits</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Table.available_rows"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.available_rows">[docs]</a>    <span class="k">def</span> <span class="nf">available_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the columns that are available in the analyzed data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">hits</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">col</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Table.add_column"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.add_column">[docs]</a>    <span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">item_type</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">combined_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">propagate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">additional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">abs_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new column to the table.</span>
+
+<span class="sd">        :param path: The column&#39;s path</span>
+<span class="sd">        :param item_type: The column&#39;s expected type</span>
+<span class="sd">        :param title: Column title</span>
+<span class="sd">        :param combined_only: Make this column available only in combined version of table</span>
+<span class="sd">        :param propagate: Add column to parent table</span>
+<span class="sd">        :param additional: Mark this column as missing in schema</span>
+<span class="sd">        :param abs_path: The column&#39;s full JSON path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">combined_path</span> <span class="o">=</span> <span class="n">combine_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">combined_only</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">combined_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">item_type</span><span class="p">,</span> <span class="n">combined_path</span><span class="p">)</span>
+        <span class="c1"># new column to track hits differently</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">[</span><span class="n">combined_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">item_type</span><span class="p">,</span> <span class="n">combined_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">additional</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_array</span><span class="p">:</span>
+                <span class="c1"># when we analyzing file we need to keep index from data not to use 0</span>
+                <span class="c1"># e.g. /tender/items/166/relatedLot</span>
+                <span class="n">combined_path</span> <span class="o">=</span> <span class="n">abs_path</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Detected additional column: </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2"> table&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">additional_columns</span><span class="p">[</span><span class="n">combined_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">item_type</span><span class="p">,</span> <span class="n">combined_path</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">combined_path</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">titles</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span> <span class="ow">and</span> <span class="n">propagate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+                <span class="n">path</span><span class="p">,</span>
+                <span class="n">item_type</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">,</span>
+                <span class="n">combined_only</span><span class="o">=</span><span class="n">combined_only</span><span class="p">,</span>
+                <span class="n">additional</span><span class="o">=</span><span class="n">additional</span><span class="p">,</span>
+                <span class="n">abs_path</span><span class="o">=</span><span class="n">abs_path</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Table.is_array"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.is_array">[docs]</a>    <span class="k">def</span> <span class="nf">is_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether the given path is in any table&#39;s arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrays</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">common_prefix</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="n">array</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">array</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Table.inc_column"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.inc_column">[docs]</a>    <span class="k">def</span> <span class="nf">inc_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increment the number of non-empty cells in the column.</span>
+
+<span class="sd">        :param abs_path: The column&#39;s full JSON path</span>
+<span class="sd">        :param path: The column&#39;s JSON path without array indexes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">get_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">headers</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">headers</span><span class="p">[</span><span class="n">header</span><span class="p">]</span><span class="o">.</span><span class="n">hits</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">inc_column</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Table.add_array"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.add_array">[docs]</a>    <span class="k">def</span> <span class="nf">add_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">add_array</span><span class="p">(</span><span class="n">header</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Table.set_array"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.set_array">[docs]</a>    <span class="k">def</span> <span class="nf">set_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Try to set the maximum length of an array.</span>
+
+<span class="sd">        :param header: The path to the array</span>
+<span class="sd">        :param item: Array from data</span>
+<span class="sd">        :return: Whether the array is bigger than previously found and the length was updated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="n">count</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">length</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Table.inc"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.inc">[docs]</a>    <span class="k">def</span> <span class="nf">inc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increment the number of rows in the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_rows</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">DEFAULT_FIELDS_COMBINED</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inc_column</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Table.set_preview_path"><a class="viewcode-back" href="../../api.html#spoonbill.spec.Table.set_preview_path">[docs]</a>    <span class="k">def</span> <span class="nf">set_preview_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">max_items</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">get_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preview_rows_combined</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">array</span> <span class="ow">or</span> <span class="p">(</span><span class="n">array</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="n">array</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">max_items</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">preview_rows</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">set_preview_path</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">max_items</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="add_child_table"><a class="viewcode-back" href="../../api.html#spoonbill.spec.add_child_table">[docs]</a><span class="k">def</span> <span class="nf">add_child_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create and append a new child table to the given table.</span>
+
+<span class="sd">    :param table: The parent table to the newly created table</span>
+<span class="sd">    :param pointer: Path to which table should match</span>
+<span class="sd">    :param parent_key: New table parent object filed name, used to generate table name</span>
+<span class="sd">    :param key: New table field name object filed name, used to generate table name</span>
+<span class="sd">    :return: Child table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table_name</span> <span class="o">=</span> <span class="n">generate_table_name</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="n">child_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="p">[</span><span class="n">pointer</span><span class="p">],</span> <span class="n">parent</span><span class="o">=</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">child_tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_array</span><span class="p">(</span><span class="n">pointer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">child_table</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

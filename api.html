@@ -1,0 +1,866 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>API Reference &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Supported tables" href="tables.html" />
+    <link rel="prev" title="Library Usage" href="library.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-spoonbill.flatten">Flatten module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-spoonbill.cli">CLI module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-spoonbill.spec">Spec module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-spoonbill.stats">Stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-spoonbill.writers.base_writer">Writer modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-spoonbill.writers.csv">CSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-spoonbill.writers.xlsx">XLSX</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-spoonbill.flatten">
+<span id="flatten-module"></span><h2>Flatten module<a class="headerlink" href="#module-spoonbill.flatten" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="spoonbill.flatten.TableFlattenConfig">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.flatten.</span></code><code class="sig-name descname"><span class="pre">TableFlattenConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">split:</span> <span class="pre">bool</span></em>, <em class="sig-param"><span class="pre">pretty_headers:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em>, <em class="sig-param"><span class="pre">headers:</span> <span class="pre">Mapping[str</span></em>, <em class="sig-param"><span class="pre">str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em>, <em class="sig-param"><span class="pre">repeat:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em>, <em class="sig-param"><span class="pre">unnest:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em>, <em class="sig-param"><span class="pre">only:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em>, <em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/flatten.html#TableFlattenConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Table specific flattening configuration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>split</strong> – Split child arrays to separate tables</p></li>
+<li><p><strong>pretty_headers</strong> – Use human friendly headers extracted from schema</p></li>
+<li><p><strong>headers</strong> – User edited headers to override automatically extracted</p></li>
+<li><p><strong>unnest</strong> – List of columns to output from child to parent table</p></li>
+<li><p><strong>repeat</strong> – List of columns to clone in child tables</p></li>
+<li><p><strong>only</strong> – List of columns to output</p></li>
+<li><p><strong>name</strong> – Overwrite table name</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.split">
+<code class="sig-name descname"><span class="pre">split</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.pretty_headers">
+<code class="sig-name descname"><span class="pre">pretty_headers</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.pretty_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.headers">
+<code class="sig-name descname"><span class="pre">headers</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.repeat">
+<code class="sig-name descname"><span class="pre">repeat</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.repeat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.unnest">
+<code class="sig-name descname"><span class="pre">unnest</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.unnest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.only">
+<code class="sig-name descname"><span class="pre">only</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.only" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.TableFlattenConfig.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><em class="property"> <span class="pre">=</span> <span class="pre">''</span></em><a class="headerlink" href="#spoonbill.flatten.TableFlattenConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="spoonbill.flatten.FlattenOptions">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.flatten.</span></code><code class="sig-name descname"><span class="pre">FlattenOptions</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">selection:</span> <span class="pre">Mapping[str,</span> <span class="pre">spoonbill.flatten.TableFlattenConfig],</span> <span class="pre">exclude:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">count:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/flatten.html#FlattenOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.flatten.FlattenOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flattening configuration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selection</strong> – List of selected tables to extract from data</p></li>
+<li><p><strong>count</strong> – Include number of rows in child table in each parent table</p></li>
+<li><p><strong>exclude</strong> – List of tables to exclude from export</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="spoonbill.flatten.FlattenOptions.selection">
+<code class="sig-name descname"><span class="pre">selection</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.flatten.TableFlattenConfig" title="spoonbill.flatten.TableFlattenConfig"><span class="pre">spoonbill.flatten.TableFlattenConfig</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.FlattenOptions.selection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.FlattenOptions.exclude">
+<code class="sig-name descname"><span class="pre">exclude</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.flatten.FlattenOptions.exclude" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.flatten.FlattenOptions.count">
+<code class="sig-name descname"><span class="pre">count</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.flatten.FlattenOptions.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="spoonbill.flatten.Flattener">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.flatten.</span></code><code class="sig-name descname"><span class="pre">Flattener</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#spoonbill.flatten.FlattenOptions" title="spoonbill.flatten.FlattenOptions"><span class="pre">spoonbill.flatten.FlattenOptions</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.spec.Table" title="spoonbill.spec.Table"><span class="pre">spoonbill.spec.Table</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'en_US'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/flatten.html#Flattener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.flatten.Flattener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data flattener</p>
+<p>In order to export data correctly Flattener requires previously analyzed tables data.
+During the process flattener could add columns not based on schema analysis, such as
+<cite>itemsCount</cite>.
+In every generated row, depending on table type, flattener will always few add autogenerated columns.
+For root table:
+* rowID
+* id
+* ocid
+For child tables this list well be extended with <cite>parentID</cite> column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> – Flattening options</p></li>
+<li><p><strong>tables</strong> – Analyzed tables data</p></li>
+<li><p><strong>language</strong> – Language to use for the human-readable headings</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="spoonbill.flatten.Flattener.flatten">
+<code class="sig-name descname"><span class="pre">flatten</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/flatten.html#Flattener.flatten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.flatten.Flattener.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten releases</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>releases</strong> – releases as iterable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Iterator over mapping between table name and list of rows for each release</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-spoonbill.cli">
+<span id="cli-module"></span><h2>CLI module<a class="headerlink" href="#module-spoonbill.cli" title="Permalink to this headline">¶</a></h2>
+<p>cli.py - Command line interface related routines</p>
+<dl class="py class">
+<dt id="spoonbill.cli.CommaSeparated">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.cli.</span></code><code class="sig-name descname"><span class="pre">CommaSeparated</span></code><a class="reference internal" href="_modules/spoonbill/cli.html#CommaSeparated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.cli.CommaSeparated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Click option type to convert comma separated string into list</p>
+<dl class="py attribute">
+<dt id="spoonbill.cli.CommaSeparated.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><em class="property"> <span class="pre">=</span> <span class="pre">'comma'</span></em><a class="headerlink" href="#spoonbill.cli.CommaSeparated.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the descriptive name of this type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.cli.CommaSeparated.convert">
+<code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/cli.html#CommaSeparated.convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.cli.CommaSeparated.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the value to the correct type. This is not called if
+the value is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the missing value).</p>
+<p>This must accept string values from the command line, as well as
+values that are already the correct type. It may also convert
+other compatible types.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">param</span></code> and <code class="docutils literal notranslate"><span class="pre">ctx</span></code> arguments may be <code class="docutils literal notranslate"><span class="pre">None</span></code> in certain
+situations, such as when converting prompt input.</p>
+<p>If the value cannot be converted, call <code class="xref py py-meth docutils literal notranslate"><span class="pre">fail()</span></code> with a
+descriptive message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> – The value to convert.</p></li>
+<li><p><strong>param</strong> – The parameter that is using this type to convert
+its value. May be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>ctx</strong> – The current context that arrived at this value. May
+be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="spoonbill.cli.read_option_file">
+<code class="sig-prename descclassname"><span class="pre">spoonbill.cli.</span></code><code class="sig-name descname"><span class="pre">read_option_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/cli.html#read_option_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.cli.read_option_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="spoonbill.cli.get_selected_tables">
+<code class="sig-prename descclassname"><span class="pre">spoonbill.cli.</span></code><code class="sig-name descname"><span class="pre">get_selected_tables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/cli.html#get_selected_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.cli.get_selected_tables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-spoonbill.spec">
+<span id="spec-module"></span><h2>Spec module<a class="headerlink" href="#module-spoonbill.spec" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="spoonbill.spec.Column">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.spec.</span></code><code class="sig-name descname"><span class="pre">Column</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hits</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Column" title="Permalink to this definition">¶</a></dt>
+<dd><p>A container for column information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – The human-friendly title</p></li>
+<li><p><strong>type</strong> – The expected type</p></li>
+<li><p><strong>id</strong> – The JSON path</p></li>
+<li><p><strong>hits</strong> – The number of times the column contains data during analysis</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="spoonbill.spec.Column.title">
+<code class="sig-name descname"><span class="pre">title</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#spoonbill.spec.Column.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Column.type">
+<code class="sig-name descname"><span class="pre">type</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#spoonbill.spec.Column.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Column.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#spoonbill.spec.Column.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Column.hits">
+<code class="sig-name descname"><span class="pre">hits</span></code><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#spoonbill.spec.Column.hits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="spoonbill.spec.Table">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.spec.</span></code><code class="sig-name descname"><span class="pre">Table</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str,</span> <span class="pre">path:</span> <span class="pre">List[str],</span> <span class="pre">total_rows:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">parent:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">is_root:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">is_combined:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">should_split:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">roll_up:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">columns:</span> <span class="pre">Mapping[str,</span> <span class="pre">spoonbill.spec.Column]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">combined_columns:</span> <span class="pre">Mapping[str,</span> <span class="pre">spoonbill.spec.Column]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">additional_columns:</span> <span class="pre">Mapping[str,</span> <span class="pre">spoonbill.spec.Column]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">arrays:</span> <span class="pre">Mapping[str,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">titles:</span> <span class="pre">Mapping[str,</span> <span class="pre">str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">child_tables:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">types:</span> <span class="pre">Mapping[str,</span> <span class="pre">List[str]]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">preview_rows:</span> <span class="pre">Sequence[dict]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">preview_rows_combined:</span> <span class="pre">Sequence[dict]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table" title="Permalink to this definition">¶</a></dt>
+<dd><p>A container for table information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Table name</p></li>
+<li><p><strong>path</strong> – List of paths to gather data to this table</p></li>
+<li><p><strong>total_rows</strong> – Total available rows in this table</p></li>
+<li><p><strong>parent</strong> – Parent table, None if this table is root table</p></li>
+<li><p><strong>is_root</strong> – This table is root table</p></li>
+<li><p><strong>is_combined</strong> – This table contains data collected from different paths</p></li>
+<li><p><strong>should_split</strong> – This table should be splitted</p></li>
+<li><p><strong>roll_up</strong> – This table should be separated from its parent</p></li>
+<li><p><strong>columns</strong> – Columns extracted from schema for split version of this table</p></li>
+<li><p><strong>combined_columns</strong> – Columns extracted from schema for unsplit version of this table</p></li>
+<li><p><strong>additional_columns</strong> – Columns identified in dataset but not in schema</p></li>
+<li><p><strong>arrays</strong> – Table array columns and maximum items (not the total count) in each array</p></li>
+<li><p><strong>titles</strong> – All human-friendly column titles, extracted from the schema</p></li>
+<li><p><strong>child_tables</strong> – List of possible child tables</p></li>
+<li><p><strong>types</strong> – All paths matched to this table with corresponding object type on each path</p></li>
+<li><p><strong>preview_rows</strong> – Generated preview for split version of this table</p></li>
+<li><p><strong>preview_rows_combined</strong> – Generated preview for unsplit version of this table</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#spoonbill.spec.Table.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.path">
+<code class="sig-name descname"><span class="pre">path</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.total_rows">
+<code class="sig-name descname"><span class="pre">total_rows</span></code><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#spoonbill.spec.Table.total_rows" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.parent">
+<code class="sig-name descname"><span class="pre">parent</span></code><em class="property"><span class="pre">:</span> <span class="pre">object</span></em><a class="headerlink" href="#spoonbill.spec.Table.parent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.is_root">
+<code class="sig-name descname"><span class="pre">is_root</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.spec.Table.is_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.is_combined">
+<code class="sig-name descname"><span class="pre">is_combined</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.spec.Table.is_combined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.should_split">
+<code class="sig-name descname"><span class="pre">should_split</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.spec.Table.should_split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.roll_up">
+<code class="sig-name descname"><span class="pre">roll_up</span></code><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#spoonbill.spec.Table.roll_up" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.columns">
+<code class="sig-name descname"><span class="pre">columns</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.spec.Column" title="spoonbill.spec.Column"><span class="pre">spoonbill.spec.Column</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.combined_columns">
+<code class="sig-name descname"><span class="pre">combined_columns</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.spec.Column" title="spoonbill.spec.Column"><span class="pre">spoonbill.spec.Column</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.combined_columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.additional_columns">
+<code class="sig-name descname"><span class="pre">additional_columns</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.spec.Column" title="spoonbill.spec.Column"><span class="pre">spoonbill.spec.Column</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.additional_columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.arrays">
+<code class="sig-name descname"><span class="pre">arrays</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.arrays" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.titles">
+<code class="sig-name descname"><span class="pre">titles</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.titles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.child_tables">
+<code class="sig-name descname"><span class="pre">child_tables</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.child_tables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.types">
+<code class="sig-name descname"><span class="pre">types</span></code><em class="property"><span class="pre">:</span> <span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.preview_rows">
+<code class="sig-name descname"><span class="pre">preview_rows</span></code><em class="property"><span class="pre">:</span> <span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.preview_rows" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="spoonbill.spec.Table.preview_rows_combined">
+<code class="sig-name descname"><span class="pre">preview_rows_combined</span></code><em class="property"><span class="pre">:</span> <span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#spoonbill.spec.Table.preview_rows_combined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.missing_rows">
+<code class="sig-name descname"><span class="pre">missing_rows</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.missing_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.missing_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the columns that are available in the schema, but not present in the analyzed data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.available_rows">
+<code class="sig-name descname"><span class="pre">available_rows</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.available_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.available_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the columns that are available in the analyzed data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.add_column">
+<code class="sig-name descname"><span class="pre">add_column</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combined_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.add_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.add_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new column to the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – The column’s path</p></li>
+<li><p><strong>item_type</strong> – The column’s expected type</p></li>
+<li><p><strong>title</strong> – Column title</p></li>
+<li><p><strong>combined_only</strong> – Make this column available only in combined version of table</p></li>
+<li><p><strong>propagate</strong> – Add column to parent table</p></li>
+<li><p><strong>additional</strong> – Mark this column as missing in schema</p></li>
+<li><p><strong>abs_path</strong> – The column’s full JSON path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.is_array">
+<code class="sig-name descname"><span class="pre">is_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.is_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.is_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the given path is in any table’s arrays.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.inc_column">
+<code class="sig-name descname"><span class="pre">inc_column</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">abs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.inc_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.inc_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the number of non-empty cells in the column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>abs_path</strong> – The column’s full JSON path</p></li>
+<li><p><strong>path</strong> – The column’s JSON path without array indexes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.add_array">
+<code class="sig-name descname"><span class="pre">add_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.add_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.add_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.set_array">
+<code class="sig-name descname"><span class="pre">set_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.set_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.set_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to set the maximum length of an array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header</strong> – The path to the array</p></li>
+<li><p><strong>item</strong> – Array from data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Whether the array is bigger than previously found and the length was updated</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.inc">
+<code class="sig-name descname"><span class="pre">inc</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.inc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.inc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the number of rows in the table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.spec.Table.set_preview_path">
+<code class="sig-name descname"><span class="pre">set_preview_path</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">abs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#Table.set_preview_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.Table.set_preview_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="spoonbill.spec.add_child_table">
+<code class="sig-prename descclassname"><span class="pre">spoonbill.spec.</span></code><code class="sig-name descname"><span class="pre">add_child_table</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pointer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/spec.html#add_child_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.spec.add_child_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and append a new child table to the given table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – The parent table to the newly created table</p></li>
+<li><p><strong>pointer</strong> – Path to which table should match</p></li>
+<li><p><strong>parent_key</strong> – New table parent object filed name, used to generate table name</p></li>
+<li><p><strong>key</strong> – New table field name object filed name, used to generate table name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Child table</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-spoonbill.stats">
+<span id="stats-module"></span><h2>Stats module<a class="headerlink" href="#module-spoonbill.stats" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="spoonbill.stats.DataPreprocessor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.stats.</span></code><code class="sig-name descname"><span class="pre">DataPreprocessor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_tables</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combined_tables</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#spoonbill.spec.Table" title="spoonbill.spec.Table"><span class="pre">spoonbill.spec.Table</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'en_US'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiple_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data analyzer</p>
+<p>Processes the given schema and, based on this, extracts information from the iterable dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>schema</strong> – The dataset’s schema</p></li>
+<li><p><strong>root_tables</strong> – The paths which should become root tables</p></li>
+<li><p><strong>combined_tables</strong> – The paths which should become tables that combine data from different locations</p></li>
+<li><p><strong>tables</strong> – Use these tables objects instead of parsing the schema</p></li>
+<li><p><strong>table_threshold</strong> – The maximum array length, before it is recommended to split out a child table</p></li>
+<li><p><strong>total_items</strong> – The total objects processed</p></li>
+<li><p><strong>language</strong> – Language to use for the human-readable headings</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.name_check">
+<code class="sig-name descname"><span class="pre">name_check</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.name_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.name_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.init_tables">
+<code class="sig-name descname"><span class="pre">init_tables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_combined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.init_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.init_tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the root tables with default fields.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.parse_schema">
+<code class="sig-name descname"><span class="pre">parse_schema</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.parse_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.parse_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract information from the schema.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.get_table">
+<code class="sig-name descname"><span class="pre">get_table</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.get_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.get_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the table that best matches the given path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> – A path</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.add_preview_row">
+<code class="sig-name descname"><span class="pre">add_preview_row</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.add_preview_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.add_preview_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a mostly-empty row to the previews.</p>
+<p>This is important to do, because other code uses an index of -1 to access and update the current row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rows</strong> – The Rows object</p></li>
+<li><p><strong>item_id</strong> – Object id</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.process_items">
+<code class="sig-name descname"><span class="pre">process_items</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_preview</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.process_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.process_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze releases.</p>
+<p>Iterates over every release to calculate metrics and optionally generates previews for combined and split
+versions of each table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>releases</strong> – The releases to analyze</p></li>
+<li><p><strong>with_preview</strong> – Whether to generate previews for each table</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.dump">
+<code class="sig-name descname"><span class="pre">dump</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump the data processor’s state to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> – Full path to file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.stats.DataPreprocessor.restore">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">restore</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/stats.html#DataPreprocessor.restore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.stats.DataPreprocessor.restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore a data preprocessor’s state from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> – Full path to file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-spoonbill.writers.base_writer">
+<span id="writer-modules"></span><h2>Writer modules<a class="headerlink" href="#module-spoonbill.writers.base_writer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="spoonbill.writers.base_writer.BaseWriter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.writers.base_writer.</span></code><code class="sig-name descname"><span class="pre">BaseWriter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/base_writer.html#BaseWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.base_writer.BaseWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base writer class</p>
+<dl class="py method">
+<dt id="spoonbill.writers.base_writer.BaseWriter.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/base_writer.html#BaseWriter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.base_writer.BaseWriter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>workdir</strong> – Working directory</p></li>
+<li><p><strong>tables</strong> – The table objects</p></li>
+<li><p><strong>options</strong> – Flattening options</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.writers.base_writer.BaseWriter.get_headers">
+<code class="sig-name descname"><span class="pre">get_headers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/base_writer.html#BaseWriter.get_headers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.base_writer.BaseWriter.get_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a table’s headers, respecting the human and override options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – A table object</p></li>
+<li><p><strong>options</strong> – Flattening options</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Mapping between the machine-readable headers and the output headers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.writers.base_writer.BaseWriter.init_sheet">
+<code class="sig-name descname"><span class="pre">init_sheet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/base_writer.html#BaseWriter.init_sheet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.base_writer.BaseWriter.init_sheet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a sheet, setting its headers and unique name.</p>
+<p>In this context, the sheet might be either a CSV file or a sheet in an Excel workbook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Table name</p></li>
+<li><p><strong>table</strong> – Table object</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="module-spoonbill.writers.csv">
+<span id="csv"></span><h3>CSV<a class="headerlink" href="#module-spoonbill.writers.csv" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="spoonbill.writers.csv.CSVWriter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.writers.csv.</span></code><code class="sig-name descname"><span class="pre">CSVWriter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/csv.html#CSVWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.csv.CSVWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writer class with output to CSV files.</p>
+<p>For each table, a corresponding CSV file will be created.</p>
+<dl class="py attribute">
+<dt id="spoonbill.writers.csv.CSVWriter.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'csv'</span></em><a class="headerlink" href="#spoonbill.writers.csv.CSVWriter.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.writers.csv.CSVWriter.writerow">
+<code class="sig-name descname"><span class="pre">writerow</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/csv.html#CSVWriter.writerow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.csv.CSVWriter.writerow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a row to the output file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-spoonbill.writers.xlsx">
+<span id="xlsx"></span><h3>XLSX<a class="headerlink" href="#module-spoonbill.writers.xlsx" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="spoonbill.writers.xlsx.XlsxWriter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">spoonbill.writers.xlsx.</span></code><code class="sig-name descname"><span class="pre">XlsxWriter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'result.xlsx'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/xlsx.html#XlsxWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.xlsx.XlsxWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writer class with output to XLSX files.</p>
+<p>For each table, a corresponding sheet in an Excel workbook will be created.</p>
+<dl class="py attribute">
+<dt id="spoonbill.writers.xlsx.XlsxWriter.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'xlsx'</span></em><a class="headerlink" href="#spoonbill.writers.xlsx.XlsxWriter.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="spoonbill.writers.xlsx.XlsxWriter.writerow">
+<code class="sig-name descname"><span class="pre">writerow</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spoonbill/writers/xlsx.html#XlsxWriter.writerow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spoonbill.writers.xlsx.XlsxWriter.writerow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a row to the output file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="tables.html" class="btn btn-neutral float-right" title="Supported tables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="library.html" class="btn btn-neutral float-left" title="Library Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

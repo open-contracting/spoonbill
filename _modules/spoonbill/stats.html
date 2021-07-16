@@ -1,0 +1,559 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>spoonbill.stats &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>spoonbill.stats</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for spoonbill.stats</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">jsonref</span>
+<span class="kn">from</span> <span class="nn">flatten_dict</span> <span class="kn">import</span> <span class="n">flatten</span>
+
+<span class="kn">from</span> <span class="nn">spoonbill.common</span> <span class="kn">import</span> <span class="n">ARRAY</span><span class="p">,</span> <span class="n">JOINABLE</span><span class="p">,</span> <span class="n">JOINABLE_SEPARATOR</span><span class="p">,</span> <span class="n">PREVIEW_ROWS</span><span class="p">,</span> <span class="n">TABLE_THRESHOLD</span>
+<span class="kn">from</span> <span class="nn">spoonbill.i18n</span> <span class="kn">import</span> <span class="n">LOCALE</span><span class="p">,</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">spoonbill.rowdata</span> <span class="kn">import</span> <span class="n">Rows</span>
+<span class="kn">from</span> <span class="nn">spoonbill.spec</span> <span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">add_child_table</span>
+<span class="kn">from</span> <span class="nn">spoonbill.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PYTHON_TO_JSON_TYPE</span><span class="p">,</span>
+    <span class="n">RepeatFilter</span><span class="p">,</span>
+    <span class="n">extract_type</span><span class="p">,</span>
+    <span class="n">generate_table_name</span><span class="p">,</span>
+    <span class="n">get_matching_tables</span><span class="p">,</span>
+    <span class="n">get_root</span><span class="p">,</span>
+    <span class="n">recalculate_headers</span><span class="p">,</span>
+    <span class="n">resolve_file_uri</span><span class="p">,</span>
+    <span class="n">validate_type</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;spoonbill&quot;</span><span class="p">)</span>
+<span class="n">LOGGER</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">RepeatFilter</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="DataPreprocessor"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor">[docs]</a><span class="k">class</span> <span class="nc">DataPreprocessor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data analyzer</span>
+
+<span class="sd">    Processes the given schema and, based on this, extracts information from the iterable dataset.</span>
+
+<span class="sd">    :param schema: The dataset&#39;s schema</span>
+<span class="sd">    :param root_tables: The paths which should become root tables</span>
+<span class="sd">    :param combined_tables: The paths which should become tables that combine data from different locations</span>
+<span class="sd">    :param tables: Use these tables objects instead of parsing the schema</span>
+<span class="sd">    :param table_threshold: The maximum array length, before it is recommended to split out a child table</span>
+<span class="sd">    :param total_items: The total objects processed</span>
+<span class="sd">    :param language: Language to use for the human-readable headings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+        <span class="n">root_tables</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span>
+        <span class="n">combined_tables</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tables</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Table</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">table_threshold</span><span class="o">=</span><span class="n">TABLE_THRESHOLD</span><span class="p">,</span>
+        <span class="n">total_items</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">header_separator</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="p">,</span>
+        <span class="n">language</span><span class="o">=</span><span class="n">LOCALE</span><span class="p">,</span>
+        <span class="n">multiple_values</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_tables</span> <span class="o">=</span> <span class="n">root_tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combined_tables</span> <span class="o">=</span> <span class="n">combined_tables</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tables</span> <span class="o">=</span> <span class="n">tables</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_threshold</span> <span class="o">=</span> <span class="n">table_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multiple_values</span> <span class="o">=</span> <span class="n">multiple_values</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">header_separator</span> <span class="o">=</span> <span class="n">header_separator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_items</span> <span class="o">=</span> <span class="n">total_items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">language</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names_counter</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_schema</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">table</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DataPreprocessor.name_check"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.name_check">[docs]</a>    <span class="k">def</span> <span class="nf">name_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">table_name</span> <span class="o">=</span> <span class="n">generate_table_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names_counter</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">names_counter</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names_counter</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.init_tables"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.init_tables">[docs]</a>    <span class="k">def</span> <span class="nf">init_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">is_combined</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the root tables with default fields.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">is_root</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_combined</span><span class="o">=</span><span class="n">is_combined</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.parse_schema"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.parse_schema">[docs]</a>    <span class="k">def</span> <span class="nf">parse_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract information from the schema.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">resolve_file_uri</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">jsonref</span><span class="o">.</span><span class="n">JsonRef</span><span class="o">.</span><span class="n">replace_refs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_tables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_tables</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_tables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_tables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_tables</span><span class="p">,</span> <span class="n">is_combined</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">separator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_separator</span>
+        <span class="n">to_analyze</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)])</span>
+
+        <span class="c1"># TODO: check if recursion is better for field ordering</span>
+        <span class="k">while</span> <span class="n">to_analyze</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">prop</span> <span class="o">=</span> <span class="n">to_analyze</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="c1"># TODO: handle oneOf anyOf allOf</span>
+            <span class="n">properties</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">properties</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;__reference__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">__reference__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="n">typeset</span> <span class="o">=</span> <span class="n">extract_type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                    <span class="n">pointer</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">pointer</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">typeset</span>
+                    <span class="k">if</span> <span class="s2">&quot;object&quot;</span> <span class="ow">in</span> <span class="n">typeset</span><span class="p">:</span>
+                        <span class="n">to_analyze</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pointer</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="s2">&quot;array&quot;</span> <span class="ow">in</span> <span class="n">typeset</span><span class="p">:</span>
+                        <span class="n">items</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">]</span>
+                        <span class="n">items_type</span> <span class="o">=</span> <span class="n">extract_type</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">items_type</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">&quot;array&quot;</span><span class="p">,</span> <span class="s2">&quot;object&quot;</span><span class="p">}:</span>
+                            <span class="k">if</span> <span class="n">pointer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+                                <span class="c1"># found child array, need to create child table</span>
+                                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_check</span><span class="p">(</span><span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_add_table</span><span class="p">(</span><span class="n">add_child_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">pointer</span><span class="p">)</span>
+                            <span class="n">to_analyze</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pointer</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">items</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># This means we in array of strings, so this becomes a single joinable column</span>
+                            <span class="n">typeset</span> <span class="o">=</span> <span class="n">ARRAY</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items_type</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">JOINABLE</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="n">typeset</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">is_combined</span><span class="p">:</span>
+                            <span class="n">pointer</span> <span class="o">=</span> <span class="n">separator</span> <span class="o">+</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="n">typeset</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># TODO: not sure what to do here</span>
+                <span class="k">continue</span></div>
+
+    <span class="k">def</span> <span class="nf">_add_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">pointer</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_add_additional_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">abs_pointer</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Detected additional table: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="n">pointer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;array&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_table</span><span class="p">(</span><span class="n">add_child_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">pointer</span><span class="p">)</span>
+        <span class="c1"># add columns beforehand because it might be required</span>
+        <span class="c1"># to recalculate  and reorder headers when enlarging array</span>
+        <span class="c1"># there must be a better way but it should work for now</span>
+        <span class="k">for</span> <span class="n">extended_item</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">path_</span><span class="p">,</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">(</span><span class="n">extended_item</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="s2">&quot;path&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">pointer</span><span class="p">,</span> <span class="n">path_</span><span class="p">))</span>
+                <span class="n">a_p</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="n">path_</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+                        <span class="n">p</span><span class="p">,</span>
+                        <span class="n">PYTHON_TO_JSON_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">it</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;N/A&quot;</span><span class="p">),</span>
+                        <span class="n">_</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">),</span>
+                        <span class="n">abs_path</span><span class="o">=</span><span class="n">a_p</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+<div class="viewcode-block" id="DataPreprocessor.get_table"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.get_table">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the table that best matches the given path.</span>
+
+<span class="sd">        :param path: A path</span>
+<span class="sd">        :return: A table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">get_matching_tables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.add_preview_row"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.add_preview_row">[docs]</a>    <span class="k">def</span> <span class="nf">add_preview_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">item_id</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append a mostly-empty row to the previews.</span>
+
+<span class="sd">        This is important to do, because other code uses an index of -1 to access and update the current row.</span>
+
+<span class="sd">        :param rows: The Rows object</span>
+<span class="sd">        :param item_id: Object id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span>
+        <span class="k">for</span> <span class="n">p_rows</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">preview_rows</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">preview_rows_combined</span><span class="p">:</span>
+            <span class="n">p_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">new_row</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">item_id</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.process_items"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.process_items">[docs]</a>    <span class="k">def</span> <span class="nf">process_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">with_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze releases.</span>
+
+<span class="sd">        Iterates over every release to calculate metrics and optionally generates previews for combined and split</span>
+<span class="sd">        versions of each table.</span>
+
+<span class="sd">        :param releases: The releases to analyze</span>
+<span class="sd">        :param with_preview: Whether to generate previews for each table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">separator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_separator</span>
+        <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">release</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">releases</span><span class="p">):</span>
+            <span class="n">to_analyze</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">release</span><span class="p">)])</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">Rows</span><span class="p">(</span><span class="n">ocid</span><span class="o">=</span><span class="n">release</span><span class="p">[</span><span class="s2">&quot;ocid&quot;</span><span class="p">],</span> <span class="n">buyer</span><span class="o">=</span><span class="n">release</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;buyer&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">data</span><span class="o">=</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+
+            <span class="k">while</span> <span class="n">to_analyze</span><span class="p">:</span>
+                <span class="n">abs_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">record</span> <span class="o">=</span> <span class="n">to_analyze</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">pointer</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">pointer</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">item_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pointer</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">pointer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">path</span> <span class="ow">and</span> <span class="n">pointer</span> <span class="o">!=</span> <span class="s2">&quot;/buyer&quot;</span><span class="p">:</span>
+                        <span class="c1"># strict match like /parties, /tender</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="n">item</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">_nop</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">inc</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">with_preview</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">PREVIEW_ROWS</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">add_preview_row</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">parent_key</span><span class="p">)</span>
+
+                    <span class="c1"># TODO: this validation should probably be smarter with arrays</span>
+                    <span class="k">if</span> <span class="n">item_type</span> <span class="ow">and</span> <span class="n">item_type</span> <span class="o">!=</span> <span class="n">JOINABLE</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">validate_type</span><span class="p">(</span><span class="n">item_type</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+                        <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Mismatched type on </span><span class="si">%s</span><span class="s2"> expected </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="n">item_type</span><span class="p">))</span>
+                        <span class="k">continue</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">to_analyze</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">key</span><span class="p">]),</span>
+                                <span class="n">pointer</span><span class="p">,</span>
+                                <span class="n">key</span><span class="p">,</span>
+                                <span class="n">record</span><span class="p">,</span>
+                                <span class="n">item</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">item</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">abs_pointer</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">key</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item_type</span><span class="p">:</span>
+                            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Detected additional column: </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2"> table&quot;</span><span class="p">)</span>
+                                <span class="o">%</span> <span class="p">(</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="p">)</span>
+                            <span class="n">item_type</span> <span class="o">=</span> <span class="n">JOINABLE</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+                                <span class="n">pointer</span><span class="p">,</span>
+                                <span class="n">JOINABLE</span><span class="p">,</span>
+                                <span class="n">_</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">),</span>
+                                <span class="n">additional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">abs_path</span><span class="o">=</span><span class="n">abs_pointer</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">item_type</span> <span class="o">==</span> <span class="n">JOINABLE</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">inc_column</span><span class="p">(</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="n">pointer</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">with_preview</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">PREVIEW_ROWS</span><span class="p">:</span>
+                                <span class="n">value</span> <span class="o">=</span> <span class="n">JOINABLE_SEPARATOR</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">set_preview_path</span><span class="p">(</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_threshold</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">is_root</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">is_combined</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                                <span class="n">to_analyze</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="p">(</span>
+                                        <span class="n">abs_pointer</span><span class="p">,</span>
+                                        <span class="n">pointer</span><span class="p">,</span>
+                                        <span class="n">key</span><span class="p">,</span>
+                                        <span class="n">record</span><span class="p">,</span>
+                                        <span class="n">value</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">parent_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">parent</span>
+                            <span class="k">if</span> <span class="n">pointer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parent_table</span><span class="o">.</span><span class="n">arrays</span><span class="p">:</span>
+                                <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Detected additional table: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="n">pointer</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;array&quot;</span><span class="p">]</span>
+                                <span class="n">parent_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span>
+                                <span class="c1"># TODO: do we need to mark this table as additional</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_table</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="n">abs_pointer</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">add_preview_row</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">parent_key</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">parent_table</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+                                <span class="n">should_split</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_threshold</span>
+                                <span class="k">if</span> <span class="n">should_split</span><span class="p">:</span>
+                                    <span class="n">parent_table</span><span class="o">.</span><span class="n">should_split</span> <span class="o">=</span> <span class="kc">True</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">roll_up</span> <span class="o">=</span> <span class="kc">True</span>
+                                <span class="n">recalculate_headers</span><span class="p">(</span>
+                                    <span class="n">parent_table</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">should_split</span><span class="p">,</span> <span class="n">separator</span>
+                                <span class="p">)</span>
+
+                            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                                    <span class="n">abs_pointer</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+                                    <span class="n">to_analyze</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                        <span class="p">(</span>
+                                            <span class="n">abs_pointer</span><span class="p">,</span>
+                                            <span class="n">pointer</span><span class="p">,</span>
+                                            <span class="n">parent_key</span><span class="p">,</span>
+                                            <span class="n">record</span><span class="p">,</span>
+                                            <span class="n">value</span><span class="p">,</span>
+                                        <span class="p">)</span>
+                                    <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">root</span> <span class="o">=</span> <span class="n">get_root</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="p">)</span>
+                        <span class="n">abs_pointer</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">is_combined</span><span class="p">:</span>
+                            <span class="n">pointer</span> <span class="o">=</span> <span class="n">separator</span> <span class="o">+</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">parent_key</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+                            <span class="n">abs_pointer</span> <span class="o">=</span> <span class="n">pointer</span>
+                        <span class="k">if</span> <span class="n">abs_pointer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">combined_columns</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+                                <span class="n">pointer</span><span class="p">,</span>
+                                <span class="n">PYTHON_TO_JSON_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;N/A&quot;</span><span class="p">),</span>
+                                <span class="n">_</span><span class="p">(</span><span class="n">pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span><span class="p">),</span>
+                                <span class="n">additional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">abs_path</span><span class="o">=</span><span class="n">abs_pointer</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">inc_column</span><span class="p">(</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="n">pointer</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">item</span> <span class="ow">and</span> <span class="n">with_preview</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">PREVIEW_ROWS</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">pointer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/buyer&quot;</span><span class="p">):</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">current_table</span><span class="o">.</span><span class="n">set_preview_path</span><span class="p">(</span><span class="n">abs_pointer</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_threshold</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_items</span> <span class="o">=</span> <span class="n">count</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.dump"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dump the data processor&#39;s state to a file.</span>
+
+<span class="sd">        :param path: Full path to file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Failed to dump DataPreprocessor to file. Error: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DataPreprocessor.restore"><a class="viewcode-back" href="../../api.html#spoonbill.stats.DataPreprocessor.restore">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">restore</span><span class="p">(</span><span class="n">_cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore a data preprocessor&#39;s state from a file.</span>
+
+<span class="sd">        :param path: Full path to file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">UnpicklingError</span><span class="p">):</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid pickle file. Can&#39;t restore.&quot;</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

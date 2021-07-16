@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Supported tables &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Supported tables</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/tables.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="supported-tables">
+<h1>Supported tables<a class="headerlink" href="#supported-tables" title="Permalink to this headline">¶</a></h1>
+<p>Spoonbill tool supports following core OCDS tables:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">tables</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tables name</p></th>
+<th class="head"><p>Extraction paths</p></th>
+<th class="head"><p>Child tables names</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tenders</p></td>
+<td><p>/tender</p></td>
+<td><p>tenders_items,tenders_tenderers</p></td>
+</tr>
+<tr class="row-odd"><td><p>awards</p></td>
+<td><p>/awards</p></td>
+<td><p>awards_suppliers,awards_items</p></td>
+</tr>
+<tr class="row-even"><td><p>contracts</p></td>
+<td><p>/contracts</p></td>
+<td><p>contracts_items,contracts_relatedProcesses,transactions</p></td>
+</tr>
+<tr class="row-odd"><td><p>planning</p></td>
+<td><p>/planning</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>parties</p></td>
+<td><p>/parties,/buyer</p></td>
+<td><p>parties_ids</p></td>
+</tr>
+<tr class="row-odd"><td><p>documents</p></td>
+<td><p>/planning/documents,/tender/documents,/awards/documents,/contracts/documents,/contracts/implementation/documents</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>milestones</p></td>
+<td><p>/planning/milestones,/tender/milestones,/contracts/milestones,/contracts/implementation/milestones</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>amendments</p></td>
+<td><p>/planning/amendments,/tender/amendments,/awards/amendments,/contracts/amendments,/contracts/implementation/amendments</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>contracts_items</p></td>
+<td><p>/contracts/items</p></td>
+<td><p>contracts_items_class</p></td>
+</tr>
+<tr class="row-odd"><td><p>contracts_relatedProcesses</p></td>
+<td><p>/contracts/relatedProcesses</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>transactions</p></td>
+<td><p>/contracts/implementation/transactions</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>contracts_items_class</p></td>
+<td><p>/contracts/items/additionalClassifications</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>awards_suppliers</p></td>
+<td><p>/awards/suppliers</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>awards_items</p></td>
+<td><p>/awards/items</p></td>
+<td><p>awards_items_class</p></td>
+</tr>
+<tr class="row-even"><td><p>awards_items_class</p></td>
+<td><p>/awards/items/additionalClassifications</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>tenders_items</p></td>
+<td><p>/tender/items</p></td>
+<td><p>tenders_items_class</p></td>
+</tr>
+<tr class="row-even"><td><p>tenders_tenderers</p></td>
+<td><p>/tender/tenderers</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>tenders_items_class</p></td>
+<td><p>/tender/items/additionalClassifications</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>parties_ids</p></td>
+<td><p>/parties/additionalIdentifiers</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 1%" />
+<col style="width: 99%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Table Name</strong></p></td>
+<td><p><strong>Table columns</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>tenders</p></td>
+<td><p>ocid,id,rowID,parentID,/tender/id,/tender/title,/tender/description,/tender/status,/tender/procurementMethod,/tender/procurementMethodDetails,/tender/procurementMethodRationale,/tender/mainProcurementCategory,/tender/additionalProcurementCategories,/tender/awardCriteria,/tender/awardCriteriaDetails,/tender/submissionMethod,/tender/submissionMethodDetails,/tender/hasEnquiries,/tender/eligibilityCriteria,/tender/numberOfTenderers,/tender/tenderers/name,/tender/tenderers/id,/tender/tenderers/name,/tender/tenderers/id,/tender/contractPeriod/startDate,/tender/contractPeriod/endDate,/tender/contractPeriod/maxExtentDate,/tender/contractPeriod/durationInDays,/tender/awardPeriod/startDate,/tender/awardPeriod/endDate,/tender/awardPeriod/maxExtentDate,/tender/awardPeriod/durationInDays,/tender/enquiryPeriod/startDate,/tender/enquiryPeriod/endDate,/tender/enquiryPeriod/maxExtentDate,/tender/enquiryPeriod/durationInDays,/tender/tenderPeriod/startDate,/tender/tenderPeriod/endDate,/tender/tenderPeriod/maxExtentDate,/tender/tenderPeriod/durationInDays,/tender/minValue/amount,/tender/minValue/currency,/tender/value/amount,/tender/value/currency,/tender/items/id,/tender/items/description,/tender/items/quantity,/tender/items/unit/scheme,/tender/items/unit/id,/tender/items/unit/name,/tender/items/unit/uri,/tender/items/unit/value/amount,/tender/items/unit/value/currency,/tender/items/additionalClassifications/scheme,/tender/items/additionalClassifications/id,/tender/items/additionalClassifications/description,/tender/items/additionalClassifications/uri,/tender/items/classification/scheme,/tender/items/classification/id,/tender/items/classification/description,/tender/items/classification/uri,/tender/procuringEntity/name,/tender/procuringEntity/id</p></td>
+</tr>
+<tr class="row-odd"><td><p>awards</p></td>
+<td><p>ocid,id,rowID,parentID,/awards/id,/awards/title,/awards/description,/awards/status,/awards/date,/awards/contractPeriod/startDate,/awards/contractPeriod/endDate,/awards/contractPeriod/maxExtentDate,/awards/contractPeriod/durationInDays,/awards/items/id,/awards/items/description,/awards/items/quantity,/awards/items/unit/scheme,/awards/items/unit/id,/awards/items/unit/name,/awards/items/unit/uri,/awards/items/unit/value/amount,/awards/items/unit/value/currency,/awards/items/additionalClassifications/scheme,/awards/items/additionalClassifications/id,/awards/items/additionalClassifications/description,/awards/items/additionalClassifications/uri,/awards/items/classification/scheme,/awards/items/classification/id,/awards/items/classification/description,/awards/items/classification/uri,/awards/suppliers/name,/awards/suppliers/id,/awards/value/amount,/awards/value/currency</p></td>
+</tr>
+<tr class="row-even"><td><p>contracts</p></td>
+<td><p>ocid,id,rowID,parentID,/contracts/id,/contracts/awardID,/contracts/title,/contracts/description,/contracts/status,/contracts/dateSigned,/contracts/relatedProcesses/id,/contracts/relatedProcesses/relationship,/contracts/relatedProcesses/title,/contracts/relatedProcesses/scheme,/contracts/relatedProcesses/identifier,/contracts/relatedProcesses/uri,/contracts/implementation/transactions/id,/contracts/implementation/transactions/source,/contracts/implementation/transactions/date,/contracts/implementation/transactions/uri,/contracts/implementation/transactions/payee/name,/contracts/implementation/transactions/payee/id,/contracts/implementation/transactions/payer/name,/contracts/implementation/transactions/payer/id,/contracts/implementation/transactions/value/amount,/contracts/implementation/transactions/value/currency,/contracts/implementation/transactions/id,/contracts/implementation/transactions/source,/contracts/implementation/transactions/date,/contracts/implementation/transactions/uri,/contracts/implementation/transactions/payee/name,/contracts/implementation/transactions/payee/id,/contracts/implementation/transactions/payer/name,/contracts/implementation/transactions/payer/id,/contracts/implementation/transactions/value/amount,/contracts/implementation/transactions/value/currency,/contracts/items/id,/contracts/items/description,/contracts/items/quantity,/contracts/items/unit/scheme,/contracts/items/unit/id,/contracts/items/unit/name,/contracts/items/unit/uri,/contracts/items/unit/value/amount,/contracts/items/unit/value/currency,/contracts/items/additionalClassifications/scheme,/contracts/items/additionalClassifications/id,/contracts/items/additionalClassifications/description,/contracts/items/additionalClassifications/uri,/contracts/items/classification/scheme,/contracts/items/classification/id,/contracts/items/classification/description,/contracts/items/classification/uri,/contracts/value/amount,/contracts/value/currency,/contracts/period/startDate,/contracts/period/endDate,/contracts/period/maxExtentDate,/contracts/period/durationInDays</p></td>
+</tr>
+<tr class="row-odd"><td><p>planning</p></td>
+<td><p>ocid,id,rowID,parentID,/planning/rationale,/planning/budget/id,/planning/budget/description,/planning/budget/project,/planning/budget/projectID,/planning/budget/uri,/planning/budget/amount/amount,/planning/budget/amount/currency</p></td>
+</tr>
+<tr class="row-even"><td><p>parties</p></td>
+<td><p>ocid,id,rowID,parentID,/buyer/name,/buyer/id,/parties/name,/parties/id,/parties/roles,/parties/contactPoint/name,/parties/contactPoint/email,/parties/contactPoint/telephone,/parties/contactPoint/faxNumber,/parties/contactPoint/url,/parties/address/streetAddress,/parties/address/locality,/parties/address/region,/parties/address/postalCode,/parties/address/countryName,/parties/identifier/scheme,/parties/identifier/id,/parties/identifier/legalName,/parties/identifier/uri,/parties/test</p></td>
+</tr>
+<tr class="row-odd"><td><p>documents</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/documents/id,/documents/documentType,/documents/title,/documents/description,/documents/url,/documents/datePublished,/documents/dateModified,/documents/format,/documents/language</p></td>
+</tr>
+<tr class="row-even"><td><p>milestones</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/milestones/id,/milestones/title,/milestones/type,/milestones/description,/milestones/code,/milestones/dueDate,/milestones/dateMet,/milestones/dateModified,/milestones/status</p></td>
+</tr>
+<tr class="row-odd"><td><p>amendments</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/amendments/date,/amendments/rationale,/amendments/id,/amendments/description,/amendments/amendsReleaseID,/amendments/releaseID</p></td>
+</tr>
+<tr class="row-even"><td><p>contracts_items</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/contracts/items/id,/contracts/items/description,/contracts/items/quantity,/contracts/items/unit/scheme,/contracts/items/unit/id,/contracts/items/unit/name,/contracts/items/unit/uri,/contracts/items/unit/value/amount,/contracts/items/unit/value/currency,/contracts/items/additionalClassifications/scheme,/contracts/items/additionalClassifications/id,/contracts/items/additionalClassifications/description,/contracts/items/additionalClassifications/uri,/contracts/items/classification/scheme,/contracts/items/classification/id,/contracts/items/classification/description,/contracts/items/classification/uri</p></td>
+</tr>
+<tr class="row-odd"><td><p>contracts_relatedProcesses</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/contracts/relatedProcesses/id,/contracts/relatedProcesses/relationship,/contracts/relatedProcesses/title,/contracts/relatedProcesses/scheme,/contracts/relatedProcesses/identifier,/contracts/relatedProcesses/uri</p></td>
+</tr>
+<tr class="row-even"><td><p>transactions</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/contracts/implementation/transactions/id,/contracts/implementation/transactions/source,/contracts/implementation/transactions/date,/contracts/implementation/transactions/uri,/contracts/implementation/transactions/payee/name,/contracts/implementation/transactions/payee/id,/contracts/implementation/transactions/payer/name,/contracts/implementation/transactions/payer/id,/contracts/implementation/transactions/value/amount,/contracts/implementation/transactions/value/currency</p></td>
+</tr>
+<tr class="row-odd"><td><p>contracts_items_class</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/contracts/items/additionalClassifications/scheme,/contracts/items/additionalClassifications/id,/contracts/items/additionalClassifications/description,/contracts/items/additionalClassifications/uri</p></td>
+</tr>
+<tr class="row-even"><td><p>awards_suppliers</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/awards/suppliers/name,/awards/suppliers/id</p></td>
+</tr>
+<tr class="row-odd"><td><p>awards_items</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/awards/items/id,/awards/items/description,/awards/items/quantity,/awards/items/unit/scheme,/awards/items/unit/id,/awards/items/unit/name,/awards/items/unit/uri,/awards/items/unit/value/amount,/awards/items/unit/value/currency,/awards/items/additionalClassifications/scheme,/awards/items/additionalClassifications/id,/awards/items/additionalClassifications/description,/awards/items/additionalClassifications/uri,/awards/items/classification/scheme,/awards/items/classification/id,/awards/items/classification/description,/awards/items/classification/uri</p></td>
+</tr>
+<tr class="row-even"><td><p>awards_items_class</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/awards/items/additionalClassifications/scheme,/awards/items/additionalClassifications/id,/awards/items/additionalClassifications/description,/awards/items/additionalClassifications/uri</p></td>
+</tr>
+<tr class="row-odd"><td><p>tenders_items</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/tender/items/id,/tender/items/description,/tender/items/quantity,/tender/items/unit/scheme,/tender/items/unit/id,/tender/items/unit/name,/tender/items/unit/uri,/tender/items/unit/value/amount,/tender/items/unit/value/currency,/tender/items/additionalClassifications/scheme,/tender/items/additionalClassifications/id,/tender/items/additionalClassifications/description,/tender/items/additionalClassifications/uri,/tender/items/classification/scheme,/tender/items/classification/id,/tender/items/classification/description,/tender/items/classification/uri</p></td>
+</tr>
+<tr class="row-even"><td><p>tenders_tenderers</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/tender/tenderers/name,/tender/tenderers/id</p></td>
+</tr>
+<tr class="row-odd"><td><p>tenders_items_class</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/tender/items/additionalClassifications/scheme,/tender/items/additionalClassifications/id,/tender/items/additionalClassifications/description,/tender/items/additionalClassifications/uri</p></td>
+</tr>
+<tr class="row-even"><td><p>parties_ids</p></td>
+<td><p>ocid,id,rowID,parentID,parentTable,/parties/additionalIdentifiers/scheme,/parties/additionalIdentifiers/id,/parties/additionalIdentifiers/legalName,/parties/additionalIdentifiers/uri</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

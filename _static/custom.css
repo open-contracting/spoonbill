@@ -1,0 +1,5 @@
+.rst-content table.docutils caption,
+.rst-content table.field-list caption,
+.wy-table caption {
+  text-align: left;
+}

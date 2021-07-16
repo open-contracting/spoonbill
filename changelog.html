@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Changelog &mdash; OCDS Spoonbill 1.0.5b6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Contributing" href="contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> OCDS Spoonbill
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.5b6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Supported tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#b6-2021-07-14">1.0.5b6 (2021-07-14)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b5-2021-06-24">1.0.5b5 (2021-06-24)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b4-2021-06-18">1.0.5b4 (2021-06-18)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b4-2021-06-17">1.0.4b4 (2021-06-17)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b3-2021-06-15">1.0.4b3 (2021-06-15)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">1.0.3b3 (2021-06-15)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b2-2021-06-07">1.0.3b2 (2021-06-07)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b1-2021-06-02">1.0.2b1 (2021-06-02)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b1-2021-05-27">1.0.1b1 (2021-05-27)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b1-2021-05-26">1.0.0b1 (2021-05-26)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Fixed</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OCDS Spoonbill</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Changelog</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="b6-2021-07-14">
+<h2>1.0.5b6 (2021-07-14)<a class="headerlink" href="#b6-2021-07-14" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>ordering tables according to schema  (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/894d399bda27d8b7cbee718e42026cb2b962a91e">894d399</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b5-2021-06-24">
+<h2>1.0.5b5 (2021-06-24)<a class="headerlink" href="#b5-2021-06-24" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Added<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>multiple file input support  (<a class="reference external" href="https://github.com/mariob0y/spoonbill/commit/225c570ade34f02dddedcf85344d80f97a7ee449">225c570</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b4-2021-06-18">
+<h2>1.0.5b4 (2021-06-18)<a class="headerlink" href="#b4-2021-06-18" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><cite>.gz</cite> format recognition enhancement (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9283ba451008b5542a73feceb7e4189d47862bcb">9283ba4</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b4-2021-06-17">
+<h2>1.0.4b4 (2021-06-17)<a class="headerlink" href="#b4-2021-06-17" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h3>Added<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>added <cite>.gz</cite> support (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/d226a240549c97d8ea64f774c074e434114c026f">ed60751</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b3-2021-06-15">
+<h2>1.0.4b3 (2021-06-15)<a class="headerlink" href="#b3-2021-06-15" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Fixed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>pass <cite>multiple_values</cite> via <cite>DataPreprocessor</cite> (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/509a06de79ca32d04e83b101a9eb55019b7c3d88">509a06d</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>1.0.3b3 (2021-06-15)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>added jsonl support (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/59ec81c1742daca043c233a29b7aeb48c9934b98">59ec81c</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h3>Fixed<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>fix <cite>FileFlattener</cite> input (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/acacd870409fe5bdd88e1f0c10f12bc915983167">acacd87</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b2-2021-06-07">
+<h2>1.0.3b2 (2021-06-07)<a class="headerlink" href="#b2-2021-06-07" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h3>Added<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>add Row and Rows containers to keep rows data and their relations
+(<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/4e8a3857c8767f5f74ba7a614782c921563b34b7">4e8a385</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h3>Fixed<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>cli:</strong> fixed variable shadowing in a loop (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1a5514104086259a4c57ca33866dcb2f7822bcb6">1a55141</a>)</p></li>
+<li><p>fix parentTable generation for combined tables (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/5e06bf09088307b94afa26e223a9aae8d10df12a">5e06bf0</a>)</p></li>
+<li><p>parentID should be rowID for parent table (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/c429309d3b265fdb2d7fb632e83bb7d2a373b7fc">c429309</a>)</p></li>
+<li><p>.xlsx writer <code class="docutils literal notranslate"><span class="pre">only</span></code> error handling (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/ebc2ad0456e33ba8d81eacee51fec0974640e0ba">ebc2ad0</a>)</p></li>
+<li><p><strong>setup:</strong> add include_package_data to setup.py (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/db8b63b3150166e5589d9dbd675547a3f709436c">db8b63b</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b1-2021-06-02">
+<h2>1.0.2b1 (2021-06-02)<a class="headerlink" href="#b1-2021-06-02" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h3>Fixed<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>analyze:</strong> recalculate headers recursively (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/ca1c521c74b638b427d40f43f7d0575238a57d1d">ca1c521</a>)</p></li>
+<li><p><strong>stats:</strong> pregenerate headers for exstention table when detected (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/648485c7539ba4c0c0af220587d347aaebba9aca">648485c</a>)</p></li>
+<li><p><strong>stats:</strong> fix inserting array columns into rolled up table columns (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/d6d61951430bd2c049765e826957d3ae56c8cd20">d6d6195</a>)</p></li>
+<li><p>Use correct type annotation for List (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9d16a3f26309cff54c31ac27adfd49e41ac09801">9d16a3f</a>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b1-2021-05-27">
+<h2>1.0.1b1 (2021-05-27)<a class="headerlink" href="#b1-2021-05-27" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h3>Fixed<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>flatten:</strong> strict columns match in only option</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="b1-2021-05-26">
+<h2>1.0.0b1 (2021-05-26)<a class="headerlink" href="#b1-2021-05-26" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id11">
+<h3>Added<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>cli:</strong> add –unnest-file, –repeat-file and –only-file options (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9b024e2ae93d22d9a9a33b2f5b74edc1039c604d">9b024e2</a>)</p></li>
+<li><p><strong>cli:</strong> add click integration with logging (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/3c1184f9d05f669401b30a2d7350126b631bbaf5">3c1184f</a>)</p></li>
+<li><p><strong>cli:</strong> add informational messages about only, unnest and repeat (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/2e6d48e09345669a743c436e2c4bdc85fc7f5dbb">2e6d48e</a>)</p></li>
+<li><p><strong>cli:</strong> add language option (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1d89e0b7d755cf7dc001e2aa65cb0a9ae22c1142">1d89e0b</a>)</p></li>
+<li><p><strong>cli:</strong> add progressbar when analyze file (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/49e44406d2c18c08e4bcbeeec5554fc6623acf7d">49e4440</a>)</p></li>
+<li><p><strong>cli:</strong> enable only and repeat options (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/8b82f9eb42562e8291864fcd4f79234ef5938998">8b82f9e</a>)</p></li>
+<li><p><strong>cli:</strong> use click.progressabr in heavy operations (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1e27a096ffcbc94e9695ed700e9091a5de166c30">1e27a09</a>)</p></li>
+<li><p><strong>cli:</strong> use csv and xlsx options to provide output paths (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/bf8689d6e6b3ee340db2a4a432fe7ec08e0163f4">bf8689d</a>)</p></li>
+<li><p><strong>csv:</strong> more exception handling in csv writer (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9e85095b9d8e680043bae4b1e4b181146a0daa2d">9e85095</a>)</p></li>
+<li><p><strong>flatten:</strong> add exclude option to remove table from export (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/26025dd611b6512e8b0b1dabcb65cff0773b6417">26025dd</a>)</p></li>
+<li><p><strong>flatten:</strong> implement only option to specify list of output cols (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/a57200bce0cb3ae51d05a8955ce9998470a26ddc">a57200b</a>)</p></li>
+<li><p><strong>i18n:</strong> add custom babel extractor to produce schema paths (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/f602a6968779be23e59c179beacf569ac0e2b79c">f602a69</a>)</p></li>
+<li><p><strong>i18n:</strong> add locale override option when using gettext (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/638b9a8f3b35dcb4fd1cf18edc1f754c8ca761d7">638b9a8</a>)</p></li>
+<li><p><strong>i18n:</strong> use localization mechanism as tool to generate h/r titles (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/5e20df398a18980ec62ad700ce9aecac7f0ac15d">5e20df3</a>)</p></li>
+<li><p>add ability to rename sheet (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9d4c68df2340bdc631a062d976c215dd724a88ba">9d4c68d</a>)</p></li>
+<li><p>add DataPreprocessor restore method to init from existing data (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1c3ada7375717d7ab14eeb705a6545d1bc241315">1c3ada7</a>)</p></li>
+<li><p>implement –state-file option to restore analyzer state from file (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/a8294ea292989a6528c76fdde462ed88346e2e5b">a8294ea</a>)</p></li>
+<li><p>make DataPreprocessor.process_items iterable to track progress (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/380196ff3bcb70fd4b901df834abcf8d12024239">380196f</a>)</p></li>
+<li><p>table threshold option now enabled by default (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/42283e6e283335f5d5f8940c825aa2486b45ff24">42283e6</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Add lru_cache for common_prefix, and compare len() instead of using min() and max() (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/694135ce220b565dd9a19fbf1470224f485c79b0">694135c</a>)</p></li>
+<li><p>Use pickle instead of json (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/63a42653f95d9a9a134ef560c863351b84643f20">63a4265</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h3>Fixed<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>cli:</strong> drop –split option and introduce –exclude (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/35f13911c770ed7ef76d612d23f30e7063122a2a">35f1391</a>)</p></li>
+<li><p>use pkg_resources.resource_filename to access locales (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/be48d7785c95a741771c3001ebc42a4eb067a966">be48d77</a>)</p></li>
+<li><p><strong>stats:</strong> fix IndexError when generating preview_rows for extra tables (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/82b179b994d570eea3b08e99467105748812a1e8">82b179b</a>)</p></li>
+<li><p><strong>utils:</strong> make resolve_file_uri understand pathlib.Path (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/51e82a3633837b5104ecfb4db604d69d619c948b">51e82a3</a>)</p></li>
+<li><p>use pickle instead of json in DataPreprocessor dump (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/d0c516bf194d72ac08a84cb0bf5a13f815b3c843">d0c516b</a>)</p></li>
+<li><p><strong>writers:</strong> make writers context managers (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/18e4c097a01f95bbacda41cac00552608322463f">18e4c09</a>)</p></li>
+<li><p>add more logging messages (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/920521716cd4532f9649b1651ad108c742bec04a">9205217</a>)</p></li>
+<li><p>added logger filter for repetative messages (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/f936d5078abb37caf29ae7436c98333c0637fd7f">f936d50</a>)</p></li>
+<li><p>added table abbreviation support (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/85f46f3fcecf08b499728b2551fa3f63906a7805">85f46f3</a>)</p></li>
+<li><p>CLI export message edit - removed extra tables from message, added list of exported tables and number of rows for each (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/9681c7109d483114a95312ee0428c2e550a7249c">9681c71</a>)</p></li>
+<li><p>CLI index out of range error, issue <a class="reference external" href="https://github.com/open-contracting/spoonbill/issues/66">#66</a> (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/03185587b1d17a7c638d8b1399d3208a56ec7491">0318558</a>)</p></li>
+<li><p>code refactor; added duplicate check to stats/DataPreprocessor (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/fcfb6116050d62b0b5ea9474ac94b8834d34bea7">fcfb611</a>)</p></li>
+<li><p>fix crash with additional array of strings present in data (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/4e73c70acbd75136c7ff317a574636c259fa5d88">4e73c70</a>)</p></li>
+<li><p>fix KeyError with adding count column in child tables (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/36d5ccc109eefb0f12346674cfba1379616efc3a">36d5ccc</a>)</p></li>
+<li><p>fixed bug with regenerated headers when array is shorter than table_threshold (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/3e87b4ce6b9e15dd79db41ff053e33088f4356dc">3e87b4c</a>)</p></li>
+<li><p>fixed KeyError when flattening data with additional arrays (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/c7e3cd0f72b394571161c957ffa4ded63cd41ec0">c7e3cd0</a>)</p></li>
+<li><p>increment default columns when incrementing table rows (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/3c602a641ea36a88e6a1787837b4e325b8cf65b0">3c602a6</a>)</p></li>
+<li><p>make name ‘_’ explicit imported (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/99932e07637bf8d30d9bddcc6015b635cb83d18a">99932e0</a>)</p></li>
+<li><p>strip lines when reading option file (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/e57031b6897c082ee5daa7c12785d29a9bdd538c">e57031b</a>)</p></li>
+<li><p>use OrderedDict as map container in iter_file (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/0d1df1b14b4520cd416a98efadb4aca5e848f0f1">0d1df1b</a>)</p></li>
+<li><p>writing booleans to .xlsx cells (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1d8de320278517a418ac989bc0c2fdb1879188bf">1d8de32</a>)</p></li>
+<li><p><strong>cli:</strong> enable –threshold option (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/852ff92c156e4c904caec241d41d7d8aa9e1002e">852ff92</a>)</p></li>
+<li><p><strong>cli:</strong> fix variable naming (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/c17ca632bc5eae347a4d0129d564c5d674ad382f">c17ca63</a>)</p></li>
+<li><p><strong>flaten:</strong> fixed typo JOINABLE -&gt; JOINABLE_SEPARATOR (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/1adc440e950a4e4b19cbd2435f362831befa1b2f">1adc440</a>)</p></li>
+<li><p><strong>flatten:</strong> fix only option causing empty output (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/c8447b015683f606a10e3c9270dcb84eea95bf95">c8447b0</a>)</p></li>
+<li><p><strong>flatten:</strong> fix repeat spreading to unrelated tables (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/2e16c309a53857916693ca2aef09ce4891729cee">2e16c30</a>)</p></li>
+<li><p><strong>i18n:</strong> generate message for count columns (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/a527f8dc91f52be00ae8b681984a85798a36065c">a527f8d</a>)</p></li>
+<li><p><strong>setup:</strong> do not use babel cmds in setup.py (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/e449c3705f234c2eadc66553348873c4223ac679">e449c37</a>)</p></li>
+<li><p>fixed mixing preview_rows and preview_rows combined (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/dd1dd1977ba0e86a8d762f16fdd9ce2d5379aa78">dd1dd19</a>)</p></li>
+<li><p>fixed serialization of total_items (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/055ff657588e58599aee71a6eb4fd5297eaf0267">055ff65</a>)</p></li>
+<li><p>remove copy column by reference in recalculate headers (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/22c63f84e308e16ca0a95059ce06a99ac0864af7">22c63f8</a>)</p></li>
+<li><p><strong>stats:</strong> respect with_preview when appending new preview row (<a class="reference external" href="https://github.com/open-contracting/spoonbill/commit/cfd8663f03ff7565da836b465eba9ead780e6e84">cfd8663</a>)</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Open Contracting Partnership.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
