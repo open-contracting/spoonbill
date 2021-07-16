@@ -14,8 +14,6 @@ From the command line:
 
    pip install spoonbill
 
-To improve performance, install the `YAJL <http://lloyd.github.io/yajl/>`__ system library (on macOS, run ``brew install yajl``).
-
 Spoonbill requires Python 3.6 or greater.
 
 .. _how-it-works:
