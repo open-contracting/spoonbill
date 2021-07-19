@@ -17,6 +17,7 @@ from spoonbill.utils import (
     RepeatFilter,
     extract_type,
     generate_table_name,
+    get_headers_from_schema,
     get_matching_tables,
     get_root,
     recalculate_headers,
@@ -145,6 +146,8 @@ class DataPreprocessor:
             else:
                 # TODO: not sure what to do here
                 continue
+
+        get_headers_from_schema(self.tables, self.schema)
 
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
