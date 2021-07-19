@@ -12,7 +12,7 @@ from pathlib import Path
 import ijson
 import requests
 
-from spoonbill.common import COMBINED_TABLES
+from spoonbill.common import COMBINED_TABLES, DEFAULT_FIELDS_COMBINED
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -35,6 +35,8 @@ ABBREVIATION_TABLE_NAME = {
 }
 
 GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
+
+SCHEMA_DEFINITIONS = {"documents": "Document", "milestones": "Milestone", "amendments": "Amendment"}
 
 
 @functools.lru_cache(maxsize=None)
@@ -349,3 +351,54 @@ def get_order(properties):
     if "tender" in order:
         order[order.index("tender")] = "tenders"
     return order
+
+
+def get_headers_from_schema(tables, schema):
+    for table in tables.values():
+        pretty_titles = {}
+
+        for path in table.titles.keys():
+            if path not in DEFAULT_FIELDS_COMBINED:
+
+                elements = path.split("/")
+                elements.remove("")
+                elements = [x for x in elements if not x.isnumeric()]
+                titles = []
+
+                for e in elements:
+                    schema_location = "schema"
+                    path_elements = elements[0 : elements.index(e) + 1]  # noqa: E203
+                    for path_e in path_elements:
+                        if path_e in SCHEMA_DEFINITIONS and path_elements.index(path_e) == 0:
+                            schema_location += f'["definitions"]["{SCHEMA_DEFINITIONS[path_e]}"]'
+
+                        elif path_e == "items":
+                            try:
+                                eval(schema_location + f"""{'["properties"]["items"]["items"]'}""")
+                                schema_location += f"""{'["properties"]["items"]["items"]'}"""
+                            except KeyError:
+                                schema_location += f"""{'["items"]["properties"]["items"]'}"""
+                        else:
+                            try:
+                                eval(schema_location + f'["properties"]["{path_e}"]')
+                                schema_location += f'["properties"]["{path_e}"]'
+                            except KeyError:
+                                schema_location += f'["items"]["properties"]["{path_e}"]'
+                    schema_location += '["title"]'
+
+                    try:
+                        new_title = eval(schema_location)
+                    except KeyError:
+                        new_title = e
+                    titles.append(new_title)
+
+                # Add indexes to title
+                elements = path.split("/")
+                elements.remove("")
+                for idx, e in enumerate(elements):
+                    if e.isnumeric():
+                        titles.insert(idx, e)
+
+                pretty_titles[path] = ": ".join(titles)
+
+        table.titles.update(pretty_titles)

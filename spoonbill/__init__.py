@@ -2,6 +2,8 @@ import logging
 from operator import attrgetter
 from pathlib import Path
 
+import jsonref
+import requests
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -9,15 +11,15 @@ from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, T
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import get_order, get_reader, iter_file, resolve_file_uri
+from spoonbill.utils import get_headers_from_schema, get_order, get_reader, iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
+BASE_SCHEMA_URL = "https://standard.open-contracting.org/latest/"
 
 
 class FileAnalyzer:
     """Main utility for analyzing files
-
     :param workdir: Working directory
     :param schema: Json schema file to use with data
     :param root_tables: Path configuration which should become root tables
@@ -92,7 +94,6 @@ class FileAnalyzer:
 
     def dump_to_file(self, filenames):
         """Save analyzed information to file
-
         :param filename: Output filename in working directory
         """
         if not isinstance(filenames, list):
@@ -107,18 +108,23 @@ class FileAnalyzer:
         if "release" in input_format:
             pkg_type = "releases"
             getter = attrgetter("release_package_schema")
+            url = f"{BASE_SCHEMA_URL}{self.language}/release-package-schema.json"
         else:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
+            url = f"{BASE_SCHEMA_URL}{self.language}/record-package-schema.json"
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+            profile = ProfileBuilder(
+                CURRENT_SCHEMA_TAG, {}, schema_base_url=url if requests.get(url).status_code == 200 else None
+            )
             schema = getter(profile)()
         title = schema.get("title", "").lower()
         if not title:
             raise ValueError(_("Incomplete schema, please make sure your data is correct"))
         if "package" in title:
             # TODO: is is a good way to get release/record schema
+            schema = jsonref.JsonRef.replace_refs(schema)
             schema = schema["properties"][pkg_type]["items"]
 
         self.schema = schema
@@ -150,7 +156,6 @@ class FileAnalyzer:
 
 class FileFlattener:
     """Main utility for flattening files
-
     :param workdir: Working directory
     :param options: Flattening configuration
     :param analyzer: Analyzed data object
@@ -181,6 +186,7 @@ class FileFlattener:
         self.xlsx = xlsx
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
+        self.schema = analyzer.schema
 
     def _flatten(self, filenames, writers):
         if not isinstance(filenames, list):
@@ -199,10 +205,12 @@ class FileFlattener:
 
     def flatten_file(self, filename):
         """Flatten file
-
         :param filename: Input filename in working directory
         """
         workdir = self.workdir
+
+        if self.schema:
+            get_headers_from_schema(self.tables, self.schema)
         if isinstance(self.csv, Path):
             workdir = self.csv
         if not self.xlsx and self.csv:
