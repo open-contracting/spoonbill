@@ -95,8 +95,9 @@ class DataPreprocessor:
         """
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
-        self.schema = jsonref.JsonRef.replace_refs(self.schema)
         self.init_tables(self.root_tables)
+        if not isinstance(self.schema, jsonref.JsonRef):
+            self.schema = jsonref.JsonRef.replace_refs(self.schema)
         if self.combined_tables:
             self.init_tables(self.combined_tables, is_combined=True)
         separator = self.header_separator
