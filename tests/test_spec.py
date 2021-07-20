@@ -20,7 +20,14 @@ def test_combine_path(root_table):
 
 def test_inc_column(root_table):
     child = add_child_table(root_table, "/tender/items", "tender", "items")
-    child.add_column("/tender/items/id", ["string"], "Tender Id", additional=True, abs_path="/tender/items/0/test")
+    child.add_column(
+        "/tender/items/id",
+        item_type=["string"],
+        item={"title": "Tender Id"},
+        parent={},
+        additional=True,
+        abs_path="/tender/items/0/test",
+    )
     child.arrays["/tender/items/additionalClassifications"] = 0
     root_table.inc_column("ocid", "ocid")
     assert root_table["ocid"].hits == 1
@@ -41,8 +48,9 @@ def test_inc_column(root_table):
     )
     child_child.add_column(
         "/tender/items/additionalClassifications/id",
-        ["string"],
-        "Classification Id",
+        item_type=["string"],
+        item={"title": "Classification Id"},
+        parent={},
         additional=True,
     )
     child_child.inc_column(
@@ -55,16 +63,19 @@ def test_inc_column(root_table):
 
 
 def test_add_column(root_table):
-    root_table.add_column("/tender/id", ["string", "integer"], "Tender Id")
+    root_table.add_column("/tender/id", item={"title": "Tender ID"}, item_type=["string", "integer"], parent={})
     assert "/tender/id" in root_table
     assert "/tender/id" in root_table.combined_columns
 
-    root_table.add_column("/tender/itemsCount", ["string", "integer"], "Items Count")
+    root_table.add_column("/tender/itemsCount", {"title": "Items Count"}, ["string", "integer"], {})
     assert "/tender/itemsCount" in root_table
     assert "/tender/itemsCount" in root_table.combined_columns
 
     root_table.add_column(
-        "/tender/items/additionalClassificationsCount", ["string", "integer"], "Classifications Count"
+        "/tender/items/additionalClassificationsCount",
+        item_type=["string", "integer"],
+        item={"title": "Classifications Count"},
+        parent={},
     )
     assert "/tender/items/0/additionalClassificationsCount" in root_table
     assert "/tender/items/0/additionalClassificationsCount" in root_table.combined_columns
@@ -72,19 +83,25 @@ def test_add_column(root_table):
     child = add_child_table(root_table, "/tender/items", "tender", "items")
     child.add_column(
         "/tender/items/test",
-        ["string", "integer"],
-        "/tender/items/test",
+        item_type=["string", "integer"],
         additional=True,
         abs_path="/tender/items/0/test",
+        item={"title": "Tender ID"},
+        parent={},
     )
     assert "/tender/items/test" in child
     assert "/tender/items/test" in child.combined_columns
     assert "/tender/items/0/test" in root_table
     assert "/tender/items/0/test" in root_table.combined_columns
-    child.add_column("/tender/items/id", ["string", "integer"], "Items Id")
+    child.add_column("/tender/items/id", item_type=["string", "integer"], item={"title": "Items Id"}, parent={})
 
     child.arrays["/tender/items/additionalClassifications"] = 0
-    child.add_column("/tender/items/additionalClassifications/id", ["string", "integer"], "Classification ID")
+    child.add_column(
+        "/tender/items/additionalClassifications/id",
+        item_type=["string", "integer"],
+        item={"title": "Classification ID"},
+        parent={},
+    )
     assert "/tender/items/additionalClassifications/0/id" in child
     assert "/tender/items/id" in child
     assert "/tender/items/0/id" in root_table
@@ -92,8 +109,9 @@ def test_add_column(root_table):
 
     child.add_column(
         "/tender/items/additionalClassificationsCount",
-        ["string", "integer"],
-        "Classification Count",
+        item_type=["string", "integer"],
+        item={"title": "Classification Count"},
+        parent={},
         propagate=False,
     )
     assert "/tender/items/additionalClassificationsCount" in child
