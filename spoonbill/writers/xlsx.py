@@ -1,9 +1,11 @@
 import collections
 import logging
 
+import openpyxl
 import xlsxwriter
 from xlsxwriter.exceptions import XlsxWriterException
 
+from spoonbill.common import DEFAULT_FIELDS
 from spoonbill.i18n import _
 from spoonbill.writers.base_writer import BaseWriter
 
@@ -56,14 +58,17 @@ class XlsxWriter(BaseWriter):
         """
         Close the workbook.
         """
-        LOGGER.info(_("Dumped all sheets to file to file '{}'").format(self.path))
         self.workbook.close()
+
+        if self.row_counters[min(self.row_counters, key=self.row_counters.get)] > 1:
+            self.clean_empty_columns()
+
+        LOGGER.info(_("Dumped all sheets to file to file '{}'").format(self.path))
 
     def writerow(self, table, row):
         """
         Write a row to the output file.
         """
-
         table_name = self.names.get(table, table)
         sheet = self.workbook.get_worksheet_by_name(table_name)
         columns = self.col_index[table]
@@ -88,3 +93,14 @@ class XlsxWriter(BaseWriter):
                 LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
 
         self.row_counters[table] += 1
+
+    def clean_empty_columns(self):
+        wb = openpyxl.load_workbook(self.path)
+        for sheet in wb:
+            for column in sheet.columns:
+                cells = [cell for cell in column if cell.value]
+                if len(cells) == 1 and column[0].value not in DEFAULT_FIELDS:
+                    column[0].value = None
+
+        wb.save(self.path)
+        wb.close()
