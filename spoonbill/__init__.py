@@ -3,6 +3,7 @@ from operator import attrgetter
 from pathlib import Path
 
 import jsonref
+import requests
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
@@ -14,6 +15,7 @@ from spoonbill.utils import get_order, get_reader, iter_file, resolve_file_uri
 from spoonbill.writers import CSVWriter, XlsxWriter
 
 LOGGER = logging.getLogger("spoonbill")
+BASE_SCHEMA_URL = "https://standard.open-contracting.org/latest/"
 
 
 class FileAnalyzer:
@@ -108,12 +110,16 @@ class FileAnalyzer:
         if "release" in input_format:
             pkg_type = "releases"
             getter = attrgetter("release_package_schema")
+            url = f"{BASE_SCHEMA_URL}{self.language}/release-package-schema.json"
         else:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
+            url = f"{BASE_SCHEMA_URL}{self.language}/record-package-schema.json"
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+            profile = ProfileBuilder(
+                CURRENT_SCHEMA_TAG, {}, schema_base_url=url if requests.get(url).status_code == 200 else None
+            )
             schema = getter(profile)()
         title = schema.get("title", "").lower()
         if not title:

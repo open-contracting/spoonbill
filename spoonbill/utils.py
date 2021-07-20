@@ -349,3 +349,24 @@ def get_order(properties):
     if "tender" in order:
         order[order.index("tender")] = "tenders"
     return order
+
+
+def prepare_title(item, parent):
+    """Attempts to extract human friendly table header from schema
+    :param item: Schema description of item for which title should be generated
+    :param parent: Schema description of item parent object
+    :return: Generated title
+    """
+    title = []
+
+    if hasattr(parent, "__reference__") and parent.__reference__.get("title"):
+        parent_title = parent.__reference__.get("title", "")
+    else:
+        parent_title = parent.get("title", "")
+    if parent_title != "":
+        parent_title += ": "
+    for chunk in chain(parent_title.split(), item["title"].split()):
+        chunk = chunk.capitalize()
+        if chunk not in title:
+            title.append(chunk)
+    return " ".join(title)

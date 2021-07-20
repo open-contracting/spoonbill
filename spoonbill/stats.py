@@ -26,6 +26,7 @@ from spoonbill.utils import (
 
 LOGGER = logging.getLogger("spoonbill")
 LOGGER.addFilter(RepeatFilter())
+SCHEMA_PROPERTIES = {"tenders": "tender", "documents": "Document"}
 
 
 class DataPreprocessor:
@@ -138,11 +139,11 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, typeset, _(pointer, self.language))
+                            self.current_table.add_column(pointer, item, typeset, parent=prop)
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
-                        self.current_table.add_column(pointer, typeset, _(pointer, self.language))
+                        self.current_table.add_column(pointer, item, typeset, parent=prop)
             else:
                 # TODO: not sure what to do here
                 continue
@@ -153,6 +154,7 @@ class DataPreprocessor:
         self.get_table.cache_clear()
 
     def _add_additional_table(self, pointer, abs_pointer, parent_key, key, item, separator="/"):
+
         LOGGER.debug(_("Detected additional table: %s") % pointer)
         self.current_table.types[pointer] = ["array"]
         self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
@@ -166,8 +168,9 @@ class DataPreprocessor:
                 if p not in self.current_table:
                     self.current_table.add_column(
                         p,
-                        PYTHON_TO_JSON_TYPE.get(type(it).__name__, "N/A"),
-                        _(p, self.language),
+                        item_type=PYTHON_TO_JSON_TYPE.get(type(it).__name__, "N/A"),
+                        item={"title": it},
+                        parent=self.schema["properties"][parent_key],
                         abs_path=a_p,
                     )
 
@@ -253,8 +256,9 @@ class DataPreprocessor:
                             item_type = JOINABLE
                             self.current_table.add_column(
                                 pointer,
-                                JOINABLE,
-                                _(pointer, self.language),
+                                item_type=JOINABLE,
+                                item={"title": key},
+                                parent=parent,
                                 additional=True,
                                 abs_path=abs_pointer,
                             )
@@ -311,10 +315,20 @@ class DataPreprocessor:
                             pointer = separator + separator.join((parent_key, key))
                             abs_pointer = pointer
                         if abs_pointer not in root.combined_columns:
+
+                            parent = (
+                                self.schema["properties"]["tender"]
+                                if root.name == "tenders"
+                                else self.schema["definitions"]["Document"]
+                                if root.name == "documents"
+                                else self.schema["properties"][root.name]
+                            )
+
                             self.current_table.add_column(
                                 pointer,
-                                PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
-                                _(pointer, self.language),
+                                item_type=PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
+                                item={"title": key},
+                                parent=parent,
                                 additional=True,
                                 abs_path=abs_pointer,
                             )

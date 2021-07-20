@@ -162,6 +162,7 @@ class Flattener:
 
             if count:
                 for array in table.arrays:
+                    key = array.split("/")[-1]
                     path = make_count_column(array)
                     target = self._types_cache.get(array) or table
                     combined = split and table.should_split
@@ -172,11 +173,12 @@ class Flattener:
                         # /tender/items/200/additionalClassificationsCount
                         target.add_column(
                             path,
-                            "integer",
-                            _(path, self.language),
+                            item_type="integer",
                             additional=True,
                             combined_only=not combined,
                             propagate=False,
+                            parent={},
+                            item={"title": f"{key} count"},
                         )
                         target.inc_column(path, path)
             if unnest:
