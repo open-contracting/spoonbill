@@ -3,6 +3,7 @@ import functools
 import gzip
 import json
 import logging
+import re
 from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
@@ -35,8 +36,6 @@ ABBREVIATION_TABLE_NAME = {
 }
 
 GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
-
-SCHEMA_DEFINITIONS = {"documents": "Document", "milestones": "Milestone", "amendments": "Amendment"}
 
 
 @functools.lru_cache(maxsize=None)
@@ -257,15 +256,14 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
 
 def resolve_file_uri(file_path):
     """Read json file from provided uri
-
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
+    if str(file_path).startswith("http://") or str(file_path).startswith("https://"):
+        return requests.get(file_path).json()
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd, object_pairs_hook=OrderedDict)
-    if file_path.startswith("http://") or file_path.startswith("https://"):
-        return requests.get(file_path).json()
 
 
 def read_lines(path):
@@ -353,52 +351,64 @@ def get_order(properties):
     return order
 
 
-def get_headers_from_schema(tables, schema):
-    for table in tables.values():
-        pretty_titles = {}
+def nonschema_title_formatter(title):
+    title = title.replace("_", " ").replace("-", " ")
+    title = re.sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", title)
+    title = title.replace("  ", " ")
+    title = title.title()
+    return title
 
-        for path in table.titles.keys():
-            if path not in DEFAULT_FIELDS_COMBINED:
 
-                elements = path.split("/")
-                elements.remove("")
-                elements = [x for x in elements if not x.isnumeric()]
-                titles = []
+class SchemaHeaderExtractor:
+    """
+    Human-readable headers extracted from schema
 
-                for e in elements:
-                    schema_location = "schema"
-                    path_elements = elements[0 : elements.index(e) + 1]  # noqa: E203
-                    for path_e in path_elements:
-                        if path_e in SCHEMA_DEFINITIONS and path_elements.index(path_e) == 0:
-                            schema_location += f'["definitions"]["{SCHEMA_DEFINITIONS[path_e]}"]'
+    :param schema: The dataset's schema
+    :param unres_schema_path: URL or path to schema
+    """
 
-                        elif path_e == "items":
-                            try:
-                                eval(schema_location + f"""{'["properties"]["items"]["items"]'}""")
-                                schema_location += f"""{'["properties"]["items"]["items"]'}"""
-                            except KeyError:
-                                schema_location += f"""{'["items"]["properties"]["items"]'}"""
-                        else:
-                            try:
-                                eval(schema_location + f'["properties"]["{path_e}"]')
-                                schema_location += f'["properties"]["{path_e}"]'
-                            except KeyError:
-                                schema_location += f'["items"]["properties"]["{path_e}"]'
-                    schema_location += '["title"]'
+    def __init__(self, schema, unres_schema_path=None):
+        self.unres_schema = resolve_file_uri(unres_schema_path) if unres_schema_path else None
+        self.schema = schema
 
-                    try:
-                        new_title = eval(schema_location)
-                    except KeyError:
-                        new_title = e
-                    titles.append(new_title)
+    def get_header(self, path):
+        if path in DEFAULT_FIELDS_COMBINED:
+            return path
+        # Splitting path to separate elements (ignoring indexes for now)
+        elements = [x for x in filter(None, path.split("/")) if not x.isnumeric()]
+        title = []
+        for e in elements:
+            # Searching for a title in schema for each section in path
+            schema_location = []
+            path_elements = elements[0 : elements.index(e) + 1]  # noqa: E203
+            for path_e in path_elements:
+                if path_e == "items":
+                    _next = ["properties", "items", path_e]
+                    schema_location.extend(_next) if self.check_location(
+                        schema_location, _next
+                    ) else schema_location.extend(["properties", "properties", path_e])
+                else:
+                    _next = ["properties", path_e]
+                    schema_location.extend(_next) if self.check_location(
+                        schema_location, _next
+                    ) else schema_location.extend(["items", "properties", path_e])
+            schema_location.extend(["title"])
+            # First title is searched in unresolved schema, then - in resolved
+            # If title is absent in schema - original path formatted as title
+            new_title = (
+                self.check_location(schema_location, schema=self.unres_schema) or self.check_location(schema_location)
+            ) or nonschema_title_formatter(e)
+            title.append(new_title)
+        # Add indexes to a title
+        [title.insert(idx, e) for idx, e in enumerate(filter(None, path.split("/"))) if e.isnumeric()]
+        return ": ".join(title)
 
-                # Add indexes to title
-                elements = path.split("/")
-                elements.remove("")
-                for idx, e in enumerate(elements):
-                    if e.isnumeric():
-                        titles.insert(idx, e)
-
-                pretty_titles[path] = ": ".join(titles)
-
-        table.titles.update(pretty_titles)
+    def check_location(self, current_location, _next=[], schema=None):
+        data = schema or self.schema
+        paths = current_location + _next
+        try:
+            for i in range(0, len(paths)):
+                data = data[paths[i]]
+            return data
+        except KeyError:
+            return

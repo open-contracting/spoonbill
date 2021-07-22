@@ -45,3 +45,4 @@ JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
 TABLE_THRESHOLD = 5
 CURRENT_SCHEMA_TAG = "1__1__5"
+BASE_SCHEMA_URL = "https://standard.open-contracting.org/latest"

@@ -54,6 +54,7 @@ class DataPreprocessor:
         header_separator="/",
         language=LOCALE,
         multiple_values=False,
+        unres_schema_path=None,
     ):
         self.schema = schema
         self.root_tables = root_tables
@@ -70,6 +71,7 @@ class DataPreprocessor:
         self.names_counter = defaultdict(int)
         if not self.tables:
             self.parse_schema()
+        self.unres_schema_path = unres_schema_path
 
     def __getitem__(self, table):
         return self.tables[table]
@@ -95,9 +97,9 @@ class DataPreprocessor:
         """
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
+        self.init_tables(self.root_tables)
         if not isinstance(self.schema, jsonref.JsonRef):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
-        self.init_tables(self.root_tables)
         if self.combined_tables:
             self.init_tables(self.combined_tables, is_combined=True)
         separator = self.header_separator

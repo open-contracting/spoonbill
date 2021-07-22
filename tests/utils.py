@@ -18,8 +18,11 @@ def read_xlsx_headers(path, sheet):
     return [c.value for cell in columns for c in cell]
 
 
-def get_writers(workdir, tables, options):
-    with CSVWriter(workdir, tables, options) as csv, XlsxWriter(workdir, tables, options) as xlsx:
+def get_writers(workdir, tables, options, schema=None):
+
+    with CSVWriter(workdir, tables, options, schema=schema) as csv, XlsxWriter(
+        workdir, tables, options, schema=schema
+    ) as xlsx:
         return [csv, xlsx]
 
 

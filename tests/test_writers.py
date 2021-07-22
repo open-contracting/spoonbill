@@ -6,6 +6,7 @@ import openpyxl
 
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
+from spoonbill.utils import SchemaHeaderExtractor
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
@@ -41,7 +42,7 @@ def test_headers_filtering(spec, tmpdir, flatten_options):
         assert csv_headers[0] == ID_FIELDS[name]
 
 
-def test_writers_pretty_headers(spec, tmpdir, releases):
+def test_writers_pretty_headers(spec, tmpdir, releases, schema):
     # increase items count for force split
     releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
     for _ in spec.process_items(releases):
@@ -66,16 +67,16 @@ def test_writers_pretty_headers(spec, tmpdir, releases):
     }
 
     workdir = Path(tmpdir)
-    get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
+    titles = SchemaHeaderExtractor(schema)
 
     for name, opts in options.selection.items():
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
-        table = tables[name]
         for col in tables[name].available_rows(opts.split):
-            title = table.titles.get(col)
+            title = titles.get_header(col)
             if col == "/tender/items/id":
                 title = "item id"
             assert title in xlsx_headers
@@ -132,7 +133,7 @@ def test_writers_pretty_headers(spec, tmpdir, releases):
     assert "PARTY" in csv_headers
 
 
-def test_writers_flatten_count(spec, tmpdir, releases):
+def test_writers_flatten_count(spec, tmpdir, releases, schema):
     releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
     for _ in spec.process_items(releases):
         pass
@@ -152,20 +153,22 @@ def test_writers_flatten_count(spec, tmpdir, releases):
 
     workdir = Path(tmpdir)
     analyzer = FileAnalyzer(workdir)
-    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
+    flattener = FileFlattener(
+        workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
+    )
     xlsx = workdir / "result.xlsx"
     for _ in flattener.flatten_file(releases_path):
         pass
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Items Count" in headers
-        assert "Tenderers Count" in headers
+        assert "Tender: Items Count" in headers
+        assert "Tender: Tenderers Count" in headers
 
     sheet = "parties"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Additional Identifiers Count" in headers
+        assert "Parties: Additional Identifiers Count" in headers
 
 
 def test_writers_table_name_override(spec, tmpdir):

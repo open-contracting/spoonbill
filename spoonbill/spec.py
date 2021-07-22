@@ -93,7 +93,6 @@ class Table:
                     self.columns[col] = Column(col, "string", col)
                 if col not in self.combined_columns:
                     self.combined_columns[col] = Column(col, "string", col)
-                self.titles[col] = _(col)
 
     def _counter(self, split, cond):
         cols = self.columns if split else self.combined_columns
