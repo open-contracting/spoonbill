@@ -1,4 +1,4 @@
-name: push
+name: push_pr
 on:
   workflow_dispatch:
   pull_request:
