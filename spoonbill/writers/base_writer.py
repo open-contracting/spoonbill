@@ -8,7 +8,7 @@ class BaseWriter:
     Base writer class
     """
 
-    def __init__(self, workdir, tables, options, schema=None, unres_schema_path=None):
+    def __init__(self, workdir, tables, options, schema):
         """
         :param workdir: Working directory
         :param tables: The table objects
@@ -21,8 +21,7 @@ class BaseWriter:
         self.headers = {}
         self.names_counter = defaultdict(int)
         self.schema = schema
-        self.unres_schema_path = unres_schema_path
-        self.schema_headers = SchemaHeaderExtractor(self.schema, self.unres_schema_path) if schema else None
+        self.schema_headers = SchemaHeaderExtractor(self.schema)
 
     def get_headers(self, table, options):
         """
@@ -37,7 +36,7 @@ class BaseWriter:
         headers = {c: c for c in table.available_rows(split=split)}
         if options.pretty_headers:
             for c in headers:
-                headers[c] = self.schema_headers.get_header(c) if self.schema_headers else c
+                headers[c] = self.schema_headers.get_header(c)
         if options.headers:
             for c, h in options.headers.items():
                 headers[c] = h

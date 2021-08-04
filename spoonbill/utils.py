@@ -352,6 +352,18 @@ def get_order(properties):
 
 
 def nonschema_title_formatter(title):
+    """
+    Formatting a path, that is absent in schema, to human-readable form
+    :param title: str
+    :return: formatted title
+
+    >>> nonschema_title_formatter('legalEntityTypeDetail')
+    'Legal Entity Type Detail'
+    >>> nonschema_title_formatter('fuenteFinanciamiento')
+    'Fuente Financiamiento'
+    >>> nonschema_title_formatter('Óóó-Ñññ_Úúú')
+    'Óóó Ñññ Úúú'
+    """
     title = title.replace("_", " ").replace("-", " ")
     title = re.sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", title)
     title = title.replace("  ", " ")
@@ -364,23 +376,23 @@ class SchemaHeaderExtractor:
     Human-readable headers extracted from schema
 
     :param schema: The dataset's schema
-    :param unres_schema_path: URL or path to schema
     """
 
-    def __init__(self, schema, unres_schema_path=None):
-        self.unres_schema = resolve_file_uri(unres_schema_path) if unres_schema_path else None
+    def __init__(self, schema):
         self.schema = schema
 
     def get_header(self, path):
+        # Since default fields are added by library and titles
+        # are absent in schema - these are passed as is
         if path in DEFAULT_FIELDS_COMBINED:
             return path
         # Splitting path to separate elements (ignoring indexes for now)
         elements = [x for x in filter(None, path.split("/")) if not x.isnumeric()]
         title = []
-        for e in elements:
+        for idx, e in enumerate(elements):
             # Searching for a title in schema for each section in path
             schema_location = []
-            path_elements = elements[0 : elements.index(e) + 1]  # noqa: E203
+            path_elements = elements[0 : idx + 1]  # noqa: E203
             for path_e in path_elements:
                 if path_e == "items":
                     _next = ["properties", "items", path_e]
@@ -393,11 +405,9 @@ class SchemaHeaderExtractor:
                         schema_location, _next
                     ) else schema_location.extend(["items", "properties", path_e])
             schema_location.extend(["title"])
-            # First title is searched in unresolved schema, then - in resolved
+            # First title is searched in schema
             # If title is absent in schema - original path formatted as title
-            new_title = (
-                self.check_location(schema_location, schema=self.unres_schema) or self.check_location(schema_location)
-            ) or nonschema_title_formatter(e)
+            new_title = self.check_location(schema_location) or nonschema_title_formatter(e)
             title.append(new_title)
         # Add indexes to a title
         [title.insert(idx, e) for idx, e in enumerate(filter(None, path.split("/"))) if e.isnumeric()]

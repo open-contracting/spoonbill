@@ -3,11 +3,10 @@ from operator import attrgetter
 from pathlib import Path
 
 import jsonref
-import requests
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
-from spoonbill.common import BASE_SCHEMA_URL, COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, TABLE_THRESHOLD
+from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, DEFAULT_SCHEMA_URL, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
@@ -53,7 +52,6 @@ class FileAnalyzer:
             self.spec = None
         self.pkg_type = pkg_type
         self.order = None
-        self.unres_schema_path = None
 
     def analyze_file(self, filenames, with_preview=True):
 
@@ -84,7 +82,6 @@ class FileAnalyzer:
                     language=self.language,
                     table_threshold=self.table_threshold,
                     multiple_values=self.multiple_values,
-                    unres_schema_path=self.unres_schema_path,
                 )
             reader = get_reader(path)
             with reader(path, "rb") as fd:
@@ -105,21 +102,17 @@ class FileAnalyzer:
 
     def parse_schema(self, input_format, schema=None):
         if schema:
-            self.unres_schema_path = schema
             schema = resolve_file_uri(schema)
         if "release" in input_format:
             pkg_type = "releases"
             getter = attrgetter("release_package_schema")
-            url = f"{BASE_SCHEMA_URL}/{self.language}/release-package-schema.json"
         else:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
-            url = f"{BASE_SCHEMA_URL}/{self.language}/record-package-schema.json"
+        url = DEFAULT_SCHEMA_URL[pkg_type][self.language]
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
-            profile = ProfileBuilder(
-                CURRENT_SCHEMA_TAG, {}, schema_base_url=url if requests.get(url).status_code == 200 else None
-            )
+            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {}, schema_base_url=url)
             schema = getter(profile)()
         title = schema.get("title", "").lower()
         if not title:
@@ -128,7 +121,6 @@ class FileAnalyzer:
             # TODO: is is a good way to get release/record schema
             schema = jsonref.JsonRef.replace_refs(schema)
             schema = schema["properties"][pkg_type]["items"]
-            self.unres_schema_path = schema.__reference__["$ref"]
 
         self.schema = schema
         self.pkg_type = pkg_type
@@ -180,7 +172,6 @@ class FileFlattener:
         language=LOCALE,
         multiple_values=False,
         schema=None,
-        unres_schema_path=None,
     ):
         self.tables = tables if tables else analyzer.spec.tables
         self.flattener = Flattener(options, self.tables, language=language)
@@ -191,8 +182,7 @@ class FileFlattener:
         self.xlsx = xlsx
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
-        self.schema = schema or getattr(analyzer, "spec.schema", None)
-        self.unres_schema_path = unres_schema_path or getattr(analyzer, "spec.unres_chema_path", None)
+        self.schema = schema or getattr(getattr(analyzer, "spec"), "schema")
 
     def _flatten(self, filenames, writers):
         if not isinstance(filenames, list):
@@ -222,7 +212,6 @@ class FileFlattener:
                 workdir,
                 self.flattener.tables,
                 self.flattener.options,
-                unres_schema_path=self.unres_schema_path,
                 schema=self.schema,
             ) as writer:
                 for count in self._flatten(filename, [writer]):
@@ -232,7 +221,6 @@ class FileFlattener:
                 self.workdir,
                 self.flattener.tables,
                 self.flattener.options,
-                unres_schema_path=self.unres_schema_path,
                 filename=self.xlsx,
                 schema=self.schema,
             ) as writer:
@@ -244,7 +232,6 @@ class FileFlattener:
                 self.workdir,
                 self.flattener.tables,
                 self.flattener.options,
-                unres_schema_path=self.unres_schema_path,
                 filename=self.xlsx,
                 schema=self.schema,
             ) as xlsx, CSVWriter(
@@ -252,7 +239,6 @@ class FileFlattener:
                 self.flattener.tables,
                 self.flattener.options,
                 schema=self.schema,
-                unres_schema_path=self.unres_schema_path,
             ) as csv:
                 for count in self._flatten(filename, [xlsx, csv]):
                     yield count

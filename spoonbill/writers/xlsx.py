@@ -19,14 +19,14 @@ class XlsxWriter(BaseWriter):
 
     name = "xlsx"
 
-    def __init__(self, workdir, tables, options, schema=None, unres_schema_path=None, filename="result.xlsx"):
+    def __init__(self, workdir, tables, options, schema, filename="result.xlsx"):
         """
         :param workdir: Working directory
         :param tables: The table objects
         :param options: Flattening options
         """
 
-        super().__init__(workdir, tables, options, schema=schema, unres_schema_path=unres_schema_path)
+        super().__init__(workdir, tables, options, schema=schema)
         self.col_index = collections.defaultdict(dict)
         self.path = workdir / filename
         self.workbook = xlsxwriter.Workbook(self.path, {"constant_memory": True})

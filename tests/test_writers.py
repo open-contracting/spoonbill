@@ -105,7 +105,7 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
     )
 
     workdir = Path(tmpdir)
-    get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
 
     sheet = "tenders"
@@ -171,7 +171,7 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
         assert "Parties: Additional Identifiers Count" in headers
 
 
-def test_writers_table_name_override(spec, tmpdir):
+def test_writers_table_name_override(spec, tmpdir, schema):
     options = FlattenOptions(
         **{
             "selection": {
@@ -187,7 +187,7 @@ def test_writers_table_name_override(spec, tmpdir):
             table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
     for name in ("testname", "my_tenders", "pretty_items"):
         path = workdir / f"{name}.csv"
@@ -222,7 +222,7 @@ def test_abbreviations(spec, tmpdir):
         assert read_csv_headers(path)
 
 
-def test_name_duplicate(spec, tmpdir):
+def test_name_duplicate(spec, tmpdir, schema):
     duplicate_name = "test"
     options = FlattenOptions(
         **{
@@ -238,7 +238,7 @@ def test_name_duplicate(spec, tmpdir):
         for col in table:
             table.inc_column(col, col)
     workdir = Path(tmpdir)
-    get_writers(workdir, tables, options)
+    get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
     for name in ("test", "test1", "test2"):
         path = workdir / f"{name}.csv"
@@ -248,7 +248,7 @@ def test_name_duplicate(spec, tmpdir):
 
 
 @patch("spoonbill.LOGGER.error")
-def test_writers_invalid_table(log, spec, tmpdir):
+def test_writers_invalid_table(log, spec, tmpdir, schema):
     options = FlattenOptions(
         **{
             "selection": {
@@ -262,14 +262,14 @@ def test_writers_invalid_table(log, spec, tmpdir):
             table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options)
+    writers = get_writers(workdir, tables, options, schema)
     for writer in writers:
         writer.writerow("test", {})
     log.assert_has_calls([call("Invalid table test"), call("Invalid table test")])
 
 
 @patch("spoonbill.LOGGER.error")
-def test_writers_invalid_row(log, spec, tmpdir):
+def test_writers_invalid_row(log, spec, tmpdir, schema):
     options = FlattenOptions(
         **{
             "selection": {
@@ -283,7 +283,7 @@ def test_writers_invalid_row(log, spec, tmpdir):
             table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options)
+    writers = get_writers(workdir, tables, options, schema)
     for writer in writers:
         writer.writerow("parties", {"/test/test": "test"})
     log.assert_has_calls(
@@ -312,11 +312,11 @@ def test_writers_open_fail(open_, log, spec, tmpdir):
     log.assert_has_calls([call("Failed to open file {} with error {}".format(str(tmpdir / "testname.csv"), "test"))])
 
 
-def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
+def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    with CSVWriter(workdir, tables, flatten_options) as writer:
+    with CSVWriter(workdir, tables, flatten_options, schema) as writer:
         # Writing CSV files
         for _count, flat in flattener.flatten(releases):
             for name, rows in flat.items():
@@ -342,11 +342,11 @@ def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir):
                 counter[name] += 1
 
 
-def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
+def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    with XlsxWriter(workdir, tables, flatten_options) as writer:
+    with XlsxWriter(workdir, tables, flatten_options, schema) as writer:
         # Writing XLSX file
         for _count, flat in flattener.flatten(releases):
             for name, rows in flat.items():
@@ -381,12 +381,12 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir):
                 counter[name] += 1
 
 
-def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir):
+def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir, schema):
     test_arrays = ["tenders_items", "tenders_items_addit", "tenders_tende"]
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    with CSVWriter(workdir, tables, flatten_options) as writer:
+    with CSVWriter(workdir, tables, flatten_options, schema) as writer:
         for _count, flat in flattener.flatten(releases):
             for name, rows in flat.items():
                 for row in rows:
@@ -397,12 +397,12 @@ def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir):
         assert not path.is_file()
 
 
-def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir):
+def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir, schema):
     test_arrays = ["tenders_items", "tenders_items_addit", "tenders_tende"]
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    with XlsxWriter(workdir, tables, flatten_options) as writer:
+    with XlsxWriter(workdir, tables, flatten_options, schema) as writer:
         for _count, flat in flattener.flatten(releases):
             for name, rows in flat.items():
                 for row in rows:
@@ -414,12 +414,12 @@ def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir)
         assert name not in xlsx_reader
 
 
-def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir):
+def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
     flatten_options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
-    with XlsxWriter(workdir, tables, flatten_options) as writer:
+    with XlsxWriter(workdir, tables, flatten_options, schema) as writer:
         for _count, flat in flattener.flatten(releases):
             for name, rows in flat.items():
                 for row in rows:
@@ -434,14 +434,16 @@ def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir):
     assert xlsx_reader["tenders"].max_column == 1
 
 
-def test_flatten_multiple_files(spec, tmpdir, releases):
+def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     for _ in spec.process_items(releases):
         pass
     options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
 
     workdir = Path(tmpdir)
     analyzer = FileAnalyzer(workdir)
-    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
+    flattener = FileFlattener(
+        workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
+    )
     xlsx = workdir / "result.xlsx"
     sheet = "tenders"
     for _ in flattener.flatten_file(releases_path):
@@ -451,7 +453,9 @@ def test_flatten_multiple_files(spec, tmpdir, releases):
     line_number = ws.max_row - 1
     assert ws.max_row - 1 == 4
 
-    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer)
+    flattener = FileFlattener(
+        workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
+    )
     for _ in flattener.flatten_file([releases_path, releases_path]):
         pass
     wb = openpyxl.load_workbook(xlsx)

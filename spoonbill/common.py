@@ -45,4 +45,14 @@ JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
 TABLE_THRESHOLD = 5
 CURRENT_SCHEMA_TAG = "1__1__5"
-BASE_SCHEMA_URL = "https://standard.open-contracting.org/latest"
+CURRENT_URL_TAG = "1.1"
+DEFAULT_SCHEMA_URL = {
+    "releases": {
+        "en": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/release-package-schema.json",
+        "es": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/release-package-schema.json",
+    },
+    "records": {
+        "en": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/record-package-schema.json",
+        "es": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/record-package-schema.json",
+    },
+}

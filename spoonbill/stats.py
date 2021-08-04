@@ -54,7 +54,6 @@ class DataPreprocessor:
         header_separator="/",
         language=LOCALE,
         multiple_values=False,
-        unres_schema_path=None,
     ):
         self.schema = schema
         self.root_tables = root_tables
@@ -71,7 +70,6 @@ class DataPreprocessor:
         self.names_counter = defaultdict(int)
         if not self.tables:
             self.parse_schema()
-        self.unres_schema_path = unres_schema_path
 
     def __getitem__(self, table):
         return self.tables[table]
