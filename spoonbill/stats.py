@@ -234,6 +234,7 @@ class DataPreprocessor:
                         continue
 
                     if isinstance(item, dict):
+                        self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
                         to_analyze.append(
                             (
                                 separator.join([abs_path, key]),
@@ -264,6 +265,7 @@ class DataPreprocessor:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.set_preview_path(abs_pointer, pointer, value, self.table_threshold)
                         elif self.current_table.is_root or self.current_table.is_combined:
+                            self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
                             for value in item:
                                 to_analyze.append(
                                     (
