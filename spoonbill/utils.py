@@ -404,10 +404,14 @@ class SchemaHeaderExtractor:
                     schema_location.extend(_next) if self.check_location(
                         schema_location, _next
                     ) else schema_location.extend(["items", "properties", path_e])
-            schema_location.extend(["title"])
-            # First title is searched in schema
-            # If title is absent in schema - original path formatted as title
-            new_title = self.check_location(schema_location) or nonschema_title_formatter(e)
+            schema_item = self.check_location(schema_location)
+            if hasattr(schema_item, "__reference__") and schema_item.__reference__.get("title"):
+                new_title = schema_item.__reference__.get("title", "")
+            else:
+                schema_location.extend(["title"])
+                # First title is searched in schema
+                # If title is absent in schema - original path formatted as title
+                new_title = self.check_location(schema_location) or nonschema_title_formatter(e)
             title.append(new_title)
         # Add indexes to a title
         [title.insert(idx, e) for idx, e in enumerate(filter(None, path.split("/"))) if e.isnumeric()]
