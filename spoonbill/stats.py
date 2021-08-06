@@ -8,7 +8,7 @@ from typing import List, Mapping
 import jsonref
 from flatten_dict import flatten
 
-from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
+from spoonbill.common import ARRAY, COMBINED_TABLES, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
 from spoonbill.i18n import LOCALE, _
 from spoonbill.rowdata import Rows
 from spoonbill.spec import Table, add_child_table
@@ -233,6 +233,9 @@ class DataPreprocessor:
                         LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
                         continue
 
+                    if self.current_table.name in COMBINED_TABLES:
+                        self.extend_table_types(pointer, item)
+
                     if isinstance(item, dict):
                         to_analyze.append(
                             (
@@ -349,3 +352,13 @@ class DataPreprocessor:
                 return pickle.load(fd)
         except (TypeError, pickle.UnpicklingError):
             LOGGER.error(_("Invalid pickle file. Can't restore."))
+
+    def extend_table_types(self, pointer, item):
+        """
+        Check if path belong to table and expand its types
+        :param pointer: Path to an item
+        :param item: Item being analyzed
+        """
+        for path in self.current_table.path:
+            if pointer.startswith(path) and pointer not in self.current_table.types:
+                self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]

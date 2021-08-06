@@ -15,6 +15,7 @@ here = pathlib.Path(__file__).parent
 schema_path = here / "data" / "ocds-simplified-schema.json"
 releases_path = here / "data" / "ocds-sample-data.json"
 analyzed_path = here / "data" / "analyzed"
+releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
 
 
 @pytest.fixture
@@ -26,6 +27,12 @@ def schema():
 @pytest.fixture
 def releases():
     with open(releases_path) as fd:
+        return json.load(fd, object_pairs_hook=OrderedDict)["releases"]
+
+
+@pytest.fixture
+def releases_extension():
+    with open(releases_extension_path) as fd:
         return json.load(fd, object_pairs_hook=OrderedDict)["releases"]
 
 

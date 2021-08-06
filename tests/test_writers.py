@@ -9,7 +9,7 @@ from spoonbill.flatten import Flattener, FlattenOptions
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
-from .conftest import releases_path
+from .conftest import releases_extension_path, releases_path
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -454,3 +454,29 @@ def test_flatten_multiple_files(spec, tmpdir, releases):
     wb = openpyxl.load_workbook(xlsx)
     ws = wb[sheet]
     assert ws.max_row - 1 == line_number * 2
+
+
+def test_extension_export(spec, tmpdir, releases_extension):
+    for _ in spec.process_items(releases_extension):
+        pass
+    options = FlattenOptions(**{"selection": {"tenders": {"split": False}, "documents": {"split": False}}})
+
+    workdir = Path(tmpdir)
+    analyzer = FileAnalyzer(workdir)
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, analyzer=analyzer)
+    xlsx = workdir / "result.xlsx"
+    sheet = "documents"
+    extension_header = "/documents/test_extension"
+    for _ in flattener.flatten_file(releases_extension_path):
+        pass
+    wb = openpyxl.load_workbook(xlsx)
+    ws = wb[sheet]
+    for column_cell in ws.iter_cols(1, ws.max_column):
+        if column_cell[0].value == extension_header:
+            extension_column = ws[column_cell[0].coordinate[:-1]]
+    for cell in extension_column:
+        if cell.value == extension_header:
+            continue
+        assert cell.value == "test"
+    for column_cell in wb["tenders"].iter_cols(1, ws.max_column):
+        assert column_cell[0].value != extension_header
