@@ -93,6 +93,7 @@ class DataPreprocessor:
         """
         Extract information from the schema.
         """
+        spoonbill_headers = {}
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.init_tables(self.root_tables)
@@ -118,6 +119,12 @@ class DataPreprocessor:
                         continue
                     typeset = extract_type(item)
                     pointer = separator.join([path, key])
+
+                    if hasattr(item, "__reference__") and item.__reference__.get("title"):
+                        spoonbill_headers[pointer] = item.__reference__.get("title")
+                    else:
+                        spoonbill_headers[pointer] = item["title"]
+
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
@@ -146,6 +153,7 @@ class DataPreprocessor:
             else:
                 # TODO: not sure what to do here
                 continue
+        self.schema["$spoonbill_headers"] = spoonbill_headers
 
     def _add_table(self, table, pointer):
         self.tables[table.name] = table

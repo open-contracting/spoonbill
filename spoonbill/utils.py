@@ -4,16 +4,17 @@ import gzip
 import json
 import logging
 import re
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
 from pathlib import Path
 
 import ijson
+import jsonref
 import requests
 
-from spoonbill.common import COMBINED_TABLES, DEFAULT_FIELDS_COMBINED
+from spoonbill.common import COMBINED_TABLES
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -382,47 +383,65 @@ class SchemaHeaderExtractor:
         self.schema = schema
 
     def get_header(self, path):
-        # Since default fields are added by library and titles
-        # are absent in schema - these are passed as is
-        if path in DEFAULT_FIELDS_COMBINED:
-            return path
-        # Splitting path to separate elements (ignoring indexes for now)
-        elements = [x for x in filter(None, path.split("/")) if not x.isnumeric()]
-        title = []
-        for idx, e in enumerate(elements):
-            # Searching for a title in schema for each section in path
-            schema_location = []
-            path_elements = elements[0 : idx + 1]  # noqa: E203
-            for path_e in path_elements:
-                if path_e == "items":
-                    _next = ["properties", "items", path_e]
-                    schema_location.extend(_next) if self.check_location(
-                        schema_location, _next
-                    ) else schema_location.extend(["properties", "properties", path_e])
-                else:
-                    _next = ["properties", path_e]
-                    schema_location.extend(_next) if self.check_location(
-                        schema_location, _next
-                    ) else schema_location.extend(["items", "properties", path_e])
-            schema_item = self.check_location(schema_location)
-            if hasattr(schema_item, "__reference__") and schema_item.__reference__.get("title"):
-                new_title = schema_item.__reference__.get("title", "")
+        """
+        Constructing full title for given path
+        :param path: path
+        :return: title
+        """
+        titles = []
+        paths = path.split("/")
+        # Titles are extracted from schema if they weren't already
+        if "$spoonbill_headers" not in self.schema:
+            self.parse_schema()
+        headers = self.schema["$spoonbill_headers"]
+        for idx, p in enumerate(paths):
+            current_path = "/".join(paths[0 : idx + 1])  # noqa: E203
+            if current_path in headers:
+                titles.append(headers[current_path])
             else:
-                schema_location.extend(["title"])
-                # First title is searched in schema
-                # If title is absent in schema - original path formatted as title
-                new_title = self.check_location(schema_location) or nonschema_title_formatter(e)
-            title.append(new_title)
-        # Add indexes to a title
-        [title.insert(idx, e) for idx, e in enumerate(filter(None, path.split("/"))) if e.isnumeric()]
-        return ": ".join(title)
+                # If title is absent in schema - it is formatted
+                titles.append(nonschema_title_formatter(p))
+        titles = list(filter(None, titles))
+        return ": ".join(titles)
 
-    def check_location(self, current_location, _next=[], schema=None):
-        data = schema or self.schema
-        paths = current_location + _next
-        try:
-            for i in range(0, len(paths)):
-                data = data[paths[i]]
-            return data
-        except KeyError:
-            return
+    def parse_schema(self):
+        """
+        Extracting all possible titles from given schema
+        """
+        spoonbill_headers = {}
+        if isinstance(self.schema, (str, Path)):
+            self.schema = resolve_file_uri(self.schema)
+
+        if not isinstance(self.schema, jsonref.JsonRef):
+            self.schema = jsonref.JsonRef.replace_refs(self.schema)
+
+        to_analyze = deque([("", "", {}, self.schema)])
+
+        while to_analyze:
+            path, parent_key, parent, prop = to_analyze.pop()
+            if prop.get("deprecated"):
+                continue
+            properties = prop.get("properties", {})
+            if properties:
+                for key, item in properties.items():
+                    if item.get("deprecated"):
+                        continue
+                    if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
+                        continue
+                    typeset = extract_type(item)
+                    pointer = "/".join([path, key])
+
+                    if hasattr(item, "__reference__") and item.__reference__.get("title"):
+                        spoonbill_headers[pointer] = item.__reference__.get("title")
+                    else:
+                        spoonbill_headers[pointer] = item["title"]
+
+                    if "object" in typeset:
+                        to_analyze.append((pointer, key, properties, item))
+                    elif "array" in typeset:
+                        items = item["items"]
+                        items_type = extract_type(items)
+                        pointer = "/".join([path, key])
+                        if set(items_type) & {"array", "object"}:
+                            to_analyze.append((pointer, key, properties, items))
+        self.schema["$spoonbill_headers"] = spoonbill_headers
