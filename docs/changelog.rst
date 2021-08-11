@@ -3,6 +3,15 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.6b6 (2021-07-14)
+--------------------
+Fixed
+~~~~~
+*  combined table's extensions are missing from export (`b1e897b <https://github.com/open-contracting/spoonbill/commit/b1e897bb87365cb8495aa57b6958f14292883780>`__)
+*  table's extensions are missing from export (`6ebd662 <https://github.com/open-contracting/spoonbill/commit/6ebd6621d27b6dfccd39d497a6f7fdb3c366bb25>`__)
+*  `JsongrefError` for record schema (`b2d6066 <https://github.com/open-contracting/spoonbill/commit/b2d606626f0368d86094073ce21d982b4e89a76a>`__)
+*  locale is set to EN if it's absent (`b5d2aa9 <https://github.com/open-contracting/spoonbill/commit/b5d2aa9dd95708bbea6180986d6b57cdf0327bbf>`__)
+
 1.0.5b6 (2021-07-14)
 --------------------
 Added
