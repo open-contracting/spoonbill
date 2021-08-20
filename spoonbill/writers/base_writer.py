@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from spoonbill.utils import SchemaHeaderExtractor
+from spoonbill.utils import SchemaHeaderExtractor, nonschema_title_formatter
 
 
 class BaseWriter:
@@ -36,7 +36,14 @@ class BaseWriter:
         headers = {c: c for c in table.available_rows(split=split)}
         if options.pretty_headers:
             for c in headers:
-                headers[c] = self.schema_headers.get_header(c)
+                headers[c] = table.titles.get(c, c)
+                for k, v in headers.items():
+                    if v and isinstance(v, list):
+                        headers[k] = self.schema_headers.get_header(v)
+                    elif v == []:
+                        headers[k] = nonschema_title_formatter(k)
+                    else:
+                        headers[k] = nonschema_title_formatter(v)
         if options.headers:
             for c, h in options.headers.items():
                 headers[c] = h

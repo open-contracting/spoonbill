@@ -30,6 +30,7 @@ setup(
         "xlsxwriter",
         'dataclasses;python_version<"3.7"',
         "flatten-dict",
+        "scalpl",
     ],
     extras_require={
         "test": [

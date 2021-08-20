@@ -4,7 +4,7 @@ import gzip
 import json
 import logging
 import re
-from collections import OrderedDict, deque
+from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
 from numbers import Number
@@ -13,6 +13,7 @@ from pathlib import Path
 import ijson
 import jsonref
 import requests
+from scalpl import Cut
 
 from spoonbill.common import COMBINED_TABLES
 
@@ -367,7 +368,9 @@ def nonschema_title_formatter(title):
     """
     title = title.replace("_", " ").replace("-", " ")
     title = re.sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", title)
-    title = title.replace("  ", " ")
+    title = title.replace("  ", " ").replace("/", ": ")
+    if title.startswith(": "):
+        title = title[2:]
     title = title.title()
     return title
 
@@ -381,67 +384,87 @@ class SchemaHeaderExtractor:
 
     def __init__(self, schema):
         self.schema = schema
-
-    def get_header(self, path):
-        """
-        Constructing full title for given path
-        :param path: path
-        :return: title
-        """
-        titles = []
-        paths = path.split("/")
-        # Titles are extracted from schema if they weren't already
-        if "$spoonbill_headers" not in self.schema:
-            self.parse_schema()
-        headers = self.schema["$spoonbill_headers"]
-        for idx, p in enumerate(paths):
-            current_path = "/".join(paths[0 : idx + 1])  # noqa: E203
-            if current_path in headers:
-                titles.append(headers[current_path])
-            else:
-                # If title is absent in schema - it is formatted
-                titles.append(nonschema_title_formatter(p))
-        titles = list(filter(None, titles))
-        return ": ".join(titles)
-
-    def parse_schema(self):
-        """
-        Extracting all possible titles from given schema
-        """
-        spoonbill_headers = {}
-        if isinstance(self.schema, (str, Path)):
-            self.schema = resolve_file_uri(self.schema)
-
-        if not isinstance(self.schema, jsonref.JsonRef):
+        if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
-        to_analyze = deque([("", "", {}, self.schema)])
-
-        while to_analyze:
-            path, parent_key, parent, prop = to_analyze.pop()
-            if prop.get("deprecated"):
+    def get_header(self, paths):
+        final_title = []
+        for path in paths:
+            _object = Cut(self.schema)["properties." + ".".join(path[:-1])]
+            if hasattr(_object, "__reference__") and "title" in _object.__reference__:
+                title = _object.__reference__["title"]
+            else:
+                title = Cut(self.schema)["properties." + ".".join(path)]
+            if isinstance(title, dict):
                 continue
-            properties = prop.get("properties", {})
-            if properties:
-                for key, item in properties.items():
-                    if item.get("deprecated"):
-                        continue
-                    if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
-                        continue
-                    typeset = extract_type(item)
-                    pointer = "/".join([path, key])
+            final_title.append(title)
+        return ":".join(final_title)
 
-                    if hasattr(item, "__reference__") and item.__reference__.get("title"):
-                        spoonbill_headers[pointer] = item.__reference__.get("title")
-                    else:
-                        spoonbill_headers[pointer] = item["title"]
 
-                    if "object" in typeset:
-                        to_analyze.append((pointer, key, properties, item))
-                    elif "array" in typeset:
-                        items = item["items"]
-                        items_type = extract_type(items)
-                        pointer = "/".join([path, key])
-                        if set(items_type) & {"array", "object"}:
-                            to_analyze.append((pointer, key, properties, items))
-        self.schema["$spoonbill_headers"] = spoonbill_headers
+def generate_paths(source):
+    """
+    Generate full paths for nested dictionary or alike object
+    :param source: Input object
+    :return: List of paths
+    """
+    paths = []
+    if isinstance(source, dict):
+        for k, v in source.items():
+            paths.append([k])
+            paths += [[k] + x for x in generate_paths(v)]
+    return paths
+
+
+def add_paths_to_schema(unres_schema, schema):
+    """
+    Extracts full path for each title in schema; creates paths list of full title for each
+    :param unres_schema: Unresolved schema
+    :param schema: Schema object that will be updated
+    :return: Schema with full title paths
+    """
+    proxy = Cut(schema["properties"])
+    updated_items = {}
+    for table in proxy.keys():
+        # In order to add title paths to schema without overlapping refs -
+        # each key in 'properties' should be deep copied from unres schema
+        # TODO: is it the best way to get deep copy of resolved schema?
+        path_item = jsonref.JsonRef.replace_refs(unres_schema)
+        path_item = path_item["properties"][table]
+        path_item = Cut({table: path_item})
+        # Generating path to each title in schema
+        for path in generate_paths({table: proxy[table]}):
+            if path[-1] == "title":
+                object_path = ".".join(path[:-1])
+                if hasattr(path_item[object_path], "__reference__"):
+                    path_item[object_path].__reference__["$path"] = path
+                path_item[object_path]["$path"] = path
+        updated_items[table] = path_item[table]
+    schema["properties"] = updated_items
+    # Generating array with title paths for each title in schema
+    title_paths = [path for path in title_path(schema["properties"])]
+    for path_list in title_paths:
+        location = "properties." + ".".join(path_list[-1][:-1])
+        if hasattr(Cut(schema)[location], "__reference__"):
+            Cut(schema)[location].__reference__["_title"] = path_list
+        Cut(schema)[location]["_title"] = path_list
+    return schema
+
+
+def title_path(schema, path=[]):
+    """
+    Get path for each previous title and form full list of titles for each object
+    :param schema: Object
+    :param path: List of paths for full title
+    :return:
+    """
+    for k, v in schema.items():
+        newpath = path
+        if "$path" in schema:
+            newpath = path + [schema.get("$path", [])]
+        if isinstance(v, dict):
+            for result in title_path(v, newpath):
+                if result:
+                    yield result
+        else:
+            if newpath:
+                yield newpath

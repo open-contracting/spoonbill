@@ -6,7 +6,7 @@ import openpyxl
 
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
-from spoonbill.utils import SchemaHeaderExtractor
+from spoonbill.utils import SchemaHeaderExtractor, nonschema_title_formatter
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
@@ -69,14 +69,28 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
-    titles = SchemaHeaderExtractor(schema)
+    schema_headers = SchemaHeaderExtractor(schema)
+
+    table_headers = {}
+    for name, table in tables.items():
+        headers = {c: c for c in table.available_rows(split=False if "parties" in name else True)}
+        for c in headers:
+            headers[c] = table.titles.get(c, c)
+            for k, v in headers.items():
+                if v and isinstance(v, list):
+                    headers[k] = schema_headers.get_header(v)
+                elif not v:
+                    headers[k] = nonschema_title_formatter(k)
+                else:
+                    headers[k] = nonschema_title_formatter(v)
+        table_headers[name] = headers
 
     for name, opts in options.selection.items():
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
         for col in tables[name].available_rows(opts.split):
-            title = titles.get_header(col)
+            title = table_headers[name][col]
             if col == "/tender/items/id":
                 title = "item id"
             assert title in xlsx_headers

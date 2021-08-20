@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Mapping
 
 import jsonref
+import requests
 from flatten_dict import flatten
 
 from spoonbill.common import ARRAY, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
@@ -15,6 +16,7 @@ from spoonbill.spec import Table, add_child_table
 from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
     RepeatFilter,
+    add_paths_to_schema,
     extract_type,
     generate_table_name,
     get_matching_tables,
@@ -93,7 +95,6 @@ class DataPreprocessor:
         """
         Extract information from the schema.
         """
-        spoonbill_headers = {}
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.init_tables(self.root_tables)
@@ -103,6 +104,7 @@ class DataPreprocessor:
             self.init_tables(self.combined_tables, is_combined=True)
         separator = self.header_separator
         to_analyze = deque([("", "", {}, self.schema)])
+        self.schema = add_paths_to_schema(requests.get(self.schema["id"]).json(), self.schema)
 
         # TODO: check if recursion is better for field ordering
         while to_analyze:
@@ -113,18 +115,14 @@ class DataPreprocessor:
             properties = prop.get("properties", {})
             if properties:
                 for key, item in properties.items():
+                    if isinstance(item, list):
+                        continue
                     if item.get("deprecated"):
                         continue
                     if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
                         continue
                     typeset = extract_type(item)
                     pointer = separator.join([path, key])
-
-                    if hasattr(item, "__reference__") and item.__reference__.get("title"):
-                        spoonbill_headers[pointer] = item.__reference__.get("title")
-                    else:
-                        spoonbill_headers[pointer] = item["title"]
-
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
@@ -145,15 +143,19 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, typeset, _(pointer, self.language))
+                            self.current_table.add_column(
+                                pointer, typeset, _(pointer, self.language), header=item["_title"]
+                            )
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
-                        self.current_table.add_column(pointer, typeset, _(pointer, self.language))
+                        self.current_table.add_column(
+                            pointer, typeset, _(pointer, self.language), header=item["_title"]
+                        )
+
             else:
                 # TODO: not sure what to do here
                 continue
-        self.schema["$spoonbill_headers"] = spoonbill_headers
 
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
