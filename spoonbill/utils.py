@@ -398,7 +398,7 @@ class SchemaHeaderExtractor:
             if isinstance(title, dict):
                 continue
             final_title.append(title)
-        return ":".join(final_title)
+        return ": ".join(final_title)
 
 
 def generate_paths(source):

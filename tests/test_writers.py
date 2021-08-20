@@ -3,14 +3,16 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 import openpyxl
+import requests
+from scalpl import Cut
 
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
-from spoonbill.utils import SchemaHeaderExtractor, nonschema_title_formatter
+from spoonbill.utils import SchemaHeaderExtractor, add_paths_to_schema, generate_paths, nonschema_title_formatter
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
-from .conftest import releases_path
+from .conftest import releases_extension_path, releases_path
 from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
@@ -475,3 +477,51 @@ def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     wb = openpyxl.load_workbook(xlsx)
     ws = wb[sheet]
     assert ws.max_row - 1 == line_number * 2
+
+
+def test_extension_export(spec, tmpdir, releases_extension, schema):
+    for _ in spec.process_items(releases_extension):
+        pass
+    options = FlattenOptions(**{"selection": {"tenders": {"split": False}, "documents": {"split": False}}})
+
+    workdir = Path(tmpdir)
+    analyzer = FileAnalyzer(workdir)
+    flattener = FileFlattener(workdir=workdir, options=options, tables=spec.tables, analyzer=analyzer, schema=schema)
+    xlsx = workdir / "result.xlsx"
+    sheet = "documents"
+    extension_header = "/documents/test_extension"
+    for _ in flattener.flatten_file(releases_extension_path):
+        pass
+    wb = openpyxl.load_workbook(xlsx)
+    ws = wb[sheet]
+    for column_cell in ws.iter_cols(1, ws.max_column):
+        if column_cell[0].value == extension_header:
+            extension_column = ws[column_cell[0].coordinate[:-1]]
+    for cell in extension_column:
+        if cell.value == extension_header:
+            continue
+        assert cell.value == "test"
+    for column_cell in wb["tenders"].iter_cols(1, ws.max_column):
+        assert column_cell[0].value != extension_header
+
+
+def test_schema_header_paths(schema):
+    paths = generate_paths(schema["properties"])
+    schema = add_paths_to_schema(requests.get(schema["id"]).json(), schema)
+    proxy = Cut(schema["properties"])
+    for path in paths:
+        if path[-1] == "title":
+            _path = ".".join(path[:-1])
+            assert "_title" in proxy[_path]
+            assert proxy[_path]["_title"][-1] == path
+
+
+def test_schema_header_generation(schema):
+    headers = SchemaHeaderExtractor(schema)
+    paths = [
+        ["parties", "title"],
+        ["parties", "items", "title"],
+        ["parties", "items", "properties", "contactPoint", "title"],
+        ["parties", "items", "properties", "contactPoint", "properties", "name", "title"],
+    ]
+    assert headers.get_header(paths) == "Parties: Organization: Contact point: Name"

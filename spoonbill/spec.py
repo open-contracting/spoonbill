@@ -25,7 +25,7 @@ class Column:
     type: str
     id: str
     hits: int = 0
-    header: list = field(default_factory=lambda: [])
+    header: list = field(default_factory=list)
 
 
 @dataclass
