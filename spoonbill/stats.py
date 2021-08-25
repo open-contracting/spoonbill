@@ -219,6 +219,9 @@ class DataPreprocessor:
             self.current_table.inc()
             self.add_preview_row(rows, record.get("id", ""), parent_key)
 
+    def is_new_row(self, pointer):
+        return pointer in self.current_table.path and pointer != "/buyer"
+
     def process_items(self, releases, with_preview=True):
         """
         Analyze releases.
@@ -244,7 +247,7 @@ class DataPreprocessor:
                         continue
 
                     item_type = self.current_table.types.get(pointer)
-                    if pointer in self.current_table.path and pointer != "/buyer":
+                    if self.is_new_row(pointer):
                         # strict match like /parties, /tender
                         self.inc_table(item, rows, parent_key, record)
 
