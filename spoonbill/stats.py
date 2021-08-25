@@ -16,6 +16,7 @@ from spoonbill.utils import (
     PYTHON_TO_JSON_TYPE,
     RepeatFilter,
     add_paths_to_schema,
+    common_prefix,
     extract_type,
     generate_table_name,
     get_matching_tables,
@@ -85,6 +86,9 @@ class DataPreprocessor:
         if self.names_counter[table_name] > 1:
             key = key[:4] + str(self.names_counter[table_name] - 1)
         return key
+
+    def guess_type(self, item):
+        return [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
 
     def init_tables(self, tables, is_combined=False):
         """
@@ -220,7 +224,15 @@ class DataPreprocessor:
             self.add_preview_row(rows, record.get("id", ""), parent_key)
 
     def is_new_row(self, pointer):
+        # strict match like /parties, /tender
         return pointer in self.current_table.path and pointer != "/buyer"
+
+    def join_path(self, *args):
+        return self.header_separator.join(args)
+
+    def modify_path_for_combined_table(self, parent_key, key):
+        pointer = self.header_separator + self.join_path(parent_key, key)
+        return (pointer, pointer)
 
     def process_items(self, releases, with_preview=True):
         """
@@ -240,17 +252,16 @@ class DataPreprocessor:
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
                 for key, item in record.items():
-                    pointer = separator.join([path, key])
+                    pointer = self.join_path(path, key)
 
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
 
-                    item_type = self.current_table.types.get(pointer)
                     if self.is_new_row(pointer):
-                        # strict match like /parties, /tender
                         self.inc_table(item, rows, parent_key, record)
 
+                    item_type = self.current_table.types.get(pointer)
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
                         LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
@@ -260,10 +271,9 @@ class DataPreprocessor:
                         self.extend_table_types(pointer, item)
 
                     if isinstance(item, dict):
-                        self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
                         to_analyze.append(
                             (
-                                separator.join([abs_path, key]),
+                                self.join_path(abs_path, key),
                                 pointer,
                                 key,
                                 record,
@@ -271,13 +281,14 @@ class DataPreprocessor:
                             )
                         )
                     elif item and isinstance(item, list):
-                        abs_pointer = separator.join([abs_path, key])
+                        abs_pointer = self.join_path(abs_path, key)
                         if not isinstance(item[0], dict) and not item_type:
                             LOGGER.debug(
                                 _("Detected additional column: %s in %s table")
                                 % (abs_pointer, self.current_table.name)
                             )
                             item_type = JOINABLE
+                            self.current_table.types[pointer] = JOINABLE
                             self.current_table.add_column(
                                 pointer,
                                 JOINABLE,
@@ -291,7 +302,6 @@ class DataPreprocessor:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.set_preview_path(abs_pointer, pointer, value, self.table_threshold)
                         elif self.current_table.is_root or self.current_table.is_combined:
-                            self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
                             for value in item:
                                 to_analyze.append(
                                     (
@@ -323,7 +333,7 @@ class DataPreprocessor:
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
-                                    abs_pointer = separator.join([abs_path, key, str(i)])
+                                    abs_pointer = self.join_path(abs_path, key, str(i))
                                     to_analyze.append(
                                         (
                                             abs_pointer,
@@ -335,14 +345,13 @@ class DataPreprocessor:
                                     )
                     else:
                         root = get_root(self.current_table)
-                        abs_pointer = separator.join((abs_path, key))
+                        abs_pointer = self.join_path(abs_path, key)
                         if self.current_table.is_combined:
-                            pointer = separator + separator.join((parent_key, key))
-                            abs_pointer = pointer
+                            pointer, abs_pointer = self.modify_path_for_combined_table(parent_key, key)
                         if abs_pointer not in root.combined_columns:
                             self.current_table.add_column(
                                 pointer,
-                                PYTHON_TO_JSON_TYPE.get(type(item).__name__, "N/A"),
+                                self.guess_type(item),
                                 _(pointer, self.language),
                                 additional=True,
                                 abs_path=abs_pointer,
@@ -385,6 +394,7 @@ class DataPreprocessor:
         :param pointer: Path to an item
         :param item: Item being analyzed
         """
-        for path in self.current_table.path:
-            if pointer.startswith(path) and pointer not in self.current_table.types:
-                self.current_table.types[pointer] = [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
+        table = self.current_table
+        if pointer not in table.types:
+            if any((common_prefix(pointer, path) for path in table.path)):
+                self.current_table.types[pointer] = self.guess_type(item)
