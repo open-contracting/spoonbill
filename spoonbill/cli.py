@@ -227,7 +227,7 @@ def cli(
         # Progress bar not showing with small files
         # https://github.com/pallets/click/pull/1296/files
         with click.progressbar(width=0, show_percent=True, show_pos=True, length=total) as bar:
-            for read, number in analyzer.analyze_file(filename, with_preview=True):
+            for read, number in analyzer.analyze_file(filename, with_preview=False):
                 bar.label = ANALYZED_LABEL.format(click.style(str(number), fg="cyan"))
                 bar.update(read - progress)
                 progress = read

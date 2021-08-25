@@ -56,6 +56,7 @@ class DataPreprocessor:
         language=LOCALE,
         multiple_values=False,
         pkg_type=None,
+        with_preview=False,
     ):
         self.schema = schema
         self.root_tables = root_tables
@@ -70,6 +71,7 @@ class DataPreprocessor:
 
         self.language = language
         self.names_counter = defaultdict(int)
+        self.with_preview = with_preview
         if not self.tables:
             self.parse_schema()
         self.pkg_type = pkg_type
@@ -206,8 +208,16 @@ class DataPreprocessor:
         :param item_id: Object id
         """
         table = self.current_table
-        for p_rows in table.preview_rows, table.preview_rows_combined:
-            p_rows.append(rows.new_row(table, item_id).as_dict())
+        if self.with_preview and table.total_rows < PREVIEW_ROWS:
+            for p_rows in table.preview_rows, table.preview_rows_combined:
+                row = rows.new_row(table, item_id).as_dict()
+                p_rows.append(row)
+
+    def inc_table(self, item, rows, parent_key, record):
+        c = item if isinstance(item, list) else [item]
+        for _nop in c:
+            self.current_table.inc()
+            self.add_preview_row(rows, record.get("id", ""), parent_key)
 
     def process_items(self, releases, with_preview=True):
         """
@@ -228,17 +238,15 @@ class DataPreprocessor:
                 abs_path, path, parent_key, parent, record = to_analyze.pop()
                 for key, item in record.items():
                     pointer = separator.join([path, key])
+
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
+
                     item_type = self.current_table.types.get(pointer)
                     if pointer in self.current_table.path and pointer != "/buyer":
                         # strict match like /parties, /tender
-                        c = item if isinstance(item, list) else [item]
-                        for _nop in c:
-                            self.current_table.inc()
-                            if with_preview and count < PREVIEW_ROWS:
-                                self.add_preview_row(rows, record.get("id", ""), parent_key)
+                        self.inc_table(item, rows, parent_key, record)
 
                     # TODO: this validation should probably be smarter with arrays
                     if item_type and item_type != JOINABLE and not validate_type(item_type, item):
@@ -276,7 +284,7 @@ class DataPreprocessor:
                             )
                         if item_type == JOINABLE:
                             self.current_table.inc_column(abs_pointer, pointer)
-                            if with_preview and count < PREVIEW_ROWS:
+                            if self.with_preview and count < PREVIEW_ROWS:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.set_preview_path(abs_pointer, pointer, value, self.table_threshold)
                         elif self.current_table.is_root or self.current_table.is_combined:
@@ -298,6 +306,7 @@ class DataPreprocessor:
                                 self.current_table.types[pointer] = ["array"]
                                 parent_table = self.current_table
                                 # TODO: do we need to mark this table as additional
+
                                 self._add_additional_table(pointer, abs_pointer, parent_key, key, item)
                                 self.add_preview_row(rows, record.get("id", ""), parent_key)
                             if parent_table.set_array(pointer, item):
@@ -336,7 +345,7 @@ class DataPreprocessor:
                                 abs_path=abs_pointer,
                             )
                         self.current_table.inc_column(abs_pointer, pointer)
-                        if item and with_preview and count < PREVIEW_ROWS:
+                        if item and self.with_preview and count < PREVIEW_ROWS:
                             if not pointer.startswith("/buyer"):
                                 self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
