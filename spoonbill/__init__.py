@@ -62,13 +62,12 @@ class FileAnalyzer:
         """
         if not isinstance(filenames, list):
             filenames = [filenames]
-
         path = self.workdir / filenames[0]
         (
             input_format,
             _is_concatenated,
             _is_array,
-        ) = detect_format(path=filenames[0], reader=get_reader(path))
+        ) = detect_format(path=path, reader=get_reader(path))
         LOGGER.info(_("Input file is {}").format(input_format))
         self.multiple_values = _is_concatenated
         self.parse_schema(input_format, self.schema)

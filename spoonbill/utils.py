@@ -344,8 +344,7 @@ def get_reader(path):
 
 
 def get_order(properties):
-    order = [name for name in properties]
-    order.extend(COMBINED_TABLES.keys())
+    order = [name for name in chain(properties, COMBINED_TABLES)]
     if "tender" in order:
         order[order.index("tender")] = "tenders"
     return order
