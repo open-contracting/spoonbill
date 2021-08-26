@@ -89,13 +89,10 @@ class FileAnalyzer:
                     yield fd.tell(), count
         self.sort_tables()
 
-    def dump_to_file(self, filenames):
+    def dump_to_file(self, filename):
         """Save analyzed information to file
         :param filename: Output filename in working directory
         """
-        if not isinstance(filenames, list):
-            filenames = [filenames]
-        filename = filenames[0] / str(len(filenames)) if len(filenames) > 1 else ""
         path = self.workdir / filename
         self.spec.dump(path)
 
