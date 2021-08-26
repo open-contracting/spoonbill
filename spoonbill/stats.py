@@ -98,6 +98,9 @@ class DataPreprocessor:
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
 
+    def is_base_table(self):
+        return self.current_table.is_root or self.current_table.is_combined
+
     def parse_schema(self):
         """
         Extract information from the schema.
@@ -129,7 +132,7 @@ class DataPreprocessor:
                     if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
                         continue
                     typeset = extract_type(item)
-                    pointer = separator.join([path, key])
+                    pointer = self.join_path(path, key)
                     self.current_table = self.get_table(pointer)
                     if not self.current_table:
                         continue
@@ -155,8 +158,7 @@ class DataPreprocessor:
                             )
                     else:
                         if self.current_table.is_combined:
-                            pointer = separator + separator.join((parent_key, key))
-
+                            pointer = separator + self.join_path(parent_key, key)
                         self.current_table.add_column(
                             pointer, typeset, _(pointer, self.language), header=item["$title"]
                         )
@@ -179,14 +181,13 @@ class DataPreprocessor:
         # there must be a better way but it should work for now
         for extended_item in item:
             for path_, it in flatten(extended_item, reducer="path").items():
-                p = separator.join((pointer, path_))
-                a_p = separator.join((abs_pointer, path_))
-                if p not in self.current_table:
+                ppointer = self.join_path(pointer, path_)
+                if ppointer not in self.current_table:
                     self.current_table.add_column(
-                        p,
-                        PYTHON_TO_JSON_TYPE.get(type(it).__name__, "N/A"),
-                        _(p, self.language),
-                        abs_path=a_p,
+                        ppointer,
+                        self.guess_type(it),
+                        _(ppointer, self.language),
+                        abs_path=self.join_path(abs_pointer, path_),
                     )
 
     @lru_cache(maxsize=None)
@@ -217,7 +218,7 @@ class DataPreprocessor:
                 row = rows.new_row(table, item_id).as_dict()
                 p_rows.append(row)
 
-    def inc_table(self, item, rows, parent_key, record):
+    def inc_table_rows(self, item, rows, parent_key, record):
         c = item if isinstance(item, list) else [item]
         for _nop in c:
             self.current_table.inc()
@@ -230,9 +231,34 @@ class DataPreprocessor:
     def join_path(self, *args):
         return self.header_separator.join(args)
 
-    def modify_path_for_combined_table(self, parent_key, key):
+    def get_paths_for_combined_table(self, parent_key, key):
         pointer = self.header_separator + self.join_path(parent_key, key)
         return (pointer, pointer)
+
+    def is_type_matched(self, pointer, item, item_type):
+        # TODO: this validation should probably be smarter with arrays
+        if item_type and item_type != JOINABLE and not validate_type(item_type, item):
+            LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
+            return False
+        return True
+
+    def add_joinable_column(self, abs_pointer, pointer):
+        LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))
+        self.current_table.types[pointer] = JOINABLE
+        self.current_table.add_column(
+            pointer,
+            JOINABLE,
+            _(pointer, self.language),
+            additional=True,
+            abs_path=abs_pointer,
+        )
+
+    def handle_array_expanded(self, parent_table, pointer, item, abs_path, key):
+        should_split = len(item) >= self.table_threshold
+        if should_split:
+            parent_table.should_split = True
+            self.current_table.roll_up = True
+        recalculate_headers(parent_table, pointer, abs_path, key, item, should_split, self.header_separator)
 
     def process_items(self, releases, with_preview=True):
         """
@@ -244,8 +270,9 @@ class DataPreprocessor:
         :param releases: The releases to analyze
         :param with_preview: Whether to generate previews for each table
         """
-        separator = self.header_separator
+
         for count, release in enumerate(releases):
+
             to_analyze = deque([("", "", "", {}, release)])
             rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
 
@@ -259,12 +286,10 @@ class DataPreprocessor:
                         continue
 
                     if self.is_new_row(pointer):
-                        self.inc_table(item, rows, parent_key, record)
+                        self.inc_table_rows(item, rows, parent_key, record)
 
                     item_type = self.current_table.types.get(pointer)
-                    # TODO: this validation should probably be smarter with arrays
-                    if item_type and item_type != JOINABLE and not validate_type(item_type, item):
-                        LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
+                    if not self.is_type_matched(pointer, item, item_type):
                         continue
 
                     if self.current_table.name in COMBINED_TABLES:
@@ -282,26 +307,17 @@ class DataPreprocessor:
                         )
                     elif item and isinstance(item, list):
                         abs_pointer = self.join_path(abs_path, key)
+
                         if not isinstance(item[0], dict) and not item_type:
-                            LOGGER.debug(
-                                _("Detected additional column: %s in %s table")
-                                % (abs_pointer, self.current_table.name)
-                            )
                             item_type = JOINABLE
-                            self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(
-                                pointer,
-                                JOINABLE,
-                                _(pointer, self.language),
-                                additional=True,
-                                abs_path=abs_pointer,
-                            )
+                            self.add_joinable_column(abs_pointer, pointer)
+
                         if item_type == JOINABLE:
                             self.current_table.inc_column(abs_pointer, pointer)
                             if self.with_preview and count < PREVIEW_ROWS:
                                 value = JOINABLE_SEPARATOR.join(item)
                                 self.current_table.set_preview_path(abs_pointer, pointer, value, self.table_threshold)
-                        elif self.current_table.is_root or self.current_table.is_combined:
+                        elif self.is_base_table():
                             for value in item:
                                 to_analyze.append(
                                     (
@@ -318,18 +334,11 @@ class DataPreprocessor:
                                 LOGGER.debug(_("Detected additional table: %s") % pointer)
                                 self.current_table.types[pointer] = ["array"]
                                 parent_table = self.current_table
-                                # TODO: do we need to mark this table as additional
-
                                 self._add_additional_table(pointer, abs_pointer, parent_key, key, item)
                                 self.add_preview_row(rows, record.get("id", ""), parent_key)
+
                             if parent_table.set_array(pointer, item):
-                                should_split = len(item) >= self.table_threshold
-                                if should_split:
-                                    parent_table.should_split = True
-                                    self.current_table.roll_up = True
-                                recalculate_headers(
-                                    parent_table, pointer, abs_path, key, item, should_split, separator
-                                )
+                                self.handle_array_expanded(parent_table, pointer, item, abs_path, key)
 
                             for i, value in enumerate(item):
                                 if isinstance(value, dict):
@@ -347,7 +356,7 @@ class DataPreprocessor:
                         root = get_root(self.current_table)
                         abs_pointer = self.join_path(abs_path, key)
                         if self.current_table.is_combined:
-                            pointer, abs_pointer = self.modify_path_for_combined_table(parent_key, key)
+                            pointer, abs_pointer = self.get_paths_for_combined_table(parent_key, key)
                         if abs_pointer not in root.combined_columns:
                             self.current_table.add_column(
                                 pointer,

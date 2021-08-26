@@ -144,6 +144,7 @@ class Table:
         :param additional: Mark this column as missing in schema
         :param abs_path: The column's full JSON path
         """
+
         is_array = self.is_array(path)
         combined_path = combine_path(self, path)
         if not combined_only:
