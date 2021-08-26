@@ -78,11 +78,11 @@ class Flattener:
         self.tables = tables
         self.language = language
 
-        self._lookup_cache = {}
-        self._types_cache = {}
-        self._path_cache = {}
+        self._lookup_map = {}
+        self._types_map = {}
+        self._path_map = {}
 
-        # init cache and filter only selected tables
+        # init map and filter only selected tables
         self.tables = {}
         for name, table in tables.items():
             if name not in self.options.selection:
@@ -112,8 +112,8 @@ class Flattener:
             self._init_table_lookup(self.tables, c_table)
         else:
             # use parent table
-            self._init_cache(self._types_cache, c_table.types, table, only=only)
-            self._init_cache(self._lookup_cache, c_table.combined_columns, table, only=only)
+            self._init_map(self._types_map, c_table.types, table, only=only)
+            self._init_map(self._lookup_map, c_table.combined_columns, table, only=only)
         if c_table.child_tables:
             for c_name in c_table.child_tables:
                 if c_name in self.options.exclude:
@@ -121,21 +121,21 @@ class Flattener:
                 cc_table = tables[c_name]
                 self._init_child_tables(tables, table, cc_table, options)
 
-    def _init_cache(self, cache, paths, table, only=None):
+    def _init_map(self, map, paths, table, only=None):
         for path in paths:
             if path not in DEFAULT_FIELDS:
                 if not only or (only and path in only):
-                    cache[path] = table
+                    map[path] = table
 
-    def _cache_path(self, table):
-        self._init_cache(self._path_cache, table.path, table)
+    def _map_path(self, table):
+        self._init_map(self._path_map, table.path, table)
 
-    def _cache_types(self, table):
-        self._init_cache(self._types_cache, table.types, table)
+    def _map_types(self, table):
+        self._init_map(self._types_map, table.types, table)
 
-    def _cache_cols(self, table, split):
+    def _map_cols(self, table, split):
         cols = table if split else table.combined_columns
-        self._init_cache(self._lookup_cache, cols, table)
+        self._init_map(self._lookup_map, cols, table)
 
     def _init_table_lookup(self, tables, table):
         if table.total_rows == 0:
@@ -146,9 +146,9 @@ class Flattener:
         split = options.split
         tables[name] = table
 
-        self._cache_path(table)
-        self._cache_types(table)
-        self._cache_cols(table, split)
+        self._map_path(table)
+        self._map_types(table)
+        self._map_cols(table, split)
 
     def _init_options(self, tables):
         for table in tables.values():
@@ -163,7 +163,7 @@ class Flattener:
             if count:
                 for array in table.arrays:
                     path = make_count_column(array)
-                    target = self._types_cache.get(array) or table
+                    target = self._types_map.get(array) or table
                     combined = split and table.should_split
                     if combined:
                         # add count columns only if table is rolled up
@@ -226,7 +226,7 @@ class Flattener:
             while to_flatten:
                 abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
 
-                table = self._path_cache.get(path)
+                table = self._path_map.get(path)
                 if path == "/buyer":
                     # only useful in analysis
                     continue
@@ -245,7 +245,7 @@ class Flattener:
                     pointer = separator.join((path, key))
                     abs_pointer = separator.join((abs_path, key))
 
-                    table = self._lookup_cache.get(pointer) or self._types_cache.get(pointer)
+                    table = self._lookup_map.get(pointer) or self._types_map.get(pointer)
                     if not table:
                         continue
 
