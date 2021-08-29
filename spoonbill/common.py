@@ -1,3 +1,5 @@
+SEPARATOR = "/"
+
 # we can try to infer tables from  schema
 # but it may require some heuristics or handling exceptional cases
 # like "tenders" which is not array and called "tender"

@@ -264,7 +264,7 @@ def cli(
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
         options["selection"][name] = {
-            "split": analyzer.spec[name].should_split,
+            "split": analyzer.spec[name].splitted,
             "pretty_headers": human,
         }
         if not analyzer.spec[name].is_combined:

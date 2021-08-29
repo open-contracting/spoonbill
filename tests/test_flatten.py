@@ -257,7 +257,7 @@ def test_flatten_should_not_split_with_split(spec_analyzed, releases):
         FlattenOptions(**{"selection": {"tenders": {"split": True}}}),
     ],
 )
-def test_flatten_should_split_with_child(spec, releases, options):
+def test_flatten_splitted_with_child(spec, releases, options):
     releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
     for _ in spec.process_items(releases):
         pass

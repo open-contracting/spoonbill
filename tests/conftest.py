@@ -65,12 +65,12 @@ def root_table():
         is_root=True,
         columns=OrderedDict(
             [
-                ("ocid", Column(title="ocid", type="string", id="ocid", hits=0)),
-                ("id", Column(title="id", type="string", id="id", hits=0)),
-                ("rowID", Column(title="rowID", type="string", id="rowID", hits=0)),
+                ("ocid", Column(id="ocid", path="ocid", title="ocid", type="string", hits=0)),
+                ("id", Column(id="id", path="id", title="id", type="string", id="id", hits=0)),
+                ("rowID", Column(path="rowID", title="rowID", type="string", id="rowID", hits=0)),
                 (
                     "parentID",
-                    Column(title="parentID", type="string", id="parentID", hits=0),
+                    Column(path="parentID", title="parentID", type="string", id="parentID", hits=0),
                 ),
                 (
                     "/tender/awardCriteriaDetails",
@@ -78,6 +78,7 @@ def root_table():
                         title="Tender Award Criteria Details",
                         type="string",
                         id="/tender/awardCriteriaDetails",
+                        path="/tender/awardCriteriaDetails",
                         hits=0,
                     ),
                 ),
@@ -88,6 +89,7 @@ def root_table():
                         type="string",
                         hits=0,
                         id="/tender/items/0/id",
+                        path="/tender/items/0/id",
                     ),
                 ),
                 (
@@ -96,18 +98,19 @@ def root_table():
                         title="Tender Item Classification id",
                         type="string",
                         id="/tender/items/0/additionalClassifications/0/id",
+                        path="/tender/items/0/additionalClassifications/0/id",
                     ),
                 ),
             ]
         ),
         combined_columns=OrderedDict(
             [
-                ("ocid", Column(title="ocid", type="string", id="ocid", hits=0)),
+                ("ocid", Column(title="ocid", type="string", id="ocid", path="ocid", hits=0)),
                 ("id", Column(title="id", type="string", id="id", hits=0)),
-                ("rowID", Column(title="rowID", type="string", id="rowID", hits=0)),
+                ("rowID", Column(title="rowID", type="string", id="rowID", path="rowID", hits=0)),
                 (
                     "parentID",
-                    Column(title="parentID", type="string", id="parentID", hits=0),
+                    Column(title="parentID", type="string", id="parentID", path="parentID", hits=0),
                 ),
                 (
                     "/tender/awardCriteriaDetails",
@@ -115,6 +118,7 @@ def root_table():
                         title="Tender Award Criteria Details",
                         type="string",
                         id="/tender/awardCriteriaDetails",
+                        path="/tender/awardCriteriaDetails",
                         hits=0,
                     ),
                 ),
@@ -124,6 +128,7 @@ def root_table():
                         title="Tender Submission Method",
                         type="array",
                         id="/tender/submissionMethod",
+                        path="/tender/submissionMethod",
                     ),
                 ),
                 (
