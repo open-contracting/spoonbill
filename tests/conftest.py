@@ -66,7 +66,7 @@ def root_table():
         columns=OrderedDict(
             [
                 ("ocid", Column(id="ocid", path="ocid", title="ocid", type="string", hits=0)),
-                ("id", Column(id="id", path="id", title="id", type="string", id="id", hits=0)),
+                ("id", Column(id="id", path="id", title="id", type="string", hits=0)),
                 ("rowID", Column(path="rowID", title="rowID", type="string", id="rowID", hits=0)),
                 (
                     "parentID",
@@ -106,7 +106,7 @@ def root_table():
         combined_columns=OrderedDict(
             [
                 ("ocid", Column(title="ocid", type="string", id="ocid", path="ocid", hits=0)),
-                ("id", Column(title="id", type="string", id="id", hits=0)),
+                ("id", Column(title="id", path="id", type="string", id="id", hits=0)),
                 ("rowID", Column(title="rowID", type="string", id="rowID", path="rowID", hits=0)),
                 (
                     "parentID",
@@ -133,7 +133,7 @@ def root_table():
                 ),
                 (
                     "/tender/items/0/id",
-                    Column(title="Tender Item id", type="string", id="/tender/items/0/id"),
+                    Column(title="Tender Item id", type="string", id="/tender/items/0/id", path="id"),
                 ),
                 (
                     "/tender/items/0/additionalClassifications/0/id",
@@ -141,6 +141,7 @@ def root_table():
                         title="Tender Item Classification id",
                         type="string",
                         id="/tender/items/0/additionalClassifications/0/id",
+                        path="id",
                     ),
                 ),
             ]

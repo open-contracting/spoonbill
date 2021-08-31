@@ -120,7 +120,7 @@ def validate_type(type_, item):
     False
     >>> validate_type(['object'], [])
     False
-    >>> validacombined_pathte_type(['object'], {})
+    >>> validate_type(['object'], {})
     True
     """
     if isinstance(item, Number):

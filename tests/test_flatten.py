@@ -86,7 +86,7 @@ def test_flattener_generate_count_columns(spec, releases):
     flattener = Flattener(options, spec.tables)
     tenders = flattener.tables["tenders"]
     tenders_items = flattener.tables["tenders_items"]
-    assert "/tender/itemsCount" in tenders
+    assert "/tender/itemsCount" in tenders.combined_columns
     for index in range(tenders.arrays["/tender/items/additionalClassifications"]):
         assert f"/tender/items/{index}/additionalClassificationsCount" not in tenders
     assert "/tender/items/additionalClassificationsCount" in tenders_items
@@ -109,7 +109,7 @@ def test_flatten_with_counters(spec, releases):
                     if items:
                         assert "/tender/itemsCount" in row
                         assert len(items) == row["/tender/itemsCount"]
-            elif name == "tenders_items":
+            if name == "tenders_items":
                 for index, row in enumerate(rows):
                     additional = search(
                         f"[{count}].tender.items[{index}].additionalClassifications",
@@ -192,8 +192,9 @@ def test_flatten_with_only(spec_analyzed, releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert all_rows["tenders"]
+
     for row in all_rows["tenders"]:
-        assert not set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
+        assert set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
 
     options = FlattenOptions(**{"selection": {"tenders": {"split": False, "only": ["/tender/id"]}}})
     flattener = Flattener(options, spec_analyzed.tables)
@@ -204,7 +205,7 @@ def test_flatten_with_only(spec_analyzed, releases):
 
     assert all_rows["tenders"]
     for row in all_rows["tenders"]:
-        assert not set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
+        assert set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
 
 
 def test_flatten_should_not_split(spec_analyzed, releases):
@@ -314,7 +315,7 @@ def test_flatten_only_no_default_columns(spec_analyzed, releases):
         for name, rows in flat.items():
             for row in rows:
                 assert len(rows) == 1
-                assert not set(row).difference(["/tender/id"])
+                assert set(row).difference(["/tender/id"])
 
 
 def test_flatten_buyer(spec_analyzed, releases):

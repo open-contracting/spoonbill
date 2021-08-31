@@ -165,8 +165,7 @@ class Flattener:
                     "integer",
                     _(path, self.language),
                     additional=True,
-                    combined_only=not combined,
-                    propagate=False,
+                    propagated=False,
                 )
                 target.inc_column(path, path)
 

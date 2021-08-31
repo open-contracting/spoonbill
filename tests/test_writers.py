@@ -95,12 +95,15 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
+        table = tables[name]
+
         for col in tables[name].available_rows(opts.split):
             title = table_headers[name][col]
             if col == "/tender/items/id":
                 title = "item id"
-            assert title in xlsx_headers
-            assert title in csv_headers
+            if title:
+                assert title in xlsx_headers
+                assert title in csv_headers
 
     options = FlattenOptions(
         **{
@@ -166,6 +169,10 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
                     "split": False,
                     "pretty_headers": True,
                 },
+                "parties_ids": {
+                    "split": False,
+                    "pretty_headers": True,
+                },
             },
             "count": True,
         }
@@ -185,7 +192,12 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
         assert "Tender: Items Count" in headers
         assert "Tender: Tenderers Count" in headers
 
-    sheet = "parties"
+    sheet = "tenders_items"
+    path = workdir / f"{sheet}.csv"
+    for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
+        assert "Items Count" in headers
+
+    sheet = "parties_ids"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
         assert "Parties: Additional Identifiers Count" in headers
@@ -334,6 +346,7 @@ def test_writers_open_fail(open_, log, spec, tmpdir):
 
 def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
     flattener = Flattener(flatten_options, spec_analyzed.tables)
+    flatten_options.selection["parties"].split = True
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
     with CSVWriter(workdir, tables, flatten_options, schema) as writer:
