@@ -14,6 +14,7 @@ from .data import TEST_COMBINED_TABLES, TEST_ROOT_TABLES
 here = pathlib.Path(__file__).parent
 schema_path = here / "data" / "ocds-simplified-schema.json"
 releases_path = here / "data" / "ocds-sample-data.json"
+test_dataset_path = here / "data" / "test_data.json"
 analyzed_path = here / "data" / "analyzed"
 releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
 
@@ -148,3 +149,9 @@ def root_table():
         ),
         arrays={"/tender/items": 0, "/tender/items/additionalClassifications": 0},
     )
+
+
+@pytest.fixture
+def test_dataset_releases():
+    with open(test_dataset_path) as fd:
+        return json.load(fd, object_pairs_hook=OrderedDict)["releases"]

@@ -3,6 +3,7 @@ from unittest.mock import call, mock_open, patch
 
 from jmespath import search
 from jsonpointer import resolve_pointer
+from pytest import fail
 
 from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table
@@ -357,3 +358,10 @@ def test_analyze_array_extentions_split(spec, releases):
     assert "/tender/items/attributes/0/name" in cols
     assert "/tender/items/attributes/1/id" not in cols
     assert "/tender/items/attributes/1/name" not in cols
+
+
+def test_analyze_test_dataset(spec, test_dataset_releases):
+    try:
+        [_ for _ in spec.process_items(test_dataset_releases)]
+    except AttributeError as e:
+        fail(f"{e.__class__.__name__}: {str(e)}")
