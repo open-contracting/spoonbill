@@ -1,4 +1,5 @@
 import codecs
+import copy
 import functools
 import gzip
 import json
@@ -415,39 +416,32 @@ def generate_paths(source):
     return paths
 
 
-def add_paths_to_schema(unres_schema, schema):
+def add_paths_to_schema(schema):
     """
     Extracts full path for each title in schema; creates paths list of full title for each
     :param unres_schema: Unresolved schema
     :param schema: Schema object that will be updated
     :return: Schema with full title paths
     """
-    proxy = Cut(schema["properties"])
+    proxy = Cut(copy.deepcopy(schema))
     updated_items = {}
-    for table in proxy.keys():
-        # In order to add title paths to schema without overlapping refs -
-        # each key in 'properties' should be deep copied from unres schema
-        # TODO: is it the best way to get deep copy of resolved schema?
-        path_item = jsonref.JsonRef.replace_refs(unres_schema)
-        path_item = path_item["properties"][table]
-        path_item = Cut({table: path_item})
+    for table in proxy["properties"].keys():
+        path_item = Cut({table: copy.deepcopy(proxy["properties"][table])})
         # Generating path to each title in schema
-        for path in generate_paths({table: proxy[table]}):
+        for path in generate_paths({table: proxy["properties"][table]}):
             if path[-1] == "title":
                 object_path = ".".join(path[:-1])
-                if hasattr(path_item[object_path], "__reference__"):
-                    path_item[object_path].__reference__["$path"] = path
                 path_item[object_path]["$path"] = path
         updated_items[table] = path_item[table]
-    schema["properties"] = updated_items
+    proxy["properties"] = updated_items
     # Generating array with title paths for each title in schema
-    title_paths = [path for path in title_path(schema["properties"])]
+    title_paths = [path for path in title_path(proxy["properties"])]
+
     for path_list in title_paths:
         location = "properties." + ".".join(path_list[-1][:-1])
-        if hasattr(Cut(schema)[location], "__reference__"):
-            Cut(schema)[location].__reference__["_title"] = path_list
-        Cut(schema)[location]["_title"] = path_list
-    return schema
+        proxy[location]["$title"] = path_list
+
+    return proxy
 
 
 def title_path(schema, path=[]):

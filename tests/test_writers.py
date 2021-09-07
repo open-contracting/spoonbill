@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 import openpyxl
-import requests
 from scalpl import Cut
 
 from spoonbill import FileAnalyzer, FileFlattener
@@ -507,13 +506,13 @@ def test_extension_export(spec, tmpdir, releases_extension, schema):
 
 def test_schema_header_paths(schema):
     paths = generate_paths(schema["properties"])
-    schema = add_paths_to_schema(requests.get(schema["id"]).json(), schema)
+    schema = add_paths_to_schema(schema)
     proxy = Cut(schema["properties"])
     for path in paths:
         if path[-1] == "title":
             _path = ".".join(path[:-1])
-            assert "_title" in proxy[_path]
-            assert proxy[_path]["_title"][-1] == path
+            assert "$title" in proxy[_path]
+            assert proxy[_path]["$title"][-1] == path
 
 
 def test_schema_header_generation(schema):

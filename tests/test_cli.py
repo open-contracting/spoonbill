@@ -337,3 +337,35 @@ def test_locale_not_found():
         result = runner.invoke(cli, ["data.json"])
         assert result.exit_code == 0
         assert "Input file is release package" in result.output
+
+
+def test_pretty_headers_en():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["--human", "--language", "en", "data.json"])
+        assert result.exit_code == 0
+        path = pathlib.Path("result.xlsx")
+        assert path.resolve().exists()
+        xlsx_reader = openpyxl.load_workbook(path)
+        sheet = xlsx_reader["parties"]
+        header_values = [cell.value for cell in sheet[1]]
+        header_columns = [cell.column_letter for cell in sheet[1]]
+        headers = dict(zip(header_columns, header_values))
+        assert headers["E"].startswith("Buyer")
+
+
+def test_pretty_headers_es():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        shutil.copyfile(FILENAME, "data.json")
+        result = runner.invoke(cli, ["--human", "--language", "es", "data.json"])
+        assert result.exit_code == 0
+        path = pathlib.Path("result.xlsx")
+        assert path.resolve().exists()
+        xlsx_reader = openpyxl.load_workbook(path)
+        sheet = xlsx_reader["parties"]
+        header_values = [cell.value for cell in sheet[1]]
+        header_columns = [cell.column_letter for cell in sheet[1]]
+        headers = dict(zip(header_columns, header_values))
+        assert headers["E"].startswith("Comprador")

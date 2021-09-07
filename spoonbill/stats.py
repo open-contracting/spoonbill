@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Mapping
 
 import jsonref
-import requests
 from flatten_dict import flatten
 
 from spoonbill.common import ARRAY, COMBINED_TABLES, JOINABLE, JOINABLE_SEPARATOR, PREVIEW_ROWS, TABLE_THRESHOLD
@@ -56,6 +55,7 @@ class DataPreprocessor:
         header_separator="/",
         language=LOCALE,
         multiple_values=False,
+        pkg_type=None,
     ):
         self.schema = schema
         self.root_tables = root_tables
@@ -72,6 +72,7 @@ class DataPreprocessor:
         self.names_counter = defaultdict(int)
         if not self.tables:
             self.parse_schema()
+        self.pkg_type = pkg_type
 
     def __getitem__(self, table):
         return self.tables[table]
@@ -103,8 +104,8 @@ class DataPreprocessor:
         if self.combined_tables:
             self.init_tables(self.combined_tables, is_combined=True)
         separator = self.header_separator
-        to_analyze = deque([("", "", {}, self.schema)])
-        self.schema = add_paths_to_schema(requests.get(self.schema["id"]).json(), self.schema)
+        proxy = add_paths_to_schema(self.schema)
+        to_analyze = deque([("", "", {}, proxy)])
 
         # TODO: check if recursion is better for field ordering
         while to_analyze:
@@ -115,7 +116,7 @@ class DataPreprocessor:
             properties = prop.get("properties", {})
             if properties:
                 for key, item in properties.items():
-                    if isinstance(item, list):
+                    if key in ("$title", "$path"):
                         continue
                     if item.get("deprecated"):
                         continue
@@ -144,13 +145,14 @@ class DataPreprocessor:
                             typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
                             self.current_table.add_column(
-                                pointer, typeset, _(pointer, self.language), header=item["_title"]
+                                pointer, typeset, _(pointer, self.language), header=item["$title"]
                             )
                     else:
                         if self.current_table.is_combined:
                             pointer = separator + separator.join((parent_key, key))
+
                         self.current_table.add_column(
-                            pointer, typeset, _(pointer, self.language), header=item["_title"]
+                            pointer, typeset, _(pointer, self.language), header=item["$title"]
                         )
 
             else:

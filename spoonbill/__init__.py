@@ -82,6 +82,7 @@ class FileAnalyzer:
                     language=self.language,
                     table_threshold=self.table_threshold,
                     multiple_values=self.multiple_values,
+                    pkg_type=self.pkg_type,
                 )
             reader = get_reader(path)
             with reader(path, "rb") as fd:
