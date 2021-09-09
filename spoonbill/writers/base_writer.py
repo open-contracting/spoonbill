@@ -34,6 +34,12 @@ class BaseWriter:
         # split = options.split and (table.roll_up or table.should_split)
         split = options.split and table.should_split
         headers = {c: c for c in table.available_rows(split=split)}
+        if (
+            table.parent != ""
+            and table.parent.name in self.options.selection  # noqa: W503
+            and self.options.selection[table.parent.name].pretty_headers  # noqa:W503
+        ):
+            self.options.selection[table.name].pretty_headers = True
         if options.pretty_headers:
             for c in headers:
                 headers[c] = table.titles.get(c, c)
