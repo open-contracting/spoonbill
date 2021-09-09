@@ -1,12 +1,14 @@
 from collections import defaultdict
 
+from spoonbill.utils import SchemaHeaderExtractor, nonschema_title_formatter
+
 
 class BaseWriter:
     """
     Base writer class
     """
 
-    def __init__(self, workdir, tables, options):
+    def __init__(self, workdir, tables, options, schema):
         """
         :param workdir: Working directory
         :param tables: The table objects
@@ -18,6 +20,8 @@ class BaseWriter:
         self.names = {}
         self.headers = {}
         self.names_counter = defaultdict(int)
+        self.schema = schema
+        self.schema_headers = SchemaHeaderExtractor(self.schema)
 
     def get_headers(self, table, options):
         """
@@ -33,6 +37,13 @@ class BaseWriter:
         if options.pretty_headers:
             for c in headers:
                 headers[c] = table.titles.get(c, c)
+                for k, v in headers.items():
+                    if v and isinstance(v, list):
+                        headers[k] = self.schema_headers.get_header(v)
+                    elif v == []:
+                        headers[k] = nonschema_title_formatter(k)
+                    else:
+                        headers[k] = nonschema_title_formatter(v)
         if options.headers:
             for c, h in options.headers.items():
                 headers[c] = h

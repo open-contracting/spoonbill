@@ -6,7 +6,7 @@ import jsonref
 from ocdsextensionregistry import ProfileBuilder
 from ocdskit.util import detect_format
 
-from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, ROOT_TABLES, TABLE_THRESHOLD
+from spoonbill.common import COMBINED_TABLES, CURRENT_SCHEMA_TAG, DEFAULT_SCHEMA_URL, ROOT_TABLES, TABLE_THRESHOLD
 from spoonbill.flatten import Flattener
 from spoonbill.i18n import LOCALE, _
 from spoonbill.stats import DataPreprocessor
@@ -18,7 +18,6 @@ LOGGER = logging.getLogger("spoonbill")
 
 class FileAnalyzer:
     """Main utility for analyzing files
-
     :param workdir: Working directory
     :param schema: Json schema file to use with data
     :param root_tables: Path configuration which should become root tables
@@ -82,6 +81,7 @@ class FileAnalyzer:
                     language=self.language,
                     table_threshold=self.table_threshold,
                     multiple_values=self.multiple_values,
+                    pkg_type=self.pkg_type,
                 )
             reader = get_reader(path)
             with reader(path, "rb") as fd:
@@ -92,7 +92,6 @@ class FileAnalyzer:
 
     def dump_to_file(self, filenames):
         """Save analyzed information to file
-
         :param filename: Output filename in working directory
         """
         if not isinstance(filenames, list):
@@ -110,9 +109,10 @@ class FileAnalyzer:
         else:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
+        url = DEFAULT_SCHEMA_URL[pkg_type][self.language]
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
-            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {})
+            profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {}, schema_base_url=url)
             schema = getter(profile)()
         title = schema.get("title", "").lower()
         if not title:
@@ -151,7 +151,6 @@ class FileAnalyzer:
 
 class FileFlattener:
     """Main utility for flattening files
-
     :param workdir: Working directory
     :param options: Flattening configuration
     :param analyzer: Analyzed data object
@@ -172,6 +171,7 @@ class FileFlattener:
         xlsx="result.xlsx",
         language=LOCALE,
         multiple_values=False,
+        schema=None,
     ):
         self.tables = tables if tables else analyzer.spec.tables
         self.flattener = Flattener(options, self.tables, language=language)
@@ -182,6 +182,7 @@ class FileFlattener:
         self.xlsx = xlsx
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
+        self.schema = schema or getattr(getattr(analyzer, "spec"), "schema")
 
     def _flatten(self, filenames, writers):
         if not isinstance(filenames, list):
@@ -200,25 +201,45 @@ class FileFlattener:
 
     def flatten_file(self, filename):
         """Flatten file
-
         :param filename: Input filename in working directory
         """
         workdir = self.workdir
+
         if isinstance(self.csv, Path):
             workdir = self.csv
         if not self.xlsx and self.csv:
-            with CSVWriter(workdir, self.flattener.tables, self.flattener.options) as writer:
+            with CSVWriter(
+                workdir,
+                self.flattener.tables,
+                self.flattener.options,
+                schema=self.schema,
+            ) as writer:
                 for count in self._flatten(filename, [writer]):
                     yield count
         if self.xlsx and not self.csv:
-            with XlsxWriter(self.workdir, self.flattener.tables, self.flattener.options, filename=self.xlsx) as writer:
+            with XlsxWriter(
+                self.workdir,
+                self.flattener.tables,
+                self.flattener.options,
+                filename=self.xlsx,
+                schema=self.schema,
+            ) as writer:
                 for count in self._flatten(filename, [writer]):
                     yield count
 
         if self.xlsx and self.csv:
             with XlsxWriter(
-                self.workdir, self.flattener.tables, self.flattener.options, filename=self.xlsx
-            ) as xlsx, CSVWriter(workdir, self.flattener.tables, self.flattener.options) as csv:
+                self.workdir,
+                self.flattener.tables,
+                self.flattener.options,
+                filename=self.xlsx,
+                schema=self.schema,
+            ) as xlsx, CSVWriter(
+                workdir,
+                self.flattener.tables,
+                self.flattener.options,
+                schema=self.schema,
+            ) as csv:
                 for count in self._flatten(filename, [xlsx, csv]):
                     yield count
 

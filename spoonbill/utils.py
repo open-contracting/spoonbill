@@ -1,8 +1,10 @@
 import codecs
+import copy
 import functools
 import gzip
 import json
 import logging
+import re
 from collections import OrderedDict
 from dataclasses import replace
 from itertools import chain
@@ -10,7 +12,9 @@ from numbers import Number
 from pathlib import Path
 
 import ijson
+import jsonref
 import requests
+from scalpl import Cut
 
 from spoonbill.common import COMBINED_TABLES
 
@@ -255,15 +259,14 @@ def recalculate_headers(table, path, abs_path, key, item, should_split, separato
 
 def resolve_file_uri(file_path):
     """Read json file from provided uri
-
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
+    if str(file_path).startswith("http://") or str(file_path).startswith("https://"):
+        return requests.get(file_path).json()
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
             return json.load(fd, object_pairs_hook=OrderedDict)
-    if file_path.startswith("http://") or file_path.startswith("https://"):
-        return requests.get(file_path).json()
 
 
 def read_lines(path):
@@ -348,3 +351,113 @@ def get_order(properties):
     if "tender" in order:
         order[order.index("tender")] = "tenders"
     return order
+
+
+def nonschema_title_formatter(title):
+    """
+    Formatting a path, that is absent in schema, to human-readable form
+    :param title: str
+    :return: formatted title
+
+    >>> nonschema_title_formatter('legalEntityTypeDetail')
+    'Legal Entity Type Detail'
+    >>> nonschema_title_formatter('fuenteFinanciamiento')
+    'Fuente Financiamiento'
+    >>> nonschema_title_formatter('Óóó-Ñññ_Úúú')
+    'Óóó Ñññ Úúú'
+    """
+    title = title.replace("_", " ").replace("-", " ")
+    title = re.sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", title)
+    title = title.replace("  ", " ").replace("/", ": ")
+    if title.startswith(": "):
+        title = title[2:]
+    title = title.title()
+    return title
+
+
+class SchemaHeaderExtractor:
+    """
+    Human-readable headers extracted from schema
+
+    :param schema: The dataset's schema
+    """
+
+    def __init__(self, schema):
+        self.schema = schema
+        if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
+            self.schema = jsonref.JsonRef.replace_refs(self.schema)
+
+    def get_header(self, paths):
+        final_title = []
+        for path in paths:
+            _object = Cut(self.schema)["properties." + ".".join(path[:-1])]
+            if hasattr(_object, "__reference__") and "title" in _object.__reference__:
+                title = _object.__reference__["title"]
+            else:
+                title = Cut(self.schema)["properties." + ".".join(path)]
+            if isinstance(title, dict):
+                continue
+            final_title.append(title)
+        return ": ".join(final_title)
+
+
+def generate_paths(source):
+    """
+    Generate full paths for nested dictionary or alike object
+    :param source: Input object
+    :return: List of paths
+    """
+    paths = []
+    if isinstance(source, dict):
+        for k, v in source.items():
+            paths.append([k])
+            paths += [[k] + x for x in generate_paths(v)]
+    return paths
+
+
+def add_paths_to_schema(schema):
+    """
+    Extracts full path for each title in schema; creates paths list of full title for each
+    :param unres_schema: Unresolved schema
+    :param schema: Schema object that will be updated
+    :return: Schema with full title paths
+    """
+    proxy = Cut(copy.deepcopy(schema))
+    updated_items = {}
+    for table in proxy["properties"].keys():
+        path_item = Cut({table: copy.deepcopy(proxy["properties"][table])})
+        # Generating path to each title in schema
+        for path in generate_paths({table: proxy["properties"][table]}):
+            if path[-1] == "title":
+                object_path = ".".join(path[:-1])
+                path_item[object_path]["$path"] = path
+        updated_items[table] = path_item[table]
+    proxy["properties"] = updated_items
+    # Generating array with title paths for each title in schema
+    title_paths = [path for path in title_path(proxy["properties"])]
+
+    for path_list in title_paths:
+        location = "properties." + ".".join(path_list[-1][:-1])
+        proxy[location]["$title"] = path_list
+
+    return proxy
+
+
+def title_path(schema, path=[]):
+    """
+    Get path for each previous title and form full list of titles for each object
+    :param schema: Object
+    :param path: List of paths for full title
+    :return:
+    """
+    for k, v in schema.items():
+        newpath = path
+        if "$path" in schema:
+            newpath = path + [schema.get("$path", [])]
+        if isinstance(v, dict):
+            for result in title_path(v, newpath):
+                if result:
+                    yield result
+        else:
+            if newpath:
+                yield newpath

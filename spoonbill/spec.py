@@ -25,6 +25,7 @@ class Column:
     type: str
     id: str
     hits: int = 0
+    header: list = field(default_factory=list)
 
 
 @dataclass
@@ -130,6 +131,7 @@ class Table:
         propagate=True,
         additional=False,
         abs_path=None,
+        header=[]
     ):
         """
         Add a new column to the table.
@@ -145,9 +147,9 @@ class Table:
         is_array = self.is_array(path)
         combined_path = combine_path(self, path)
         if not combined_only:
-            self.columns[combined_path] = Column(title, item_type, combined_path)
+            self.columns[combined_path] = Column(title, item_type, combined_path, header=header)
         # new column to track hits differently
-        self.combined_columns[combined_path] = Column(title, item_type, combined_path)
+        self.combined_columns[combined_path] = Column(title, item_type, combined_path, header=header)
 
         if additional:
             if is_array:
@@ -155,10 +157,10 @@ class Table:
                 # e.g. /tender/items/166/relatedLot
                 combined_path = abs_path
             LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))
-            self.additional_columns[combined_path] = Column(title, item_type, combined_path)
+            self.additional_columns[combined_path] = Column(title, item_type, combined_path, header=header)
 
         for p in (path, combined_path):
-            self.titles[p] = title
+            self.titles[p] = header
         if not self.is_root and propagate:
             self.parent.add_column(
                 path,
@@ -167,6 +169,7 @@ class Table:
                 combined_only=combined_only,
                 additional=additional,
                 abs_path=abs_path,
+                header=header,
             )
 
     def is_array(self, path):

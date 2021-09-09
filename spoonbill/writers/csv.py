@@ -16,14 +16,14 @@ class CSVWriter(BaseWriter):
 
     name = "csv"
 
-    def __init__(self, workdir, tables, options):
+    def __init__(self, workdir, tables, options, schema):
         """
         :param workdir: Working directory
         :param tables: The table objects
         :param options: Flattening options
         """
 
-        super().__init__(workdir, tables, options)
+        super().__init__(workdir, tables, options, schema=schema)
         self.writers = {}
         self.fds = []
 
