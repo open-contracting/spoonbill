@@ -3,6 +3,12 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.6b7 (2021-09-09)
+--------------------
+Added
+~~~~~
+* human readable titles are extracted from schema (`09f6f8a <https://github.com/open-contracting/spoonbill/commit/09f6f8a4c0c2e809bc2e4e6e28385c6f0f2c2ae4>`__)
+
 1.0.6b6 (2021-07-14)
 --------------------
 Fixed
