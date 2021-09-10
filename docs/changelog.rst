@@ -3,6 +3,12 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.7b7 (2021-09-10)
+--------------------
+Fixed
+~~~~~
+* additional formatting of human readable titles (`538592c <https://github.com/open-contracting/spoonbill/commit/538592c46976ebb62e0fdc2fd8a0fbd55b75d190>`__)
+
 1.0.6b7 (2021-09-09)
 --------------------
 Added
