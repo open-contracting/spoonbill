@@ -79,11 +79,16 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
             headers[c] = table.titles.get(c, c)
             for k, v in headers.items():
                 if v and isinstance(v, list):
-                    headers[k] = schema_headers.get_header(v)
+                    headers[k] = schema_headers.get_header(k, v)
                 elif not v:
                     headers[k] = nonschema_title_formatter(k)
                 else:
                     headers[k] = nonschema_title_formatter(v)
+                for col in headers.keys():
+                    for char in col:
+                        if char.isnumeric() and char != "0":
+                            title_col = col.replace(char, "0")
+                            headers[col] = headers[title_col]
         table_headers[name] = headers
 
     for name, opts in options.selection.items():
@@ -523,4 +528,4 @@ def test_schema_header_generation(schema):
         ["parties", "items", "properties", "contactPoint", "title"],
         ["parties", "items", "properties", "contactPoint", "properties", "name", "title"],
     ]
-    assert headers.get_header(paths) == "Parties: Organization: Contact point: Name"
+    assert headers.get_header("", paths) == "Parties: Organization: Contact point: Name"

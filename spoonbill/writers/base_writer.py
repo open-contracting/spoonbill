@@ -45,11 +45,17 @@ class BaseWriter:
                 headers[c] = table.titles.get(c, c)
                 for k, v in headers.items():
                     if v and isinstance(v, list):
-                        headers[k] = self.schema_headers.get_header(v)
+                        headers[k] = self.schema_headers.get_header(k, v)
                     elif v == []:
                         headers[k] = nonschema_title_formatter(k)
                     else:
                         headers[k] = nonschema_title_formatter(v)
+            for col in headers.keys():
+                for char in col:
+                    if char.isnumeric() and char != "0":
+                        title_col = col.replace(char, "0")
+                        headers[col] = headers[title_col]
+
         if options.headers:
             for c, h in options.headers.items():
                 headers[c] = h
