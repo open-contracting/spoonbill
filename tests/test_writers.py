@@ -7,7 +7,7 @@ from scalpl import Cut
 
 from spoonbill import FileAnalyzer, FileFlattener
 from spoonbill.flatten import Flattener, FlattenOptions
-from spoonbill.utils import SchemaHeaderExtractor, add_paths_to_schema, generate_paths, nonschema_title_formatter
+from spoonbill.utils import SchemaHeaderExtractor, add_paths_to_schema, generate_paths
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
 
@@ -66,44 +66,105 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
         "parties": spec.tables["parties"],
         "tenders_items": spec.tables["tenders_items"],
     }
+    tables_headers = {
+        "tenders": [
+            "Ocid",
+            "Id",
+            "Row Id",
+            "Parent Id",
+            "Tender: Award Criteria",
+            "Tender: Award Criteria Details",
+            "Tender: Tender Description",
+            "Tender: Has Enquiries?",
+            "Tender: Tender Id",
+            "Tender: Main Procurement Category",
+            "Tender: Number Of Tenderers",
+            "Tender: Procurement Method",
+            "Tender: Procurement Method Details",
+            "Tender: Procurement Method Rationale",
+            "Tender: Tender Status",
+            "Tender: Submission Method",
+            "Tender: Submission Method Details",
+            "Tender: Tender Title",
+            "Tender: Value: Amount",
+            "Tender: Value: Currency",
+            "Tender: Tender Period: Duration ( Days)",
+            "Tender: Tender Period: End Date",
+            "Tender: Tender Period: Start Date",
+            "Tender: Tenderers: Organization Id",
+            "Tender: Tenderers: Organization Name",
+            "Tender: Value: Amount",
+            "Tender: Value: Currency",
+            "Tender: Tender Period: Duration ( Days)",
+            "Tender: Tender Period: End Date",
+            "Tender: Tender Period: Start Date",
+            "Tender: Tender Period: Duration ( Days)",
+            "Tender: Tender Period: End Date",
+            "Tender: Tender Period: Start Date",
+            "Tender: Tender Period: End Date",
+            "Tender: Tender period: Start date",
+        ],
+        "parties": [
+            "Ocid",
+            "Id",
+            "Row Id",
+            "Parent Id",
+            "Parties: Organization: Entity Id",
+            "Parties: Organization: Common Name",
+            "Parties: Organization: Party Roles",
+            "Parties: Organization: Primary Identifier: Id",
+            "Parties: Organization: Primary Identifier: Legal Name",
+            "Parties: Organization: Primary Identifier: Scheme",
+            "Parties: Organization: Contact Point: Email",
+            "Parties: Organization: Contact Point: Fax Number",
+            "Parties: Organization: Contact Point: Name",
+            "Parties: Organization: Contact Point: Telephone",
+            "Parties: Organization: Contact Point: Url",
+            "Parties: Organization: Address: Country Name",
+            "Parties: Organization: Address: Locality",
+            "Parties: Organization: Address: Postal Code",
+            "Parties: Organization: Address: Region",
+            "Parties: Organization: Address: Street Address",
+            "Buyer: Organization Id",
+            "Buyer: Organization Name",
+            "Parties: Test",
+        ],
+        "tenders_items": [
+            "Ocid",
+            "Id",
+            "Row Id",
+            "Parent Id",
+            "Parent Table",
+            "Tender: Items To Be Procured: Item: Description",
+            "item id",
+            "Tender: Items To Be Procured: Item: Quantity",
+            "Tender: Items To Be Procured: Item: Unit: Id",
+            "Tender: Items To Be Procured: Item: Unit: Name",
+            "Tender: Items To Be Procured: Item: Unit: Scheme",
+            "Tender: Value: Amount",
+            "Tender: Value: Currency",
+            "Tender: Items To Be Procured: Item: Classification: Description",
+            "Tender: Items To Be Procured: Item: Classification: Id",
+            "Tender: Items To Be Procured: Item: Classification: Scheme",
+            "Tender: Items To Be Procured: Item: Classification: Uri",
+            "Tender: Items: Additional Classifications: 0: Description",
+            "Tender: Items: Additional Classifications: 0: Id",
+            "Tender: Items: Additional Classifications: 0: Scheme",
+            "Tender: Items: Additional Classifications: 0: Uri",
+        ],
+    }
 
     workdir = Path(tmpdir)
     get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
-    schema_headers = SchemaHeaderExtractor(schema)
-
-    table_headers = {}
-    for name, table in tables.items():
-        headers = {c: c for c in table.available_rows(split=False if "parties" in name else True)}
-        for c in headers:
-            headers[c] = table.titles.get(c, c)
-            for k, v in headers.items():
-                if v and isinstance(v, list):
-                    headers[k] = schema_headers.get_header(k, v)
-                elif not v:
-                    headers[k] = nonschema_title_formatter(k)
-                else:
-                    headers[k] = nonschema_title_formatter(v)
-                for col in headers.keys():
-                    for char in col:
-                        if char.isnumeric() and char != "0":
-                            title_col = col.replace(char, "0")
-                            headers[col] = headers[title_col]
-        table_headers[name] = headers
 
     for name, opts in options.selection.items():
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
-        table = tables[name]
-
-        for col in tables[name].available_rows(opts.split):
-            title = table_headers[name][col]
-            if col == "/tender/items/id":
-                title = "item id"
-            if title:
-                assert title in xlsx_headers
-                assert title in csv_headers
+        headers = tables_headers[name]
+        assert not set(headers).difference(set(xlsx_headers))
+        assert not set(headers).difference(set(csv_headers))
 
     options = FlattenOptions(
         **{
@@ -188,9 +249,10 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
         pass
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
-    for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Tenderers Count" in headers
-        assert "Items Count" in headers
+    # TODO: xlsx headers
+    headers = read_csv_headers(path)
+    assert "Tender: Items Count" in headers
+    assert "Tender: Tenderers Count" in headers
 
     sheet = "parties"
     path = workdir / f"{sheet}.csv"

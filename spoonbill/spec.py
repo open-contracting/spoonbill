@@ -151,17 +151,7 @@ class Table:
         if not self.is_root:
             self.parent.add_array_column(col, path, abs_path, max=max)
 
-    def add_column(
-        self,
-        path,
-        item_type,
-        title,
-        *,
-        propagated=False,
-        additional=False,
-        abs_path=None,
-        header=[]
-    ):
+    def add_column(self, path, item_type, title, *, propagated=False, additional=False, abs_path=None, header=[]):
         """
         Add a new column to the table.
 
@@ -194,8 +184,9 @@ class Table:
             self.array_positions[array] = combined_path
         if not self.is_root:
             self.parent.add_column(path, item_type, title, propagated=True, header=header)
-        if path not in self.titles:
-            self.titles[path] = title
+        for p in (path, combined_path):
+            if path not in self.titles:
+                self.titles[p] = header
         if path not in self.types:
             self.types[path] = item_type
 

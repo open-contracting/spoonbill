@@ -345,7 +345,7 @@ class SchemaHeaderExtractor:
         if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
-    def get_header(self, id, paths):
+    def _get_header(self, id, paths):
         final_title = []
         for path in paths:
             _object = Cut(self.schema)["properties." + ".".join(path[:-1])]
@@ -361,6 +361,14 @@ class SchemaHeaderExtractor:
         if "Organization reference" in final_title:
             final_title.remove("Organization reference")
         return ": ".join(final_title)
+
+    def get_header(self, id, paths):
+        if paths and isinstance(paths, list):
+            return self._get_header(id, paths)
+        elif paths == []:
+            return nonschema_title_formatter(id)
+        else:
+            return nonschema_title_formatter(paths)
 
 
 def generate_paths(source):

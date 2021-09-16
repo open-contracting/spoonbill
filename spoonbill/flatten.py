@@ -149,13 +149,7 @@ class Flattener:
             # in other way it could be frustrating
             # e.g. it may generate columns for whole array like:
             # /tender/items/200/additionalClassificationsCount
-            table.add_column(
-                path,
-                "integer",
-                _(path, self.language),
-                additional=True,
-                propagated=False,
-            )
+            table.add_column(path, "integer", _(path, self.language), additional=True, propagated=False, header=path)
             table.inc_column(path, path)
 
     def init_unnest(self, table, options):

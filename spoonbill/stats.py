@@ -101,10 +101,18 @@ class DataPreprocessor:
         self,
     ):
         """"""
+        # if isinstance(self.schema, (str, Path)):
+        #     self.schema = resolve_file_uri(self.schema)
+        # if not isinstance(self.schema, jsonref.JsonRef):
+        #     self.schema = jsonref.JsonRef.replace_refs(self.schema)
+
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
+        self.init_tables(self.root_tables)
         if not isinstance(self.schema, jsonref.JsonRef):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
+        if self.combined_tables:
+            self.init_tables(self.combined_tables, is_combined=True)
 
     def prepare_tables(self):
         self.init_tables(self.root_tables)
@@ -116,7 +124,7 @@ class DataPreprocessor:
         Extract information from the schema.
         """
         self.load_schema()
-        self.prepare_tables()
+        # self.prepare_tables()
         proxy = add_paths_to_schema(self.schema)
         to_analyze = deque([("", "", {}, proxy)])
 
@@ -198,6 +206,7 @@ class DataPreprocessor:
                         self.guess_type(it),
                         _(ppointer, self.language),
                         abs_path=self.join_path(abs_pointer, path_),
+                        header=ppointer,
                     )
 
     @lru_cache(maxsize=None)
@@ -256,11 +265,7 @@ class DataPreprocessor:
         LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))
         self.current_table.types[pointer] = JOINABLE
         self.current_table.add_column(
-            pointer,
-            JOINABLE,
-            _(pointer, self.language),
-            additional=True,
-            abs_path=abs_pointer,
+            pointer, JOINABLE, _(pointer, self.language), additional=True, abs_path=abs_pointer, header=pointer
         )
 
     def handle_array_expanded(self, pointer, item, abs_path, key):
