@@ -6,7 +6,6 @@ import json
 import logging
 import re
 from collections import OrderedDict
-from dataclasses import replace
 from itertools import chain
 from numbers import Number
 from pathlib import Path
@@ -16,7 +15,7 @@ import jsonref
 import requests
 from scalpl import Cut
 
-from spoonbill.common import COMBINED_TABLES
+from spoonbill.common import COMBINED_TABLES, SEPARATOR
 
 PYTHON_TO_JSON_TYPE = {
     "list": "array",
@@ -206,55 +205,14 @@ def generate_table_name(parent_table, parent_key, key):
     return table_name
 
 
-def recalculate_headers(table, path, abs_path, key, item, should_split, separator="/"):
-    """Rebuild table headers when array is expanded with attempt to preserve order
-
-    Also deletes combined columns from tables columns if array becomes bigger than threshold
-
-    :param table: Table for which headers should be rebuild
-    :param abs_path: Full jsonpath to array
-    :param key: Array field name
-    :param item: Array items
-    :param should_split: True if array should be separated into child table
-    :param separator: header path separator
-    """
-
-    def insert_after_key(columns, insert, last_key):
-        data = OrderedDict()
-        for key, val in columns.items():
-            data[key] = val
-            if key == last_key:
-                for k, v in insert.items():
-                    data[k] = v
-                    table.titles[k] = v.title
-        return data
-
-    base_prefix = separator.join((abs_path, key))
-    zero_prefix = get_pointer(table, separator.join((base_prefix, "0")), path, True)
-
-    zero_cols = {
-        col_p: col
-        for col_p, col in table.combined_columns.items()
-        if col_p.startswith(separator) and common_prefix(col_p, zero_prefix) == zero_prefix
-    }
-    new_cols = {}
-    for col_i, _ in enumerate(item[1:], 1):
-        col_prefix = get_pointer(table, separator.join((base_prefix, str(col_i))), path, True)
-
-        for col_p, col in zero_cols.items():
-            col_id = col.id.replace(zero_prefix, col_prefix)
-            new_cols[col_id] = replace(col, id=col_id, hits=0)
-
-    if new_cols:
-        last_key = list(zero_cols.keys())[-1]
-        table.combined_columns = insert_after_key(table.combined_columns, new_cols, last_key)
-        if should_split:
-            for col_path in chain(zero_cols, new_cols):
-                table.columns.pop(col_path, "")
-        else:
-            table.columns = insert_after_key(table.columns, new_cols, last_key)
-        if not table.is_root:
-            recalculate_headers(table.parent, path, abs_path, key, item, should_split, separator)
+def insert_after_key(columns, insert, last_key):
+    data = OrderedDict()
+    for key, val in columns.items():
+        data[key] = val
+        if key == last_key:
+            for k, v in insert.items():
+                data[k] = v
+    return data
 
 
 def resolve_file_uri(file_path):
@@ -275,7 +233,7 @@ def read_lines(path):
         return [line.strip() for line in fd.readlines()]
 
 
-def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
+def get_pointer(table, abs_path, path, split, *, index=None):
     """Combine path and abs_path in order to fit table columns
 
     For example /tender/items/0/id should be /tender/items/0/id for tenders table
@@ -283,12 +241,12 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
     """
     array = table.is_array(path)
     if index and (array or table.is_combined):
-        return separator.join((abs_path, index))
+        return SEPARATOR.join((abs_path, index))
     if table.is_root:
         return abs_path
 
     if array:
-        paths = abs_path.split(separator)
+        paths = abs_path.split(SEPARATOR)
         prefix = ""
 
         for index, pth in enumerate(paths, 1):
@@ -296,12 +254,12 @@ def get_pointer(table, abs_path, path, split, *, separator="/", index=None):
                 continue
             if not pth:
                 continue
-            prefix = separator.join((prefix, pth))
+            prefix = SEPARATOR.join((prefix, pth))
             if prefix == array:
                 break
-        pointer = separator.join(paths[index:])
+        pointer = SEPARATOR.join(paths[index:])
         if pointer:
-            return separator.join((prefix, pointer))
+            return SEPARATOR.join((prefix, pointer))
         return prefix
     return path
 
@@ -387,7 +345,7 @@ class SchemaHeaderExtractor:
         if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
-    def get_header(self, id, paths):
+    def _get_header(self, id, paths):
         final_title = []
         for path in paths:
             _object = Cut(self.schema)["properties." + ".".join(path[:-1])]
@@ -403,6 +361,14 @@ class SchemaHeaderExtractor:
         if "Organization reference" in final_title:
             final_title.remove("Organization reference")
         return ": ".join(final_title)
+
+    def get_header(self, id, paths):
+        if paths and isinstance(paths, list):
+            return self._get_header(id, paths)
+        elif paths == []:
+            return nonschema_title_formatter(id)
+        else:
+            return nonschema_title_formatter(paths)
 
 
 def generate_paths(source):
@@ -465,3 +431,14 @@ def title_path(schema, path=[]):
         else:
             if newpath:
                 yield newpath
+
+
+def get_nestiness(abs_path):
+    arrays = [c for c in abs_path if c.isdigit()]
+    return len(arrays) - 1
+
+
+def get_path_for_array_col(abs_path, array):
+    nestiness = get_nestiness(abs_path)
+    chunks = abs_path.split("/")[len(array.split("/")) + nestiness :]
+    return "/".join(chain([array], chunks))

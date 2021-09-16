@@ -23,15 +23,12 @@ def test_inc_column(root_table):
     child.add_column("/tender/items/id", ["string"], "Tender Id", additional=True, abs_path="/tender/items/0/test")
     child.arrays["/tender/items/additionalClassifications"] = 0
     root_table.inc_column("ocid", "ocid")
-    assert root_table["ocid"].hits == 1
     assert root_table.combined_columns["ocid"].hits == 1
 
     root_table.inc_column("/tender/awardCriteriaDetails", "/tender/awardCriteriaDetails")
-    assert root_table["/tender/awardCriteriaDetails"].hits == 1
     assert root_table.combined_columns["/tender/awardCriteriaDetails"].hits == 1
 
     child.inc_column("/tender/items/0/id", "/tender/items/id")
-    assert root_table["/tender/items/0/id"].hits == 1
     assert root_table.combined_columns["/tender/items/0/id"].hits == 1
     assert child["/tender/items/id"].hits == 1
     assert child.combined_columns["/tender/items/id"].hits == 1
@@ -48,10 +45,8 @@ def test_inc_column(root_table):
     child_child.inc_column(
         "/tender/items/0/additionalClassifications/0/id", "/tender/items/additionalClassifications/id"
     )
-    assert child["/tender/items/additionalClassifications/0/id"].hits == 1
-    assert child["/tender/items/additionalClassifications/0/id"].hits == 1
-    assert root_table["/tender/items/0/additionalClassifications/0/id"].hits == 1
-    assert root_table["/tender/items/0/additionalClassifications/0/id"].hits == 1
+    assert child.combined_columns["/tender/items/additionalClassifications/0/id"].hits == 1
+    assert root_table.combined_columns["/tender/items/0/additionalClassifications/0/id"].hits == 1
 
 
 def test_add_column(root_table):
@@ -79,7 +74,6 @@ def test_add_column(root_table):
     )
     assert "/tender/items/test" in child
     assert "/tender/items/test" in child.combined_columns
-    assert "/tender/items/0/test" in root_table
     assert "/tender/items/0/test" in root_table.combined_columns
     child.add_column("/tender/items/id", ["string", "integer"], "Items Id")
 
@@ -94,7 +88,7 @@ def test_add_column(root_table):
         "/tender/items/additionalClassificationsCount",
         ["string", "integer"],
         "Classification Count",
-        propagate=False,
+        propagated=False,
     )
     assert "/tender/items/additionalClassificationsCount" in child
     assert "/tender/items/additionalClassificationsCount" in child.combined_columns
@@ -111,7 +105,7 @@ def test_row_counters(root_table):
     assert not set(cols).difference(available)
 
     cols = root_table.missing_rows()
-    assert not set(cols).difference(
+    assert set(cols).difference(
         [
             "parentID",
             "/tender/awardCriteriaDetails",

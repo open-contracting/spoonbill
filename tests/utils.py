@@ -7,8 +7,7 @@ from spoonbill.writers import CSVWriter, XlsxWriter
 
 def read_csv_headers(path):
     with open(path) as fd:
-        reader = csv.DictReader(fd)
-        return [c for c in reader.fieldnames]
+        return [c for c in csv.DictReader(fd).fieldnames]
 
 
 def read_xlsx_headers(path, sheet):

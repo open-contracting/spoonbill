@@ -3,11 +3,12 @@ from unittest.mock import call, mock_open, patch
 
 from jmespath import search
 from jsonpointer import resolve_pointer
+from pytest import fail
 
 from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
-from spoonbill.utils import recalculate_headers
+from spoonbill.utils import insert_after_key
 from tests.conftest import TEST_COMBINED_TABLES, TEST_ROOT_TABLES, schema_path
 from tests.data import (
     awards_arrays,
@@ -59,19 +60,19 @@ def test_parse_schema(schema, spec):
         assert not table.parent
         assert table.is_root
         assert not table.is_combined
-        for col_id in COLUMNS[name]:
-            col = table[col_id]
+        for col_path in COLUMNS[name]:
+            col = table[col_path]
             assert isinstance(col, Column)
             assert col.hits == 0
-            assert col.id == col_id
+            assert col.path == col_path
 
-        for col_id in COMBINED_COLUMNS[name]:
-            col = table.combined_columns[col_id]
+        for col_path in COMBINED_COLUMNS[name]:
+            col = table.combined_columns[col_path]
             assert col.hits == 0
-            assert col.id == col_id
+            assert col.path == col_path
 
-        for col_id in ARRAYS_COLUMNS[name]:
-            col = table.arrays[col_id]
+        for col_path in ARRAYS_COLUMNS[name]:
+            col = table.arrays[col_path]
             assert col == 0
 
 
@@ -121,7 +122,7 @@ def test_analyze(spec, releases):
         path = f"/tender/items/{index}/id"
         items = search(f"[].tender.items[{index}].id", releases)
         assert len(items) == tenders.combined_columns[path].hits
-        assert len(items) == tenders.columns[path].hits
+        # assert len(items) == tenders.columns[path].hits
     items_ids = [i["id"] for item in tender_items for i in item]
     assert len(items_ids) == spec.tables["tenders_items"].total_rows
 
@@ -155,11 +156,16 @@ def test_dump_restore(log, spec, releases, tmpdir):
         "schema",
         "root_tables",
         "combined_tables",
-        "header_separator",
+        # "header_separator",
         "tables",
         "table_threshold",
         "total_items",
+        "multiple_values",
+        "language",
+        "names_counter",
+        "with_preview",
     ):
+
         assert key in spec2.__dict__
     with patch("builtins.open", mock_open(read_data="invalid")):
         spec2 = DataPreprocessor.restore(tmpdir / "result.json")
@@ -172,7 +178,8 @@ def test_dump_restore(log, spec, releases, tmpdir):
 
 def test_recalculate_headers(root_table, releases):
     items = releases[0]["tender"]["items"]
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, False)
+    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, False)
+    insert_after_key(root_table.combined_columns, "/tender", "items")
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",
@@ -183,13 +190,12 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.combined_columns
         assert key not in root_table.columns
     items = items * 2
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, False)
+    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, False)
+    insert_after_key(root_table.combined_columns, "/tender", "items")
 
     for key in (
         "/tender/items/0/id",
         "/tender/items/0/additionalClassifications/0/id",
-        "/tender/items/1/id",
-        "/tender/items/1/additionalClassifications/0/id",
     ):
         assert key in root_table.combined_columns
         assert key in root_table.columns
@@ -205,21 +211,8 @@ def test_recalculate_headers(root_table, releases):
             "uri": "http://cpv.data.ac.uk/code-45233162.html",
         }
     ] * 2
-    recalculate_headers(
-        root_table,
-        "/tender/items/additionalClassifications",
-        "/tender/items/0",
-        "additionalClassifications",
-        items,
-        False,
-    )
-    for key in (
-        "/tender/items/0/id",
-        "/tender/items/0/additionalClassifications/0/id",
-        "/tender/items/0/additionalClassifications/1/id",
-        "/tender/items/1/id",
-        "/tender/items/1/additionalClassifications/0/id",
-    ):
+    insert_after_key(root_table.combined_columns, "/tender/items/0", "additionalClassifications")
+    for key in ("/tender/items/0/id", "/tender/items/0/additionalClassifications/0/id"):
         assert key in root_table.combined_columns
         assert key in root_table.columns
     for key in (
@@ -231,21 +224,11 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.columns
 
     items = releases[0]["tender"]["items"] * 5
-    recalculate_headers(root_table, "/tender/items", "/tender", "items", items, True)
-    for key in (
-        "/tender/items/0/id",
-        "/tender/items/0/additionalClassifications/0/id",
-        "/tender/items/1/id",
-        "/tender/items/1/additionalClassifications/0/id",
-        "/tender/items/2/id",
-        "/tender/items/2/additionalClassifications/0/id",
-        "/tender/items/3/id",
-        "/tender/items/3/additionalClassifications/0/id",
-        "/tender/items/4/id",
-        "/tender/items/4/additionalClassifications/0/id",
-    ):
+    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, True)
+    insert_after_key(root_table.combined_columns, "/tender", "items")
+    for key in ("/tender/items/0/id", "/tender/items/0/additionalClassifications/0/id"):
         assert key in root_table.combined_columns
-        assert key not in root_table.columns
+        assert key in root_table.columns
 
 
 def test_analyze_preview_rows(spec_analyzed, releases):
@@ -266,7 +249,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables
-                    assert key in tenders
+                    assert key in tenders.combined_columns
                     expected = resolve_pointer(releases[count], key)
                     if isinstance(expected, list):
                         # joinable
@@ -309,17 +292,17 @@ def test_analyze_array_extentions_no_split(spec, releases):
     items[0]["attributes"] = [attr]
     [_ for _ in spec.process_items(releases)]
 
-    for cols in spec.tables["tenders"], spec.tables["tenders"].combined_columns:
-        assert "/tender/items/0/attributes/0/id" in cols
-        assert "/tender/items/0/attributes/0/name" in cols
-        assert "/tender/items/1/attributes/0/name" not in cols
-        assert "/tender/items/0/attributes/1/name" not in cols
-        assert "/tender/items/1/attributes/1/name" not in cols
-    for cols in spec.tables["tenders_items"], spec.tables["tenders_items"].combined_columns:
-        assert "/tender/items/attributes/0/name" in cols
-        assert "/tender/items/attributes/0/name" in cols
-        assert "/tender/items/attributes/1/name" not in cols
-        assert "/tender/items/attributes/1/name" not in cols
+    cols = spec.tables["tenders"].combined_columns
+    assert "/tender/items/0/attributes/0/id" in cols
+    assert "/tender/items/0/attributes/0/name" in cols
+    assert "/tender/items/1/attributes/0/name" not in cols
+    assert "/tender/items/0/attributes/1/name" not in cols
+    assert "/tender/items/1/attributes/1/name" not in cols
+    cols = spec.tables["tenders_items"].combined_columns
+    assert "/tender/items/attributes/0/name" in cols
+    assert "/tender/items/attributes/0/name" in cols
+    assert "/tender/items/attributes/1/name" not in cols
+    assert "/tender/items/attributes/1/name" not in cols
 
     for cols in spec.tables["tenders_items_attributes"], spec.tables["tenders_items_attributes"].combined_columns:
         assert "/tender/items/attributes/name" in cols
@@ -348,11 +331,10 @@ def test_analyze_array_extentions_split(spec, releases):
         assert key not in cols
 
     cols = spec.tables["tenders"].combined_columns
+
     for key in (
         "/tender/items/0/attributes/0/id",
-        "/tender/items/0/attributes/1/id",
         "/tender/items/0/attributes/0/name",
-        "/tender/items/0/attributes/1/name",
     ):
         assert key in cols
     for key in (
@@ -360,6 +342,8 @@ def test_analyze_array_extentions_split(spec, releases):
         "/tender/items/1/attributes/0/id",
         "/tender/items/1/attributes/1/name",
         "/tender/items/1/attributes/1/id",
+        "/tender/items/0/attributes/1/name",
+        "/tender/items/0/attributes/1/id",
     ):
         assert key not in cols
 
@@ -370,7 +354,17 @@ def test_analyze_array_extentions_split(spec, releases):
     assert "/tender/items/attributes/1/name" not in cols
 
     cols = spec.tables["tenders_items"].combined_columns
-    assert "/tender/items/attributes/0/id" in cols
-    assert "/tender/items/attributes/0/name" in cols
-    assert "/tender/items/attributes/1/id" in cols
-    assert "/tender/items/attributes/1/name" in cols
+    assert "/tender/items/attributes/0/id" not in cols
+    assert "/tender/items/attributes/0/name" not in cols
+    assert "/tender/items/attributes/1/id" not in cols
+    assert "/tender/items/attributes/1/name" not in cols
+    cols = spec.tables["tenders_items_attributes"].combined_columns
+    assert "/tender/items/attributes/id" in cols
+    assert "/tender/items/attributes/name" in cols
+
+
+def test_analyze_test_dataset(spec, test_dataset_releases):
+    try:
+        [_ for _ in spec.process_items(test_dataset_releases)]
+    except AttributeError as e:
+        fail(f"{e.__class__.__name__}: {str(e)}")

@@ -227,14 +227,17 @@ def cli(
         # Progress bar not showing with small files
         # https://github.com/pallets/click/pull/1296/files
         with click.progressbar(width=0, show_percent=True, show_pos=True, length=total) as bar:
-            for read, number in analyzer.analyze_file(filename, with_preview=True):
+            for read, number in analyzer.analyze_file(filename, with_preview=False):
                 bar.label = ANALYZED_LABEL.format(click.style(str(number), fg="cyan"))
                 bar.update(read - progress)
                 progress = read
         click.secho(
             _("Done processing. Analyzed objects: {}").format(click.style(str(number + 1), fg="red")), fg="green"
         )
-        state_file = pathlib.Path(f"{filename}.state")
+        if isinstance(filename, list):
+            state_file = pathlib.Path(f"{filename[0]}.state")
+        else:
+            state_file = pathlib.Path(f"{filename}.state")
         state_file_path = workdir / state_file
         click.echo(_("Dumping analyzed data to '{}'").format(click.style(str(state_file_path.absolute()), fg="cyan")))
         analyzer.dump_to_file(state_file)
@@ -261,7 +264,7 @@ def cli(
             click.echo(_("Ignoring empty table {}").format(click.style(name, fg="red")))
             continue
         options["selection"][name] = {
-            "split": analyzer.spec[name].should_split,
+            "split": analyzer.spec[name].splitted,
             "pretty_headers": human,
         }
         if not analyzer.spec[name].is_combined:

@@ -70,33 +70,29 @@ class FileAnalyzer:
         LOGGER.info(_("Input file is {}").format(input_format))
         self.multiple_values = _is_concatenated
         self.parse_schema(input_format, self.schema)
-
+        if self.spec is None:
+            self.spec = DataPreprocessor(
+                self.schema,
+                self.root_tables,
+                combined_tables=self.combined_tables,
+                language=self.language,
+                table_threshold=self.table_threshold,
+                multiple_values=self.multiple_values,
+                pkg_type=self.pkg_type,
+            )
         for filename in filenames:
             path = self.workdir / filename
-            if self.spec is None:
-                self.spec = DataPreprocessor(
-                    self.schema,
-                    self.root_tables,
-                    combined_tables=self.combined_tables,
-                    language=self.language,
-                    table_threshold=self.table_threshold,
-                    multiple_values=self.multiple_values,
-                    pkg_type=self.pkg_type,
-                )
             reader = get_reader(path)
             with reader(path, "rb") as fd:
                 items = iter_file(fd, self.pkg_type, multiple_values=self.multiple_values)
-                for count in self.spec.process_items(items, with_preview=with_preview):
+                for count in self.spec.process_items(items):
                     yield fd.tell(), count
         self.sort_tables()
 
-    def dump_to_file(self, filenames):
+    def dump_to_file(self, filename):
         """Save analyzed information to file
         :param filename: Output filename in working directory
         """
-        if not isinstance(filenames, list):
-            filenames = [filenames]
-        filename = filenames[0] / str(len(filenames)) if len(filenames) > 1 else ""
         path = self.workdir / filename
         self.spec.dump(path)
 

@@ -1,11 +1,18 @@
 import logging
 from collections import OrderedDict
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, is_dataclass, replace
 from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
 from spoonbill.i18n import _
-from spoonbill.utils import combine_path, common_prefix, generate_table_name, get_pointer
+from spoonbill.utils import (
+    combine_path,
+    common_prefix,
+    generate_table_name,
+    get_path_for_array_col,
+    get_pointer,
+    insert_after_key,
+)
 
 LOGGER = logging.getLogger("spoonbill")
 
@@ -15,15 +22,17 @@ class Column:
     """
     A container for column information.
 
+    :param id: The JSON path without indexes
+    :param path: The JSON path with indexes
     :param title: The human-friendly title
     :param type: The expected type
-    :param id: The JSON path
     :param hits: The number of times the column contains data during analysis
     """
 
+    id: str
+    path: str
     title: str
     type: str
-    id: str
     hits: int = 0
     header: list = field(default_factory=list)
 
@@ -39,8 +48,8 @@ class Table:
     :param parent: Parent table, None if this table is root table
     :param is_root: This table is root table
     :param is_combined: This table contains data collected from different paths
-    :param should_split: This table should be splitted
-    :param roll_up: This table should be separated from its parent
+    :param splitted: This table should be splitted
+    :param rolled_up: This table should be ated from its parent
     :param columns: Columns extracted from schema for split version of this table
     :param combined_columns: Columns extracted from schema for unsplit version of this table
     :param additional_columns: Columns identified in dataset but not in schema
@@ -59,8 +68,8 @@ class Table:
     parent: object = field(default_factory=dict)
     is_root: bool = False
     is_combined: bool = False
-    should_split: bool = False
-    roll_up: bool = False
+    splitted: bool = False
+    rolled_up: bool = False
     columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
     additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
@@ -68,6 +77,8 @@ class Table:
     titles: Mapping[str, str] = field(default_factory=dict)
     child_tables: List[str] = field(default_factory=list)
     types: Mapping[str, List[str]] = field(default_factory=dict)
+    array_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    array_positions: Mapping[str, str] = field(default_factory=dict)
 
     preview_rows: Sequence[dict] = field(default_factory=list)
     preview_rows_combined: Sequence[dict] = field(default_factory=list)
@@ -90,10 +101,11 @@ class Table:
             if self.is_root and not self.is_combined:
                 cols = DEFAULT_FIELDS
             for col in cols:
+                column = Column(col, col, "string", col)
                 if col not in self.columns:
-                    self.columns[col] = Column(col, "string", col)
+                    self.columns[col] = column
                 if col not in self.combined_columns:
-                    self.combined_columns[col] = Column(col, "string", col)
+                    self.combined_columns[col] = column
                 self.titles[col] = _(col)
 
     def _counter(self, split, cond):
@@ -114,6 +126,10 @@ class Table:
 
         return self._counter(split, lambda c: c.hits > 0)
 
+    def filter_columns(self, filter):
+        self.columns = {col_id: col for col_id, col in self.columns.items() if not filter(col)}
+        self.combined_columns = {col_id: col for col_id, col in self.combined_columns.items() if not filter(col)}
+
     def __iter__(self):
         for col in self.columns:
             yield col
@@ -121,18 +137,21 @@ class Table:
     def __getitem__(self, path):
         return self.columns.get(path)
 
-    def add_column(
-        self,
-        path,
-        item_type,
-        title,
-        *,
-        combined_only=False,
-        propagate=True,
-        additional=False,
-        abs_path=None,
-        header=[]
-    ):
+    def add_array_column(self, col, path, abs_path, max):
+        array = self.is_array(path)
+        col_path = get_path_for_array_col(abs_path, array)
+        if self.arrays[array] > max:
+            return
+
+        if col_path not in self.combined_columns:
+            col = replace(col, path=col_path)
+            last_key = self.array_positions[array]
+            self.array_positions[array] = col_path
+            self.combined_columns = insert_after_key(self.combined_columns, {col_path: col}, last_key)
+        if not self.is_root:
+            self.parent.add_array_column(col, path, abs_path, max=max)
+
+    def add_column(self, path, item_type, title, *, propagated=False, additional=False, abs_path=None, header=[]):
         """
         Add a new column to the table.
 
@@ -140,37 +159,36 @@ class Table:
         :param item_type: The column's expected type
         :param title: Column title
         :param combined_only: Make this column available only in combined version of table
-        :param propagate: Add column to parent table
+        :param propagated: Add column to parent table
         :param additional: Mark this column as missing in schema
         :param abs_path: The column's full JSON path
         """
-        is_array = self.is_array(path)
         combined_path = combine_path(self, path)
-        if not combined_only:
-            self.columns[combined_path] = Column(title, item_type, combined_path, header=header)
-        # new column to track hits differently
-        self.combined_columns[combined_path] = Column(title, item_type, combined_path, header=header)
-
+        col = Column(path, combined_path, title, item_type, header=header)
+        array = self.is_array(path)
         if additional:
-            if is_array:
+            if array:
                 # when we analyzing file we need to keep index from data not to use 0
                 # e.g. /tender/items/166/relatedLot
                 combined_path = abs_path
+                col = replace(col, path=combined_path)
             LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))
-            self.additional_columns[combined_path] = Column(title, item_type, combined_path, header=header)
+            self.additional_columns[combined_path] = col
 
+        if not propagated:
+            self.columns[combined_path] = col
+        self.combined_columns[combined_path] = col
+
+        if propagated:
+            self.array_columns[combined_path] = col
+            self.array_positions[array] = combined_path
+        if not self.is_root:
+            self.parent.add_column(path, item_type, title, propagated=True, header=header)
         for p in (path, combined_path):
-            self.titles[p] = header
-        if not self.is_root and propagate:
-            self.parent.add_column(
-                path,
-                item_type,
-                title,
-                combined_only=combined_only,
-                additional=additional,
-                abs_path=abs_path,
-                header=header,
-            )
+            if path not in self.titles:
+                self.titles[p] = header
+        if path not in self.types:
+            self.types[path] = item_type
 
     def is_array(self, path):
         """
@@ -190,10 +208,8 @@ class Table:
         :param path: The column's JSON path without array indexes
         """
         header = get_pointer(self, abs_path, path, True)
-        for headers in self.columns, self.combined_columns, self.additional_columns:
-            if header in headers:
-                headers[header].hits += 1
-
+        if header in self.combined_columns:
+            self.combined_columns[header].hits += 1
         if not self.is_root:
             self.parent.inc_column(abs_path, path)
 

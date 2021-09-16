@@ -111,7 +111,10 @@ def test_state_file():
         result = runner.invoke(cli, ["--state-file", "analyzed.json", "data.json"])
         assert result.exit_code == 0
         assert "Restoring from provided state file" in result.output
-        assert "Going to export tables: parties,parties_ids,planning" in result.output
+        assert (
+            "Going to export tables: parties,planning,tenders,awards,contracts,documents,milestones,amendments"
+            in result.output
+        )
         assert "Done flattening. Flattened objects: 6" in result.output
 
 
@@ -318,7 +321,6 @@ def test_sheet_order_state_file():
         sheets = [name for name in workbook.sheetnames]
         assert sheets == [
             "parties",
-            "parties_ids",
             "planning",
             "tenders",
             "awards",
