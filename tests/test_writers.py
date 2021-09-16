@@ -189,15 +189,10 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
-        assert "Tender: Items Count" in headers
-        assert "Tender: Tenderers Count" in headers
-
-    sheet = "tenders_items"
-    path = workdir / f"{sheet}.csv"
-    for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
+        assert "Tenderers Count" in headers
         assert "Items Count" in headers
 
-    sheet = "parties_ids"
+    sheet = "parties"
     path = workdir / f"{sheet}.csv"
     for headers in read_xlsx_headers(xlsx, sheet), read_csv_headers(path):
         assert "Parties: Additional Identifiers Count" in headers
@@ -389,62 +384,21 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
     # Reading XLSX files
     counter = {}
     path = workdir / "result.xlsx"
+    xlsx_reader = openpyxl.load_workbook(path)
+
     for _count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             if name not in counter:
                 counter[name] = 2
-            xlsx_reader = openpyxl.load_workbook(path)
             sheet = xlsx_reader[name]
-            header_values = [cell.value for cell in sheet[1]]
-            header_columns = [cell.column_letter for cell in sheet[1]]
-            headers = dict(zip(header_columns, header_values))
+            headers = {cell.column_letter: cell.value for cell in sheet[1]}
             for row in rows:
-                line_values = [cell.value for cell in sheet[counter[name]]]
-                line_columns = [headers[cell.column_letter] for cell in sheet[counter[name]]]
-                line = dict(zip(line_columns, line_values))
-                # Cleaning empty cells
-                line = {k: v for (k, v) in line.items() if v}
-
-                if "/tender/hasEnquiries" in row:
-                    str_row = {k: v for (k, v) in row.items()}
-                    str_row["/tender/hasEnquiries"] = str(row["/tender/hasEnquiries"])
-                    assert line == str_row
-                else:
-                    assert line == row.as_dict()
+                line = {headers[cell.column_letter]: cell.value for cell in sheet[counter[name]]}
+                row = row.as_dict()
+                assert not set(row.keys()).difference(set(line.keys()))
+                for k, v in row.items():
+                    assert str(v) == str(line[k])
                 counter[name] += 1
-
-
-def test_less_five_arrays_csv(spec_analyzed, releases, flatten_options, tmpdir, schema):
-    test_arrays = ["tenders_items", "tenders_items_addit", "tenders_tende"]
-    flattener = Flattener(flatten_options, spec_analyzed.tables)
-    tables = prepare_tables(spec_analyzed, flatten_options)
-    workdir = Path(tmpdir)
-    with CSVWriter(workdir, tables, flatten_options, schema) as writer:
-        for _count, flat in flattener.flatten(releases):
-            for name, rows in flat.items():
-                for row in rows:
-                    writer.writerow(name, row)
-
-    for name in test_arrays:
-        path = workdir / f"{name}.csv"
-        assert not path.is_file()
-
-
-def test_less_five_arrays_xlsx(spec_analyzed, releases, flatten_options, tmpdir, schema):
-    test_arrays = ["tenders_items", "tenders_items_addit", "tenders_tende"]
-    flattener = Flattener(flatten_options, spec_analyzed.tables)
-    tables = prepare_tables(spec_analyzed, flatten_options)
-    workdir = Path(tmpdir)
-    with XlsxWriter(workdir, tables, flatten_options, schema) as writer:
-        for _count, flat in flattener.flatten(releases):
-            for name, rows in flat.items():
-                for row in rows:
-                    writer.writerow(name, row)
-
-    path = workdir / "result.xlsx"
-    xlsx_reader = openpyxl.load_workbook(path)
-    for name in test_arrays:
-        assert name not in xlsx_reader
 
 
 def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):

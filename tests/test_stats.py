@@ -354,10 +354,13 @@ def test_analyze_array_extentions_split(spec, releases):
     assert "/tender/items/attributes/1/name" not in cols
 
     cols = spec.tables["tenders_items"].combined_columns
-    assert "/tender/items/attributes/0/id" in cols
-    assert "/tender/items/attributes/0/name" in cols
+    assert "/tender/items/attributes/0/id" not in cols
+    assert "/tender/items/attributes/0/name" not in cols
     assert "/tender/items/attributes/1/id" not in cols
     assert "/tender/items/attributes/1/name" not in cols
+    cols = spec.tables["tenders_items_attributes"].combined_columns
+    assert "/tender/items/attributes/id" in cols
+    assert "/tender/items/attributes/name" in cols
 
 
 def test_analyze_test_dataset(spec, test_dataset_releases):
