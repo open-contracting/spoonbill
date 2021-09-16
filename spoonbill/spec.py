@@ -126,6 +126,10 @@ class Table:
 
         return self._counter(split, lambda c: c.hits > 0)
 
+    def filter_columns(self, filter):
+        self.columns = {col_id: col for col_id, col in self.columns.items() if not filter(col)}
+        self.combined_columns = {col_id: col for col_id, col in self.combined_columns.items() if not filter(col)}
+
     def __iter__(self):
         for col in self.columns:
             yield col

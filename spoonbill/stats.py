@@ -264,9 +264,14 @@ class DataPreprocessor:
         )
 
     def handle_array_expanded(self, pointer, item, abs_path, key):
+        def drop(col):
+            return parent.is_array(col.id) == pointer
+
         splitted = len(item) >= self.table_threshold
         if splitted:
-            self.current_table.parent.splitted = True
+            parent = self.current_table.parent
+            parent.splitted = True
+            parent.filter_columns(drop)
             self.current_table.rolled_up = True
 
     def is_array_col(self, abs_path):
@@ -280,7 +285,7 @@ class DataPreprocessor:
             return is_array and col.hits == 0
 
         for table in self.tables.values():
-            table.combined_columns = {col_id: col for col_id, col in table.combined_columns.items() if not drop(col)}
+            table.filter_columns(drop)
 
     def process_items(self, releases, with_preview=True):
         """
@@ -434,6 +439,6 @@ class DataPreprocessor:
         :param item: Item being analyzed
         """
         table = self.current_table
-        if pointer not in table.types:
+        if pointer not in table.types and pointer not in table.path:
             if any((common_prefix(pointer, path) for path in table.path)):
                 self.current_table.types[pointer] = self.guess_type(item)
