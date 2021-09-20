@@ -143,14 +143,6 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
             "Tender: Items To Be Procured: Item: Unit: Scheme",
             "Tender: Value: Amount",
             "Tender: Value: Currency",
-            "Tender: Items To Be Procured: Item: Classification: Description",
-            "Tender: Items To Be Procured: Item: Classification: Id",
-            "Tender: Items To Be Procured: Item: Classification: Scheme",
-            "Tender: Items To Be Procured: Item: Classification: Uri",
-            "Tender: Items: Additional Classifications: 0: Description",
-            "Tender: Items: Additional Classifications: 0: Id",
-            "Tender: Items: Additional Classifications: 0: Scheme",
-            "Tender: Items: Additional Classifications: 0: Uri",
         ],
     }
 
