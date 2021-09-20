@@ -54,7 +54,7 @@ class DataPreprocessor:
         language=LOCALE,
         multiple_values=False,
         pkg_type=None,
-        with_preview=False,
+        with_preview=True,
     ):
         self.schema = schema
         self.root_tables = root_tables
