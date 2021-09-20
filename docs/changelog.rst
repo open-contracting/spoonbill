@@ -3,6 +3,19 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+
+1.0.7b8 (2021-09-20)
+--------------------
+Changed
+~~~~~~~
+* new analyzer engine (`58c4673 <https://github.com/open-contracting/spoonbill/commit/58c4673637624217a587911a83f83accb6430be9>`__)
+
+Fixed
+~~~~~
+* fix pretty title generation for count columns (`637b876 <https://github.com/open-contracting/spoonbill/commit/637b87681382e0e91c22059cd9b4d51896d481e9>`__)
+* **cli** fixed dump analyzed data to state file (`608f03d <https://github.com/open-contracting/spoonbill/commit/608f03d592373843eab336051675e9ff858ac86e>`__)
+* **flatten** fixed splitting behavior (`0514883 <https://github.com/open-contracting/spoonbill/commit/0514883716694afa880187c8c83c339953682f22>`__)
+
 1.0.7b7 (2021-09-10)
 --------------------
 Fixed
