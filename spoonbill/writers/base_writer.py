@@ -31,8 +31,8 @@ class BaseWriter:
         :param options: Flattening options
         :return: Mapping between the machine-readable headers and the output headers
         """
-        # split = options.split and (table.rolled_up or table.splitted)
-        split = options.split and table.splitted
+        split = options.split and (table.rolled_up or table.splitted)
+        # split = options.split and table.splitted
         headers = {c: c for c in table.available_rows(split=split)}
         if (
             table.parent != ""
