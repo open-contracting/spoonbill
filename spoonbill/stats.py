@@ -54,7 +54,7 @@ class DataPreprocessor:
         total_items=0,
         header_separator="/",
         language=LOCALE,
-        multiple_values=False,
+        multiple_values=True,
         pkg_type=None,
     ):
         self.schema = schema
