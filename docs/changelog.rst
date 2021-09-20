@@ -3,6 +3,12 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.8b8 (2021-09-20)
+--------------------
+Fixed
+~~~~~
+* Empty columns after split of child table (`0ec4e97 <https://github.com/open-contracting/spoonbill/commit/0ec4e97ac5568087512c238612254a09182f3a62>`__)
+
 
 1.0.7b8 (2021-09-20)
 --------------------
