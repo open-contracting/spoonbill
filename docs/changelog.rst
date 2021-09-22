@@ -3,6 +3,13 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.9b8 (2021-09-22)
+--------------------
+Fixed
+~~~~~
+* Headers for splitted child table (`2c97e6f <https://github.com/open-contracting/spoonbill/commit/2c97e6fc8b3c4a2827186cfd9faa2bb61d66fdf8>`__)
+
+
 1.0.8b8 (2021-09-20)
 --------------------
 Fixed
