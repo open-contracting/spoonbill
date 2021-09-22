@@ -33,6 +33,8 @@ class BaseWriter:
         """
         split = options.split and (table.rolled_up or table.splitted)
         # split = options.split and table.splitted
+        if table.parent != "" and table.child_tables:
+            split = True
         headers = {c: c for c in table.available_rows(split=split)}
         if (
             table.parent != ""
