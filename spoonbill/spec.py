@@ -254,6 +254,17 @@ class Table:
         if not self.is_root:
             self.parent.set_preview_path(abs_path, path, value, max_items)
 
+    def split(self, pointer):
+        def drop(col):
+            return parent.is_array(col.id) == pointer
+
+        self.rolled_up = True
+        parent = self.parent
+        if parent:
+            parent.splitted = True
+            parent.filter_columns(drop)
+            parent.split(pointer)
+
 
 def add_child_table(table, pointer, parent_key, key):
     """

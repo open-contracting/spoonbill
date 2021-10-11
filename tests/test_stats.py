@@ -306,7 +306,6 @@ def test_analyze_array_extentions_no_split(spec, releases):
 
     for cols in spec.tables["tenders_items_attributes"], spec.tables["tenders_items_attributes"].combined_columns:
         assert "/tender/items/attributes/name" in cols
-        assert "/tender/items/attributes/name" in cols
 
 
 def test_analyze_array_extentions_split(spec, releases):
@@ -336,7 +335,7 @@ def test_analyze_array_extentions_split(spec, releases):
         "/tender/items/0/attributes/0/id",
         "/tender/items/0/attributes/0/name",
     ):
-        assert key in cols
+        assert key not in cols
     for key in (
         "/tender/items/1/attributes/0/name",
         "/tender/items/1/attributes/0/id",
