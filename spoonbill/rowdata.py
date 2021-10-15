@@ -62,21 +62,23 @@ class Rows(MappingBase):
         parent_row = self.row
 
         if table.is_combined:
-            while parent_row.parent:
+            while parent_row and parent_row.parent:
                 parent_row = parent_row.parent
-            row["parentTable"] = parent_row.table_name
+            if parent_row:
+                row["parentTable"] = parent_row.table_name
 
         if not table.is_root:
             parent_table = table.parent
-            while parent_row.parent:
+            while parent_row and parent_row.parent:
                 if parent_row.table_name == parent_table.name:
                     break
-                parent_row = parent_row.parent
+                if parent_row:
+                    parent_row = parent_row.parent
             row["parentTable"] = parent_table.name
-            parent_id = parent_row.row_id
-            row["parentID"] = parent_id
-            head = parent_id
-
+            if parent_row:
+                parent_id = parent_row.row_id
+                row["parentID"] = parent_id
+                head = parent_id
         row_id = f"{head}/{name}:{item_id}"
         row["rowID"] = row_id
         if table.name == "parties" and self.buyer:

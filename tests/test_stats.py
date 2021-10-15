@@ -306,7 +306,6 @@ def test_analyze_array_extentions_no_split(spec, releases):
 
     for cols in spec.tables["tenders_items_attributes"], spec.tables["tenders_items_attributes"].combined_columns:
         assert "/tender/items/attributes/name" in cols
-        assert "/tender/items/attributes/name" in cols
 
 
 def test_analyze_array_extentions_split(spec, releases):
@@ -336,7 +335,7 @@ def test_analyze_array_extentions_split(spec, releases):
         "/tender/items/0/attributes/0/id",
         "/tender/items/0/attributes/0/name",
     ):
-        assert key in cols
+        assert key not in cols
     for key in (
         "/tender/items/1/attributes/0/name",
         "/tender/items/1/attributes/0/id",
@@ -368,3 +367,7 @@ def test_analyze_test_dataset(spec, test_dataset_releases):
         [_ for _ in spec.process_items(test_dataset_releases)]
     except AttributeError as e:
         fail(f"{e.__class__.__name__}: {str(e)}")
+
+
+def test_analyze_with_combined_tables(spec, releases_with_combined_tables):
+    [_ for _ in spec.process_items(releases_with_combined_tables)]

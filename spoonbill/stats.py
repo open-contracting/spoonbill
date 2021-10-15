@@ -269,15 +269,9 @@ class DataPreprocessor:
         )
 
     def handle_array_expanded(self, pointer, item, abs_path, key):
-        def drop(col):
-            return parent.is_array(col.id) == pointer
-
         splitted = len(item) >= self.table_threshold
         if splitted:
-            parent = self.current_table.parent
-            parent.splitted = True
-            parent.filter_columns(drop)
-            self.current_table.rolled_up = True
+            self.current_table.split(pointer)
 
     def is_array_col(self, abs_path):
         chunks = abs_path.split(SEPARATOR)
@@ -306,7 +300,6 @@ class DataPreprocessor:
 
             to_analyze = deque([("", "", "", {}, release)])
             rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
-
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.popleft()
                 if hasattr(record, "items"):

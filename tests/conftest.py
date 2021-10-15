@@ -15,6 +15,7 @@ here = pathlib.Path(__file__).parent
 schema_path = here / "data" / "ocds-simplified-schema.json"
 releases_path = here / "data" / "ocds-sample-data.json"
 test_dataset_path = here / "data" / "test_data.json"
+dataset_path_with_combined_tables = here / "data" / "releases_with_combined_tables.json"
 analyzed_path = here / "data" / "analyzed"
 releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
 
@@ -155,3 +156,9 @@ def root_table():
 def test_dataset_releases():
     with open(test_dataset_path) as fd:
         return json.load(fd, object_pairs_hook=OrderedDict)["releases"]
+
+
+@pytest.fixture
+def releases_with_combined_tables():
+    with open(dataset_path_with_combined_tables) as fd:
+        return json.load(fd, object_pairs_hook=OrderedDict)
