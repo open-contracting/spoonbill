@@ -3,6 +3,13 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.9b9 (2021-10-15)
+--------------------
+Fixed
+~~~~~
+* Fixed tool raising exception with UK tender data (`194638 <https://github.com/open-contracting/spoonbill/commit/194638248aed484f1a93fd6a4589f54d62563b6d>`__)
+
+
 1.0.9b8 (2021-09-22)
 --------------------
 Fixed
