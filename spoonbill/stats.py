@@ -300,7 +300,6 @@ class DataPreprocessor:
 
             to_analyze = deque([("", "", "", {}, release)])
             rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
-
             while to_analyze:
                 abs_path, path, parent_key, parent, record = to_analyze.popleft()
                 if hasattr(record, "items"):
