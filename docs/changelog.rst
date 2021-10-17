@@ -3,6 +3,13 @@ Changelog
 
 .. Follow the format from https://keepachangelog.com/en/1.0.0/
 
+1.0.9b10 (2021-10-17)
+--------------------
+Fixed
+~~~~~
+* Fixed exception with flattening additional array of decimals (`ae55c <https://github.com/open-contracting/spoonbill/commit/ae55c32a93d7d71cf47e998f02c7e7b587d335d9>`__)
+
+
 1.0.9b9 (2021-10-15)
 --------------------
 Fixed
