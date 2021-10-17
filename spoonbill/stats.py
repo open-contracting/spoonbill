@@ -84,6 +84,8 @@ class DataPreprocessor:
         return key
 
     def guess_type(self, item):
+        if isinstance(item, list) and item and not isinstance(item[0], (dict, list)):
+            return JOINABLE
         return [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
 
     def init_tables(self, tables, is_combined=False):
@@ -337,9 +339,11 @@ class DataPreprocessor:
                                 self.add_joinable_column(abs_pointer, pointer)
 
                             if item_type == JOINABLE:
+                                if pointer not in self.current_table:
+                                    self.add_joinable_column(abs_pointer, pointer)
                                 self.current_table.inc_column(abs_pointer, pointer)
                                 if self.with_preview and count < PREVIEW_ROWS:
-                                    value = JOINABLE_SEPARATOR.join(item)
+                                    value = JOINABLE_SEPARATOR.join([str(i) for i in item])
                                     self.current_table.set_preview_path(
                                         abs_pointer, pointer, value, self.table_threshold
                                     )
