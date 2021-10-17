@@ -74,7 +74,8 @@ class Rows(MappingBase):
                     break
                 if parent_row:
                     parent_row = parent_row.parent
-            row["parentTable"] = parent_table.name
+            if parent_table:
+                row["parentTable"] = parent_table.name
             if parent_row:
                 parent_id = parent_row.row_id
                 row["parentID"] = parent_id
