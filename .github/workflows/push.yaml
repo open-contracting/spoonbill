@@ -44,9 +44,7 @@ jobs:
         with:
           python-version:  ${{ matrix.python-version }}
       - name: Install requirements
-        run: |
-              pip install .[test]
-              pip install tox
+        run: pip install tox
       - name: Run linux test
         if: matrix.os == 'ubuntu-latest'
         run: tox -e py"${PYVER//.}"
