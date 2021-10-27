@@ -5,4 +5,6 @@ build:
     python: "3.10"
 python:
   install:
-    - extra_requirements: docs
+    - path: .
+      extra_requirements:
+        - docs
