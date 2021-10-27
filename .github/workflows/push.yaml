@@ -58,7 +58,9 @@ jobs:
       - name: Upload to coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: coveralls --service=github
+        run: |
+          pip install coveralls
+          coveralls --service=github
   build:
     runs-on: ubuntu-latest
     needs: tests
