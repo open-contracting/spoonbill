@@ -15,7 +15,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.3.0
         with:
           python-version: 3.7
       - uses: actions/cache@v2
@@ -40,7 +40,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.3.0
         with:
           python-version:  ${{ matrix.python-version }}
       - name: Install requirements
@@ -71,7 +71,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.3.0
         with:
           python-version: 3.7
       - uses: actions/cache@v2
