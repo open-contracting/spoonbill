@@ -73,5 +73,5 @@ html_css_files = [
 
 autodoc_default_options = {
     "members": None,
+    "member-order": "bysource",
 }
-autodoc_member_order = "bysource"
