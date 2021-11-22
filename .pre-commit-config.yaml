@@ -1,7 +1,5 @@
-# Apply to all files without commiting:
-#   pre-commit run --all-files
-# Update this file:
-#   pre-commit autoupdate
+ci:
+  autoupdate_schedule: quarterly
 repos:
 -   repo: https://github.com/PyCQA/isort
     rev: 5.8.0
