@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-python@v3.0.0
         with:
           python-version: 3.8
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ secrets.CACHE_NAME }}-${{ hashFiles('**/setup.cfg') }}
@@ -74,7 +74,7 @@ jobs:
         uses: actions/setup-python@v3.0.0
         with:
           python-version: 3.8
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ secrets.CACHE_NAME }}-build-${{ hashFiles('**/setup.cfg') }}
@@ -100,7 +100,7 @@ jobs:
               sudo chown $(whoami) -R  spoonbill/locales/
               pybabel compile -f -D spoonbill -d spoonbill/locales/
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
