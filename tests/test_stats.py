@@ -140,7 +140,7 @@ def test_mismatched_types(log, spec, releases):
     releases[0]["tender"]["id"] = ["/test/id"]
     for _ in spec.process_items(releases):
         pass
-    log.assert_has_calls([call("Mismatched type on /tender/id expected ['string', 'integer']")])
+    log.assert_has_calls([call("Mismatched type on %s expected %s", "/tender/id", ["string", "integer"])])
 
 
 @patch("spoonbill.LOGGER.error")
