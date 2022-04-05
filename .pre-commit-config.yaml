@@ -1,35 +1,33 @@
 ci:
   autoupdate_schedule: quarterly
 repos:
--   repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-    - id: isort
--   repo: https://github.com/psf/black
+  - repo: https://github.com/psf/black
     rev: 22.3.0
     hooks:
-    - id: black
-      args:
-        - --line-length=119
--   repo: https://github.com/PyCQA/flake8
+      - id: black
+  - repo: https://github.com/pycqa/flake8
     rev: 4.0.1
     hooks:
-    - id: flake8
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+      - id: flake8
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
     hooks:
-    - id: check-added-large-files
-    - id: check-ast
-    - id: check-builtin-literals
-    - id: check-byte-order-marker
-    - id: check-case-conflict
-    - id: check-docstring-first
-    - id: check-json
-    - id: check-merge-conflict
-    - id: check-vcs-permalinks
-    - id: debug-statements
-    - id: detect-aws-credentials
-      args: ['--allow-missing-credentials']
-    - id: detect-private-key
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
+      - id: isort
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-byte-order-marker
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-vcs-permalinks
+      - id: debug-statements
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace

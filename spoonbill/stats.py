@@ -259,7 +259,7 @@ class DataPreprocessor:
     def is_type_matched(self, pointer, item, item_type):
         # TODO: this validation should probably be smarter with arrays
         if item_type and item_type != JOINABLE and not validate_type(item_type, item):
-            LOGGER.error("Mismatched type on %s expected %s" % (pointer, item_type))
+            LOGGER.error("Mismatched type on %s expected %s", pointer, item_type)
             return False
         return True
 
