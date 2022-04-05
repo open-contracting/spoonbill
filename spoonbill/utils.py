@@ -297,7 +297,8 @@ def get_reader(path):
     :param path: path to a file
     :return: reader function
     """
-    first_bytes = open(path, "rb").read(2)
+    with open(path, "rb") as f:
+        first_bytes = f.read(2)
     if (first_bytes[0:1], first_bytes[1:2]) == GZIP_MAGIC_NUMBER:
         return gzip.open
     else:
