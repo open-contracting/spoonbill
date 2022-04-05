@@ -105,7 +105,7 @@ class FileAnalyzer:
         else:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
-        url = DEFAULT_SCHEMA_URL[pkg_type][self.language]
+        url = DEFAULT_SCHEMA_URL[pkg_type].get(self.language[:2], DEFAULT_SCHEMA_URL[pkg_type]["en"])
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
             profile = ProfileBuilder(CURRENT_SCHEMA_TAG, {}, schema_base_url=url)
