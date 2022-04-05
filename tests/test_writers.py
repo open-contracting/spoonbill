@@ -390,7 +390,7 @@ def test_writers_open_fail(open_, log, spec, tmpdir):
     workdir = Path(tmpdir)
     tables = prepare_tables(spec, options)
     get_writers(workdir, tables, options)
-    log.assert_has_calls([call("Failed to open file {} with error {}".format(str(tmpdir / "testname.csv"), "test"))])
+    log.assert_has_calls([call(f"Failed to open file {tmpdir / 'testname.csv'} with error test")])
 
 
 def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
