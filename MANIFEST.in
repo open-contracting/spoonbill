@@ -1,6 +1,5 @@
 include *.rst
 include babel.cfg
-include tox.ini
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile

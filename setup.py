@@ -34,6 +34,7 @@ setup(
     ],
     extras_require={
         "test": [
+            "coveralls",
             "jmespath",
             "openpyxl",
             "pytest",
