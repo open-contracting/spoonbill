@@ -52,13 +52,9 @@ DEFAULT_SCHEMA_URL = {
     "releases": {
         "en": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/release-package-schema.json",
         "es": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/release-package-schema.json",
-        "en_US": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/release-package-schema.json",
-        "es_ES": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/release-package-schema.json",
     },
     "records": {
         "en": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/record-package-schema.json",
         "es": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/record-package-schema.json",
-        "en_US": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/en/record-package-schema.json",
-        "es_ES": f"https://standard.open-contracting.org/{CURRENT_URL_TAG}/es/record-package-schema.json",
     },
 }

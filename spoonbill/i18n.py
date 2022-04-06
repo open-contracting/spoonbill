@@ -12,7 +12,7 @@ from spoonbill.utils import common_prefix, extract_type
 
 DOMAIN = "spoonbill"
 LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locales/")
-LOCALE = "en_US"
+LOCALE = "en"
 
 system_locale = locale.getdefaultlocale()
 if system_locale and system_locale[0]:
@@ -24,7 +24,7 @@ def translate(msg_id, lang=LOCALE):
     try:
         translator = _translation(lang)
     except FileNotFoundError:
-        LOCALE = "en_US"
+        LOCALE = "en"
         lang = LOCALE
         translator = _translation(lang)
 
