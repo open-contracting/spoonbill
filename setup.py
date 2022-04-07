@@ -35,6 +35,7 @@ setup(
     extras_require={
         "test": [
             "coveralls",
+            "jsonpointer",
             "jmespath",
             "openpyxl",
             "pytest",
