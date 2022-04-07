@@ -3,7 +3,6 @@ from setuptools import find_packages, setup
 with open("README.rst") as f:
     long_description = f.read()
 
-
 setup(
     name="spoonbill",
     version="1.0.9b10",
@@ -14,6 +13,7 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["tests", "tests.*"]),
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     include_package_data=True,
     install_requires=[
         "click",
