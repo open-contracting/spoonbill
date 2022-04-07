@@ -59,8 +59,5 @@ setup(
         "console_scripts": [
             "spoonbill = spoonbill.cli:cli",
         ],
-        "babel.extractors": [
-            "sp_schema = spoonbill.i18n:extract_schema_po",
-        ],
     },
 )
