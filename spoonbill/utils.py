@@ -5,6 +5,7 @@ import gzip
 import json
 import logging
 import re
+from collections import OrderedDict
 from itertools import chain
 from numbers import Number
 from pathlib import Path
@@ -221,7 +222,7 @@ def resolve_file_uri(file_path):
         return requests.get(file_path).json()
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
-            return json.load(fd)
+            return json.load(fd, object_pairs_hook=OrderedDict)
 
 
 def read_lines(path):
@@ -340,7 +341,7 @@ class SchemaHeaderExtractor:
 
     def __init__(self, schema):
         self.schema = schema
-        if not isinstance(self.schema, jsonref.JsonRef):
+        if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
     def _get_header(self, id, paths):
