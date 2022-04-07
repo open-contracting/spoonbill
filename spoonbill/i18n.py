@@ -1,5 +1,6 @@
 import gettext
 import locale
+import warnings
 from functools import lru_cache
 
 import pkg_resources
@@ -29,7 +30,11 @@ def translate(msg_id, lang=LOCALE):
 
 @lru_cache(maxsize=None)
 def _translation(lang):
-    return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
+    try:
+        return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
+    except FileNotFoundError as e:
+        warnings.warn(f"{e.strerror}: {e.filename}")
+        return gettext.NullTranslations()
 
 
 _ = translate
