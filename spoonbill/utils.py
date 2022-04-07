@@ -1,4 +1,3 @@
-import codecs
 import copy
 import functools
 import gzip
@@ -221,7 +220,7 @@ def resolve_file_uri(file_path):
     if str(file_path).startswith("http://") or str(file_path).startswith("https://"):
         return requests.get(file_path).json()
     if isinstance(file_path, (str, Path)):
-        with codecs.open(file_path, encoding="utf-8") as fd:
+        with open(file_path, encoding="utf-8") as fd:
             return json.load(fd, object_pairs_hook=OrderedDict)
 
 
