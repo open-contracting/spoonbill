@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-05-17 17:11+0300\n"
+"POT-Creation-Date: 2022-04-07 01:18-0400\n"
 "PO-Revision-Date: 2021-05-17 17:50+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -16,227 +16,289 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.0\n"
+"Generated-By: Babel 2.9.1\n"
 
-#: spoonbill/cli.py:23
-msgid "  Processed {} objects"
-msgstr ""
-
-#: spoonbill/cli.py:24
-msgid "  Flattened {} objects"
-msgstr ""
-
-#: spoonbill/cli.py:47
-msgid "Wrong selection, table '{}' does not exist"
-msgstr ""
-
-#: spoonbill/cli.py:56
-msgid "CLI tool to flatten OCDS datasets"
-msgstr ""
-
-#: spoonbill/cli.py:57
-msgid "Schema file uri"
-msgstr ""
-
-#: spoonbill/cli.py:58
-msgid "List of tables to extract"
-msgstr ""
-
-#: spoonbill/cli.py:61
-msgid "List of tables to split into multiple sheets"
-msgstr ""
-
-#: spoonbill/cli.py:67
-msgid "Maximum number of elements in array before its spitted into table"
-msgstr ""
-
-#: spoonbill/cli.py:73
-msgid "Uri to previously generated state file"
-msgstr ""
-
-#: spoonbill/cli.py:76
-msgid "Path to result xlsx file"
-msgstr ""
-
-#: spoonbill/cli.py:79
-msgid "Path to directory for output csv files"
-msgstr ""
-
-#: spoonbill/cli.py:83
-msgid "Combine same objects to single table"
-msgstr ""
-
-#: spoonbill/cli.py:86
-msgid "Extract columns form child tables to parent table"
-msgstr ""
-
-#: spoonbill/cli.py:92
-msgid "Same as --unnest, but read columns from a file"
-msgstr ""
-
-#: spoonbill/cli.py:96
-msgid "Specify which fields to output"
-msgstr ""
-
-#: spoonbill/cli.py:99
-msgid "Same as --only, but read columns from a file"
-msgstr ""
-
-#: spoonbill/cli.py:105
-msgid "Repeat a column from a parent sheet onto child tables"
-msgstr ""
-
-#: spoonbill/cli.py:111
-msgid "Same as --repeat, but read columns from a file"
-msgstr ""
-
-#: spoonbill/cli.py:116
-msgid "For each array field, add a count column to the parent table"
-msgstr ""
-
-#: spoonbill/cli.py:120
-msgid "Use the schema's title properties for column headings"
-msgstr ""
-
-#: spoonbill/cli.py:125
-msgid "Language for headings"
-msgstr ""
-
-#: spoonbill/cli.py:151
-msgid "Detecting input file format"
-msgstr ""
-
-#: spoonbill/cli.py:159
+#: spoonbill/__init__.py:70
 msgid "Input file is {}"
 msgstr ""
 
-#: spoonbill/cli.py:170 spoonbill/cli.py:176
+#: spoonbill/__init__.py:110
 msgid "No schema provided, using version {}"
 msgstr ""
 
-#: spoonbill/cli.py:181
+#: spoonbill/__init__.py:115
 msgid "Incomplete schema, please make sure your data is correct"
 msgstr ""
 
-#: spoonbill/cli.py:195
+#: spoonbill/cli.py:18
+msgid "  Processed {} objects"
+msgstr ""
+
+#: spoonbill/cli.py:19
+msgid "  Flattened {} objects"
+msgstr ""
+
+#: spoonbill/cli.py:43
+msgid "Wrong selection, table '{}' does not exist"
+msgstr ""
+
+#: spoonbill/cli.py:48
+msgid "CLI tool to flatten OCDS files"
+msgstr ""
+
+#: spoonbill/cli.py:51
+msgid ""
+"A JSON schema file URI. The URI can be a file path or an HTTP link. "
+"Spoonbill uses the schema to analyze the provided JSON file. Defaults to "
+"the OCDS 1.1.5 release schema (requires internet connection)"
+msgstr ""
+
+#: spoonbill/cli.py:60
+msgid ""
+"A comma-separated list of initial tables to write. The available tables "
+"to select are: parties, planning, tenders, awards, contracts"
+msgstr ""
+
+#: spoonbill/cli.py:67
+msgid "The maximum number of elements in an array before it is split into a table"
+msgstr ""
+
+#: spoonbill/cli.py:74
+msgid ""
+"A file path URI to a previously generated state file. If not provided, a "
+"new state file is generated"
+msgstr ""
+
+#: spoonbill/cli.py:79
+msgid ""
+"A file path to store the resulting xlsx file. Default to result.xlsx. Set"
+" to '' to disable the xlsx file generation"
+msgstr ""
+
+#: spoonbill/cli.py:88
+msgid ""
+"An existing directory path. If set also generates CSV files in the given "
+"directory. Disabled by default"
+msgstr ""
+
+#: spoonbill/cli.py:94
+msgid ""
+"A comma-separated list of tables. Combines same OCDS object types from "
+"different locations (tender, awards, etc) into a single table. The "
+"available tables are: documents, milestones, and amendments"
+msgstr ""
+
+#: spoonbill/cli.py:102
+msgid ""
+"A comma-separated list of tables to exclude from export. Disabled by "
+"default"
+msgstr ""
+
+#: spoonbill/cli.py:108
+msgid ""
+"A comma-separated list of column names to copy from child tables into "
+"their parent table. Disabled by default"
+msgstr ""
+
+#: spoonbill/cli.py:116
+msgid ""
+"A file path directory. Same as --unnest, but read column names from a "
+"file with one column per line"
+msgstr ""
+
+#: spoonbill/cli.py:122
+msgid ""
+"A comma-separated list of a subset of columns to output instead of all, "
+"in JSON path format, e.g. /parties/name. Defaults to all the available "
+"columns"
+msgstr ""
+
+#: spoonbill/cli.py:131
+msgid ""
+"A file path directory. Same as --only, but read the columns names from a "
+"file with one column per line"
+msgstr ""
+
+#: spoonbill/cli.py:137
+msgid ""
+"A comma-separated list of columns to repeat from a parent table into its "
+"child tables, in JSON path format,e.g. /parties/name. Disabled by default"
+msgstr ""
+
+#: spoonbill/cli.py:146
+msgid ""
+"A file path directory. Same as --repeat, but read the columns names from "
+"a file with one column per line"
+msgstr ""
+
+#: spoonbill/cli.py:152
+msgid ""
+"For each array field, add a count column to its parent table. Disabled by"
+" default"
+msgstr ""
+
+#: spoonbill/cli.py:158
+msgid ""
+"Change the tables headings to human-readable format, using the schema's "
+"title properties"
+msgstr ""
+
+#: spoonbill/cli.py:163
+msgid "Use with --human, the language to use for the human-readable headings"
+msgstr ""
+
+#: spoonbill/cli.py:194 spoonbill/cli.py:198
+msgid "Desired location {} does not exists"
+msgstr ""
+
+#: spoonbill/cli.py:209
 msgid "Restoring from provided state file"
 msgstr ""
 
-#: spoonbill/cli.py:198
+#: spoonbill/cli.py:212
 msgid "State file not supplied, going to analyze input file first"
 msgstr ""
 
-#: spoonbill/cli.py:206
-msgid "Processing file: {}"
-msgstr ""
-
-#: spoonbill/cli.py:217
-msgid "Done processing. Analyzed objects: {}"
-msgstr ""
-
 #: spoonbill/cli.py:221
-msgid "Dumping analyzed data to '{}'"
+msgid "Analyze options:"
+msgstr ""
+
+#: spoonbill/cli.py:223
+msgid " - {:30} => {}"
 msgstr ""
 
 #: spoonbill/cli.py:224
+msgid "Processing file: {}"
+msgstr ""
+
+#: spoonbill/cli.py:235
+msgid "Done processing. Analyzed objects: {}"
+msgstr ""
+
+#: spoonbill/cli.py:242
+msgid "Dumping analyzed data to '{}'"
+msgstr ""
+
+#: spoonbill/cli.py:245
 msgid "Flattening file: {}"
 msgstr ""
 
-#: spoonbill/cli.py:227
+#: spoonbill/cli.py:248
 msgid "Conflicting options: unnest and unnest-file"
 msgstr ""
 
-#: spoonbill/cli.py:229
+#: spoonbill/cli.py:250
 msgid "Conflicting options: repeat and repeat-file"
 msgstr ""
 
-#: spoonbill/cli.py:231
+#: spoonbill/cli.py:252
 msgid "Conflicting options: only and only-file"
 msgstr ""
 
-#: spoonbill/cli.py:241
+#: spoonbill/cli.py:254
+msgid "Ignoring tables (excluded by user): {}"
+msgstr ""
+
+#: spoonbill/cli.py:264
 msgid "Ignoring empty table {}"
 msgstr ""
 
-#: spoonbill/cli.py:247
+#: spoonbill/cli.py:274
 msgid "Unnesting columns {} for table {}"
 msgstr ""
 
-#: spoonbill/cli.py:255
+#: spoonbill/cli.py:282
 msgid "Using only columns {} for table {}"
 msgstr ""
 
-#: spoonbill/cli.py:263
+#: spoonbill/cli.py:290
 msgid "Repeating columns {} in all child table of {}"
 msgstr ""
 
-#: spoonbill/cli.py:277
+#: spoonbill/cli.py:309
 msgid "Going to export tables: {}"
 msgstr ""
 
-#: spoonbill/cli.py:279
+#: spoonbill/cli.py:311
+msgid "Processed tables:"
+msgstr ""
+
+#: spoonbill/cli.py:313
+msgid " - {:30} => {} rows"
+msgstr ""
+
+#: spoonbill/cli.py:313
+msgid " ---- {:27} => {} rows"
+msgstr ""
+
+#: spoonbill/cli.py:316
 msgid "Flattening input file"
 msgstr ""
 
-#: spoonbill/cli.py:289
+#: spoonbill/cli.py:327
 msgid "Done flattening. Flattened objects: {}"
 msgstr ""
 
-#: spoonbill/flatten.py:191
+#: spoonbill/flatten.py:167
 msgid "Ignoring repeat column {} because it is not in table {}"
 msgstr ""
 
-#: spoonbill/stats.py:243
-msgid "Detected additional table: {}"
-msgstr ""
-
-#: spoonbill/stats.py:283
+#: spoonbill/spec.py:175 spoonbill/stats.py:267
 #, python-format
-msgid "Path %s is targeted to combined table %s"
+msgid "Detected additional column: %s in %s table"
 msgstr ""
 
-#: spoonbill/stats.py:289
-msgid "Detected additional column: {} in {} table"
+#: spoonbill/stats.py:196 spoonbill/stats.py:364
+#, python-format
+msgid "Detected additional table: %s"
 msgstr ""
 
-#: spoonbill/stats.py:331
-msgid "Failed to restore from malformed data. Missing {} attribute"
+#: spoonbill/stats.py:422
+msgid "Failed to dump DataPreprocessor to file. Error: {}"
 msgstr ""
 
-#: spoonbill/stats.py:332
-msgid "Unable to restore, invalid input data"
+#: spoonbill/stats.py:435
+msgid "Invalid pickle file. Can't restore."
 msgstr ""
 
-#: spoonbill/writers/csv.py:38
+#: spoonbill/writers/csv.py:40
+msgid "Dumping table '{}' to file '{}'"
+msgstr ""
+
+#: spoonbill/writers/csv.py:43
 msgid "Failed to open file {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:51
+#: spoonbill/writers/csv.py:54
 msgid "Failed to headers with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:58 spoonbill/writers/xlsx.py:66
+#: spoonbill/writers/csv.py:73 spoonbill/writers/xlsx.py:81
 msgid ""
 "Operation produced invalid path. This a software bug, please send issue "
 "to developers"
 msgstr ""
 
-#: spoonbill/writers/csv.py:59
+#: spoonbill/writers/csv.py:74
 msgid "Failed to write row {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:61 spoonbill/writers/xlsx.py:58
+#: spoonbill/writers/csv.py:76 spoonbill/writers/xlsx.py:71
 msgid "Invalid table {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:48
+#: spoonbill/writers/xlsx.py:50
 msgid "Failed to write header {} to xlsx sheet {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:68
+#: spoonbill/writers/xlsx.py:59
+msgid "Dumped all sheets to file to file '{}'"
+msgstr ""
+
+#: spoonbill/writers/xlsx.py:83
 msgid "Failed to write column {} to xlsx sheet {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:73
+#: spoonbill/writers/xlsx.py:88
 msgid "Failed to write column {} to xlsx sheet {} with error {}"
 msgstr ""

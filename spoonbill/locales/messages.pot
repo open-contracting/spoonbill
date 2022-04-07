@@ -1,18 +1,17 @@
-# English translations for PROJECT.
-# Copyright (C) 2021 ORGANIZATION
+# Translations template for PROJECT.
+# Copyright (C) 2022 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2022-04-07 01:18-0400\n"
-"PO-Revision-Date: 2021-05-17 17:16+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: en\n"
-"Language-Team: en <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,15 +19,15 @@ msgstr ""
 
 #: spoonbill/__init__.py:70
 msgid "Input file is {}"
-msgstr "Input file is {}"
+msgstr ""
 
 #: spoonbill/__init__.py:110
 msgid "No schema provided, using version {}"
-msgstr "No schema provided, using version {}"
+msgstr ""
 
 #: spoonbill/__init__.py:115
 msgid "Incomplete schema, please make sure your data is correct"
-msgstr "Incomplete schema, please make sure your data is correct"
+msgstr ""
 
 #: spoonbill/cli.py:18
 msgid "  Processed {} objects"
@@ -36,15 +35,15 @@ msgstr ""
 
 #: spoonbill/cli.py:19
 msgid "  Flattened {} objects"
-msgstr "  Flattened {} objects"
+msgstr ""
 
 #: spoonbill/cli.py:43
 msgid "Wrong selection, table '{}' does not exist"
-msgstr "Wrong selection, table '{}' does not exist"
+msgstr ""
 
 #: spoonbill/cli.py:48
 msgid "CLI tool to flatten OCDS files"
-msgstr "CLI tool to flatten OCDS files"
+msgstr ""
 
 #: spoonbill/cli.py:51
 msgid ""
@@ -61,7 +60,7 @@ msgstr ""
 
 #: spoonbill/cli.py:67
 msgid "The maximum number of elements in an array before it is split into a table"
-msgstr "The maximum number of elements in an array before it is split into a table"
+msgstr ""
 
 #: spoonbill/cli.py:74
 msgid ""
@@ -105,8 +104,6 @@ msgid ""
 "A file path directory. Same as --unnest, but read column names from a "
 "file with one column per line"
 msgstr ""
-"A file path directory. Same as --unnest, but read column names from a "
-"file with one column per line"
 
 #: spoonbill/cli.py:122
 msgid ""
@@ -132,16 +129,12 @@ msgid ""
 "A file path directory. Same as --repeat, but read the columns names from "
 "a file with one column per line"
 msgstr ""
-"A file path directory. Same as --repeat, but read the columns names from "
-"a file with one column per line"
 
 #: spoonbill/cli.py:152
 msgid ""
 "For each array field, add a count column to its parent table. Disabled by"
 " default"
 msgstr ""
-"For each array field, add a count column to its parent table. Disabled by"
-" default"
 
 #: spoonbill/cli.py:158
 msgid ""
@@ -155,15 +148,15 @@ msgstr ""
 
 #: spoonbill/cli.py:194 spoonbill/cli.py:198
 msgid "Desired location {} does not exists"
-msgstr "Desired location {} does not exists"
+msgstr ""
 
 #: spoonbill/cli.py:209
 msgid "Restoring from provided state file"
-msgstr "Restoring from provided state file"
+msgstr ""
 
 #: spoonbill/cli.py:212
 msgid "State file not supplied, going to analyze input file first"
-msgstr "State file not supplied, going to analyze input file first"
+msgstr ""
 
 #: spoonbill/cli.py:221
 msgid "Analyze options:"
@@ -175,19 +168,19 @@ msgstr ""
 
 #: spoonbill/cli.py:224
 msgid "Processing file: {}"
-msgstr "Processing file: {}"
+msgstr ""
 
 #: spoonbill/cli.py:235
 msgid "Done processing. Analyzed objects: {}"
-msgstr "Done processing. Analyzed objects: {}"
+msgstr ""
 
 #: spoonbill/cli.py:242
 msgid "Dumping analyzed data to '{}'"
-msgstr "Dumping analyzed data to '{}'"
+msgstr ""
 
 #: spoonbill/cli.py:245
 msgid "Flattening file: {}"
-msgstr "Flattening file: {}"
+msgstr ""
 
 #: spoonbill/cli.py:248
 msgid "Conflicting options: unnest and unnest-file"
@@ -308,3 +301,4 @@ msgstr ""
 #: spoonbill/writers/xlsx.py:88
 msgid "Failed to write column {} to xlsx sheet {} with error {}"
 msgstr ""
+
