@@ -1,72 +1,82 @@
 Changelog
 =========
 
-.. Follow the format from https://keepachangelog.com/en/1.0.0/
+1.0.10 (2022-04-07)
+-------------------
 
-1.0.9b11 (2022-04-06)
----------------------
 Fixed
 ~~~~~
+
 * Fixed fallback for unsupported locale
 * Fixed unclosed file
 
-
 1.0.9b10 (2021-10-17)
 ---------------------
+
 Fixed
 ~~~~~
-* Fixed exception with flattening additional array of decimals (`ae55c <https://github.com/open-contracting/spoonbill/commit/ae55c32a93d7d71cf47e998f02c7e7b587d335d9>`__)
 
+* Fixed exception with flattening additional array of decimals (`ae55c <https://github.com/open-contracting/spoonbill/commit/ae55c32a93d7d71cf47e998f02c7e7b587d335d9>`__)
 
 1.0.9b9 (2021-10-15)
 --------------------
+
 Fixed
 ~~~~~
-* Fixed tool raising exception with UK tender data (`194638 <https://github.com/open-contracting/spoonbill/commit/194638248aed484f1a93fd6a4589f54d62563b6d>`__)
 
+* Fixed tool raising exception with UK tender data (`194638 <https://github.com/open-contracting/spoonbill/commit/194638248aed484f1a93fd6a4589f54d62563b6d>`__)
 
 1.0.9b8 (2021-09-22)
 --------------------
+
 Fixed
 ~~~~~
-* Headers for splitted child table (`2c97e6f <https://github.com/open-contracting/spoonbill/commit/2c97e6fc8b3c4a2827186cfd9faa2bb61d66fdf8>`__)
 
+* Headers for splitted child table (`2c97e6f <https://github.com/open-contracting/spoonbill/commit/2c97e6fc8b3c4a2827186cfd9faa2bb61d66fdf8>`__)
 
 1.0.8b8 (2021-09-20)
 --------------------
+
 Fixed
 ~~~~~
-* Empty columns after split of child table (`0ec4e97 <https://github.com/open-contracting/spoonbill/commit/0ec4e97ac5568087512c238612254a09182f3a62>`__)
 
+* Empty columns after split of child table (`0ec4e97 <https://github.com/open-contracting/spoonbill/commit/0ec4e97ac5568087512c238612254a09182f3a62>`__)
 
 1.0.7b8 (2021-09-20)
 --------------------
 Changed
 ~~~~~~~
+
 * new analyzer engine (`58c4673 <https://github.com/open-contracting/spoonbill/commit/58c4673637624217a587911a83f83accb6430be9>`__)
 
 Fixed
 ~~~~~
+
 * fix pretty title generation for count columns (`637b876 <https://github.com/open-contracting/spoonbill/commit/637b87681382e0e91c22059cd9b4d51896d481e9>`__)
 * **cli** fixed dump analyzed data to state file (`608f03d <https://github.com/open-contracting/spoonbill/commit/608f03d592373843eab336051675e9ff858ac86e>`__)
 * **flatten** fixed splitting behavior (`0514883 <https://github.com/open-contracting/spoonbill/commit/0514883716694afa880187c8c83c339953682f22>`__)
 
 1.0.7b7 (2021-09-10)
 --------------------
+
 Fixed
 ~~~~~
+
 * additional formatting of human readable titles (`538592c <https://github.com/open-contracting/spoonbill/commit/538592c46976ebb62e0fdc2fd8a0fbd55b75d190>`__)
 
 1.0.6b7 (2021-09-09)
 --------------------
 Added
 ~~~~~
+
 * human readable titles are extracted from schema (`09f6f8a <https://github.com/open-contracting/spoonbill/commit/09f6f8a4c0c2e809bc2e4e6e28385c6f0f2c2ae4>`__)
 
 1.0.6b6 (2021-07-14)
 --------------------
+
 Fixed
 ~~~~~
+
 *  combined table's extensions are missing from export (`b1e897b <https://github.com/open-contracting/spoonbill/commit/b1e897bb87365cb8495aa57b6958f14292883780>`__)
 *  table's extensions are missing from export (`6ebd662 <https://github.com/open-contracting/spoonbill/commit/6ebd6621d27b6dfccd39d497a6f7fdb3c366bb25>`__)
 *  `JsongrefError` for record schema (`b2d6066 <https://github.com/open-contracting/spoonbill/commit/b2d606626f0368d86094073ce21d982b4e89a76a>`__)
@@ -76,21 +86,23 @@ Fixed
 --------------------
 Added
 ~~~~~
+
 *  ordering tables according to schema  (`894d399 <https://github.com/open-contracting/spoonbill/commit/894d399bda27d8b7cbee718e42026cb2b962a91e>`__)
 
 1.0.5b5 (2021-06-24)
 --------------------
 Added
 ~~~~~
+
 *  multiple file input support  (`225c570 <https://github.com/mariob0y/spoonbill/commit/225c570ade34f02dddedcf85344d80f97a7ee449>`__)
 
 1.0.5b4 (2021-06-18)
 --------------------
+
 Fixed
 ~~~~~
 
 *  `.gz` format recognition enhancement (`9283ba4 <https://github.com/open-contracting/spoonbill/commit/9283ba451008b5542a73feceb7e4189d47862bcb>`__)
-
 
 1.0.4b4 (2021-06-17)
 --------------------
@@ -104,6 +116,7 @@ Added
 
 Fixed
 ~~~~~
+
 *   pass `multiple_values` via `DataPreprocessor` (`509a06d <https://github.com/open-contracting/spoonbill/commit/509a06de79ca32d04e83b101a9eb55019b7c3d88>`__)
 
 1.0.3b3 (2021-06-15)
@@ -118,7 +131,6 @@ Fixed
 ~~~~~
 
 *  fix `FileFlattener` input (`acacd87 <https://github.com/open-contracting/spoonbill/commit/acacd870409fe5bdd88e1f0c10f12bc915983167>`__)
-
 
 1.0.3b2 (2021-06-07)
 --------------------
