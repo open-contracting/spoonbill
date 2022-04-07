@@ -34,6 +34,12 @@ Install the pre-commit script:
 Tests
 -----
 
+Compile the message catalogs:
+
+.. code-block:: bash
+
+   pybabel compile -f -d spoonbill/locale -D spoonbill
+
 Run the tests:
 
 .. code-block:: bash
