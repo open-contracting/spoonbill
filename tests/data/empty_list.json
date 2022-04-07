@@ -7,9 +7,7 @@
   "releases": [
     {
       "initiationType": "tender",
-      "parties": [
-
-      ],
+      "parties": [],
       "tag": [
         "tenderUpdate"
       ],
