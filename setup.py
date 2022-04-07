@@ -21,16 +21,16 @@ setup(
     install_requires=[
         "click",
         "click_logging",
+        "flatten-dict",
         "ijson>=2.5",
-        "jsonpointer",
         "jsonref",
         "ocdsextensionregistry",
         "ocdskit>=1.0.1",
         "requests",
+        "scalpl",
+        "setuptools",
         "xlsxwriter",
         'dataclasses;python_version<"3.7"',
-        "flatten-dict",
-        "scalpl",
     ],
     extras_require={
         "test": [
