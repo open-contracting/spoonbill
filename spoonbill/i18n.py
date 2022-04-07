@@ -5,7 +5,7 @@ from functools import lru_cache
 import pkg_resources
 
 DOMAIN = "spoonbill"
-LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locales/")
+LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locale/")
 LOCALE = "en"
 
 system_locale = locale.getdefaultlocale()

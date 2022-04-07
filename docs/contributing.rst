@@ -53,10 +53,10 @@ Extract messages:
 
 .. code-block:: bash
 
-   pybabel extract -F babel.cfg -o spoonbill/locales/messages.pot .
+   pybabel extract -F babel.cfg -o spoonbill/locale/messages.pot .
 
 Update catalogs:
 
 .. code-block:: bash
 
-   pybabel update -i spoonbill/locales/messages.pot -d spoonbill/locales -D spoonbill
+   pybabel update -i spoonbill/locale/messages.pot -d spoonbill/locale -D spoonbill
