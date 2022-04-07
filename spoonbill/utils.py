@@ -5,7 +5,6 @@ import gzip
 import json
 import logging
 import re
-from collections import OrderedDict
 from itertools import chain
 from numbers import Number
 from pathlib import Path
@@ -80,9 +79,7 @@ def iter_file(fd, root, multiple_values=False):
     >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
     6
     """
-    reader = ijson.items(
-        fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values, map_type=OrderedDict
-    )
+    reader = ijson.items(fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values)
     for item in reader:
         yield item
 
@@ -206,7 +203,7 @@ def generate_table_name(parent_table, parent_key, key):
 
 
 def insert_after_key(columns, insert, last_key):
-    data = OrderedDict()
+    data = {}
     for key, val in columns.items():
         data[key] = val
         if key == last_key:
@@ -224,7 +221,7 @@ def resolve_file_uri(file_path):
         return requests.get(file_path).json()
     if isinstance(file_path, (str, Path)):
         with codecs.open(file_path, encoding="utf-8") as fd:
-            return json.load(fd, object_pairs_hook=OrderedDict)
+            return json.load(fd)
 
 
 def read_lines(path):
@@ -343,7 +340,7 @@ class SchemaHeaderExtractor:
 
     def __init__(self, schema):
         self.schema = schema
-        if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
+        if not isinstance(self.schema, jsonref.JsonRef):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
     def _get_header(self, id, paths):

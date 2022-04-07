@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 from dataclasses import dataclass, field, is_dataclass, replace
 from typing import List, Mapping, Sequence
 
@@ -70,14 +69,14 @@ class Table:
     is_combined: bool = False
     splitted: bool = False
     rolled_up: bool = False
-    columns: Mapping[str, Column] = field(default_factory=OrderedDict)
-    combined_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
-    additional_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    columns: Mapping[str, Column] = field(default_factory=dict)
+    combined_columns: Mapping[str, Column] = field(default_factory=dict)
+    additional_columns: Mapping[str, Column] = field(default_factory=dict)
     arrays: Mapping[str, int] = field(default_factory=dict)
     titles: Mapping[str, str] = field(default_factory=dict)
     child_tables: List[str] = field(default_factory=list)
     types: Mapping[str, List[str]] = field(default_factory=dict)
-    array_columns: Mapping[str, Column] = field(default_factory=OrderedDict)
+    array_columns: Mapping[str, Column] = field(default_factory=dict)
     array_positions: Mapping[str, str] = field(default_factory=dict)
 
     preview_rows: Sequence[dict] = field(default_factory=list)
@@ -91,7 +90,7 @@ class Table:
         ):
             obj = getattr(self, attr, {})
             if obj:
-                init = OrderedDict()
+                init = {}
                 for name, col in obj.items():
                     if not is_dataclass(col):
                         col = Column(**col)

@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from typing import Any, List, Mapping
@@ -53,12 +52,10 @@ class Rows(MappingBase):
     def new_row(self, table, item_id):
         name = table.name
         head = self.ocid
-        row = OrderedDict(
-            {
-                "id": item_id,
-                "ocid": self.ocid,
-            }
-        )
+        row = {
+            "id": item_id,
+            "ocid": self.ocid,
+        }
         parent_row = self.row
 
         if table.is_combined:
