@@ -178,7 +178,7 @@ class FileFlattener:
         self.xlsx = xlsx
         self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
         self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
-        self.schema = schema or getattr(getattr(analyzer, "spec"), "schema")
+        self.schema = schema or analyzer.spec.schema
 
     def _flatten(self, filenames, writers):
         if not isinstance(filenames, list):
