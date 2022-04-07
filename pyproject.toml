@@ -4,3 +4,9 @@ line-length = 119
 [tool.isort]
 profile = 'black'
 line_length = 119
+
+[tool.pytest.ini_options]
+addopts = '--doctest-modules'
+
+[tool.check-manifest]
+ignore-bad-ideas = ['*.mo']
