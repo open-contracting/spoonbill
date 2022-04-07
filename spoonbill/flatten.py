@@ -149,7 +149,7 @@ class Flattener:
             # in other way it could be frustrating
             # e.g. it may generate columns for whole array like:
             # /tender/items/200/additionalClassificationsCount
-            table.add_column(path, "integer", _(path, self.language), additional=True, propagated=False, header=path)
+            table.add_column(path, "integer", path, additional=True, propagated=False, header=path)
             table.inc_column(path, path)
 
     def init_unnest(self, table, options):
@@ -161,7 +161,6 @@ class Flattener:
     def init_repeat(self, table, options):
         for col_id in options.repeat:
             columns = table.columns if options.split else table.combined_columns
-            title = _(col_id)
             col = columns.get(col_id)
             if not col:
                 LOGGER.warning(_("Ignoring repeat column {} because it is not in table {}").format(col_id, table.name))
@@ -171,7 +170,7 @@ class Flattener:
                 if child_table:
                     child_table.columns[col_id] = col
                     child_table.combined_columns[col_id] = col
-                    child_table.titles[col_id] = title
+                    child_table.titles[col_id] = col_id
 
     def init_options(self, tables):
         for table in tables.values():

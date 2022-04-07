@@ -170,22 +170,18 @@ class DataPreprocessor:
                             # This means we in array of strings, so this becomes a single joinable column
                             typeset = ARRAY.format(items_type)
                             self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(
-                                pointer, typeset, _(pointer, self.language), header=item["$title"]
-                            )
+                            self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
                     else:
                         if self.current_table.is_combined:
                             pointer = SEPARATOR + self.join_path(parent_key, key)
-                        self.current_table.add_column(
-                            pointer, typeset, _(pointer, self.language), header=item["$title"]
-                        )
+                        self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
 
             else:
                 # TODO: not sure what to do here
                 continue
 
     def add_column(self, pointer, typeset):
-        self.current_table.add_column(pointer, typeset, _(pointer, self.language))
+        self.current_table.add_column(pointer, typeset, pointer)
 
     def _add_table(self, table, pointer):
         self.tables[table.name] = table
@@ -206,7 +202,7 @@ class DataPreprocessor:
                     self.current_table.add_column(
                         ppointer,
                         self.guess_type(it),
-                        _(ppointer, self.language),
+                        ppointer,
                         abs_path=self.join_path(abs_pointer, path_),
                         header=ppointer,
                     )
@@ -267,7 +263,7 @@ class DataPreprocessor:
         LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))
         self.current_table.types[pointer] = JOINABLE
         self.current_table.add_column(
-            pointer, JOINABLE, _(pointer, self.language), additional=True, abs_path=abs_pointer, header=pointer
+            pointer, JOINABLE, pointer, additional=True, abs_path=abs_pointer, header=pointer
         )
 
     def handle_array_expanded(self, pointer, item, abs_path, key):
@@ -395,7 +391,7 @@ class DataPreprocessor:
                                 self.current_table.add_column(
                                     pointer,
                                     self.guess_type(item),
-                                    _(pointer, self.language),
+                                    pointer,
                                     additional=True,
                                     abs_path=abs_pointer,
                                 )
