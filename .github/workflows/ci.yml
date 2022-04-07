@@ -17,7 +17,7 @@ jobs:
           cache-dependency-path: setup.py
       - run: pip install .[test] babel
       - run: pybabel compile -f -d spoonbill/locale -D spoonbill
-      - run: pytest --cov spoonbill
+      - run: pytest -W error --cov spoonbill
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: coveralls --service=github

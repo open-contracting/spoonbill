@@ -74,9 +74,11 @@ def iter_file(fd, root, multiple_values=False):
     :param bool multiple_values: Determine line-delimited JSON
     :return: Iterator of bytes read and item as a tuple
 
-    >>> [r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'records')]
+    >>> with open('tests/data/ocds-sample-data.json', 'rb') as f:
+    ...     [r for r in iter_file(f, 'records')]
     []
-    >>> len([r for r in iter_file(open('tests/data/ocds-sample-data.json', 'rb'), 'releases')])
+    >>> with open('tests/data/ocds-sample-data.json', 'rb') as f:
+    ...     len([r for r in iter_file(f, 'releases')])
     6
     """
     reader = ijson.items(fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values)
