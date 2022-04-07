@@ -21,19 +21,19 @@ releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
 
 @pytest.fixture
 def schema():
-    with open(schema_path) as fd:
+    with open(schema_path, encoding="utf-8") as fd:
         return json.load(fd, parse_float=Decimal)
 
 
 @pytest.fixture
 def releases():
-    with open(releases_path) as fd:
+    with open(releases_path, encoding="utf-8") as fd:
         return json.load(fd)["releases"]
 
 
 @pytest.fixture
 def releases_extension():
-    with open(releases_extension_path) as fd:
+    with open(releases_extension_path, encoding="utf-8") as fd:
         return json.load(fd)["releases"]
 
 
@@ -122,11 +122,11 @@ def root_table():
 
 @pytest.fixture
 def test_dataset_releases():
-    with open(test_dataset_path) as fd:
+    with open(test_dataset_path, encoding="utf-8") as fd:
         return json.load(fd)["releases"]
 
 
 @pytest.fixture
 def releases_with_combined_tables():
-    with open(dataset_path_with_combined_tables) as fd:
+    with open(dataset_path_with_combined_tables, encoding="utf-8") as fd:
         return json.load(fd)

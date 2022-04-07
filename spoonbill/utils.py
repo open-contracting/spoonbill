@@ -226,7 +226,7 @@ def resolve_file_uri(file_path):
 
 def read_lines(path):
     """Read file as lines"""
-    with open(path) as fd:
+    with open(path, encoding="utf-8") as fd:
         return [line.strip() for line in fd.readlines()]
 
 

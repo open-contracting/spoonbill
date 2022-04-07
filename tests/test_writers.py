@@ -415,7 +415,7 @@ def test_csv_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
                 str_row = {k: str(v) for (k, v) in row.items()}
                 file = name + ".csv"
                 path = workdir / file
-                with open(path, newline="") as csv_file:
+                with open(path, newline="", encoding="utf-8") as csv_file:
                     csv_reader = csv.DictReader(csv_file)
                     for num, line in enumerate(csv_reader):
                         if num == counter[name]:
