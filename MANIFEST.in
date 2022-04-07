@@ -1,5 +1,4 @@
 include LICENSE
-include babel.cfg
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
