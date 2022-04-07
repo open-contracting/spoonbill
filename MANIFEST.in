@@ -1,6 +1,5 @@
 include *.rst
 include babel.cfg
-recursive-include docs *.css
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
