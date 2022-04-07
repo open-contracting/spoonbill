@@ -22,7 +22,7 @@ Install the development requirements:
 
 .. code-block:: bash
 
-   pip install -e .[test]
+   pip install -e .[test] babel
 
 Install the pre-commit script:
 
@@ -66,3 +66,11 @@ Update catalogs:
 .. code-block:: bash
 
    pybabel update -i spoonbill/locale/messages.pot -d spoonbill/locale -D spoonbill
+
+Compile catalogs:
+
+.. code-block:: bash
+
+   pybabel compile -f -d spoonbill/locale -D spoonbill
+
+Use ``transifex-client`` to push and pull translations from Transifex.
