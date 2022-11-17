@@ -9,7 +9,7 @@ DOMAIN = "spoonbill"
 LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locale/")
 LOCALE = "en"
 
-system_locale = locale.getdefaultlocale()
+system_locale = locale.getlocale()
 if system_locale and system_locale[0]:
     LOCALE = system_locale[0]
 
