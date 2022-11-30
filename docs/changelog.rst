@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Changed
+~~~~~~~
+
+-  Drop support for Python 3.6 (end-of-life 2021-12-23).
+
 1.0.10 (2022-04-07)
 -------------------
 
