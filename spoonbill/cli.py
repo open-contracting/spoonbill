@@ -161,7 +161,7 @@ def get_selected_tables(base, selection):
 @click.option(
     "--language",
     help=_("Use with --human, the language to use for the human-readable headings"),
-    default=LOCALE.split("_")[0],
+    default=LOCALE,
     show_default=True,
     type=click.Choice(["en", "es"]),
 )

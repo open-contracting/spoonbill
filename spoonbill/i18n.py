@@ -9,9 +9,11 @@ DOMAIN = "spoonbill"
 LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locale/")
 LOCALE = "en"
 
-system_locale = locale.getlocale()
-if system_locale and system_locale[0]:
-    LOCALE = system_locale[0]
+language_code, encoding = locale.getlocale()
+if language_code:
+    # Windows can set the locale to "English_United States", which fails normalization. "English" succeeds, but is
+    # normalized as en_EN.ISO8859-1. So, we split again.
+    LOCALE = locale.normalize(language_code.split("_")[0]).split("_")[0]
 
 
 def translate(msg_id, lang=LOCALE):
