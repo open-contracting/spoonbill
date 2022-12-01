@@ -9,5 +9,5 @@ def test_translate_absent_locale():
         translation = translate(ANALYZED_LABEL, "uk_UA")
         assert translation == ANALYZED_LABEL
 
-    assert str(records[0].message) == "No translation file found for domain: spoonbill"
+    assert str(records[0].message) == "No translation file found for domain spoonbill in language uk_UA"
     assert len(records) == 1

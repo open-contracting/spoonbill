@@ -16,24 +16,15 @@ if system_locale and system_locale[0]:
 
 def translate(msg_id, lang=LOCALE):
     """Simple wrapper of python's gettext with ability to override desired language"""
-    try:
-        translator = _translation(lang)
-    except FileNotFoundError:
-        LOCALE = "en"
-        lang = LOCALE
-        translator = _translation(lang)
-
-    if translator:
-        return translator.gettext(msg_id)
-    return msg_id
+    return translator(lang).gettext(msg_id)
 
 
 @lru_cache(maxsize=None)
-def _translation(lang):
+def translator(lang):
     try:
         return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
     except FileNotFoundError as e:
-        warnings.warn(f"{e.strerror}: {e.filename}")
+        warnings.warn(f"{e.strerror} {e.filename} in language {lang}")
         return gettext.NullTranslations()
 
 
