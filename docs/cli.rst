@@ -69,7 +69,6 @@ During :ref:`analysis<how-it-works>`, each array within the JSON file is assigne
 For example, let's say there are at most two identifiers per organization. Separated tables might look like this (omitting the ``ocid``, ``id`` and ``parentTable`` columns for simplicity):
 
 .. list-table:: parties
-   :widths: auto
    :header-rows: 1
 
    * - rowID
@@ -82,7 +81,6 @@ For example, let's say there are at most two identifiers per organization. Separ
      - 1
 
 .. list-table:: parties_ids
-   :widths: auto
    :header-rows: 1
 
    * - rowID
@@ -101,7 +99,6 @@ For example, let's say there are at most two identifiers per organization. Separ
 Instead of creating separate tables, the two tables can be combined. That way, you can read an organization's identifiers without performing a lookup across the two tables.
 
 .. list-table::
-   :widths: auto
    :header-rows: 1
 
    * - rowID
