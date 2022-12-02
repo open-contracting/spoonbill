@@ -156,7 +156,7 @@ Fixed
 *  fix parentTable generation for combined tables (`5e06bf0 <https://github.com/open-contracting/spoonbill/commit/5e06bf09088307b94afa26e223a9aae8d10df12a>`__)
 *  parentID should be rowID for parent table (`c429309 <https://github.com/open-contracting/spoonbill/commit/c429309d3b265fdb2d7fb632e83bb7d2a373b7fc>`__)
 *  .xlsx writer ``only`` error handling (`ebc2ad0 <https://github.com/open-contracting/spoonbill/commit/ebc2ad0456e33ba8d81eacee51fec0974640e0ba>`__)
-*  **setup:** add include_package_data to setup.py (`db8b63b <https://github.com/open-contracting/spoonbill/commit/db8b63b3150166e5589d9dbd675547a3f709436c>`__)
+*  **setup:** add include_package_data to metadata (`db8b63b <https://github.com/open-contracting/spoonbill/commit/db8b63b3150166e5589d9dbd675547a3f709436c>`__)
 
 1.0.2b1 (2021-06-02)
 --------------------
@@ -239,7 +239,7 @@ Fixed
 * **flatten:** fix only option causing empty output (`c8447b0 <https://github.com/open-contracting/spoonbill/commit/c8447b015683f606a10e3c9270dcb84eea95bf95>`_)
 * **flatten:** fix repeat spreading to unrelated tables (`2e16c30 <https://github.com/open-contracting/spoonbill/commit/2e16c309a53857916693ca2aef09ce4891729cee>`_)
 * **i18n:** generate message for count columns (`a527f8d <https://github.com/open-contracting/spoonbill/commit/a527f8dc91f52be00ae8b681984a85798a36065c>`_)
-* **setup:** do not use babel cmds in setup.py (`e449c37 <https://github.com/open-contracting/spoonbill/commit/e449c3705f234c2eadc66553348873c4223ac679>`_)
+* **setup:** run babel commands via pybabel (`e449c37 <https://github.com/open-contracting/spoonbill/commit/e449c3705f234c2eadc66553348873c4223ac679>`_)
 * fixed mixing preview_rows and preview_rows combined (`dd1dd19 <https://github.com/open-contracting/spoonbill/commit/dd1dd1977ba0e86a8d762f16fdd9ce2d5379aa78>`_)
 * fixed serialization of total_items (`055ff65 <https://github.com/open-contracting/spoonbill/commit/055ff657588e58599aee71a6eb4fd5297eaf0267>`_)
 * remove copy column by reference in recalculate headers (`22c63f8 <https://github.com/open-contracting/spoonbill/commit/22c63f84e308e16ca0a95059ce06a99ac0864af7>`_)

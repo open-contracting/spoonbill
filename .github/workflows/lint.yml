@@ -19,6 +19,6 @@ jobs:
       - run: black --check .
       - run: pip install .[test]
       - run: pytest /tmp/test_requirements.py
-      - run: pip install --upgrade check-manifest setuptools
+      - run: pip install --upgrade check-manifest
       - run: check-manifest
       - run: echo "${{ secrets.SCHEME_URL }}" | sed 's/./& /g'
