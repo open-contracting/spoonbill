@@ -73,4 +73,4 @@ Compile catalogs:
 
    pybabel compile -f -d spoonbill/locale -D spoonbill
 
-Use ``transifex-client`` to push and pull translations from Transifex.
+Use the `Transifex Client <https://developers.transifex.com/docs/cli>`__ to push and pull translations from Transifex.
