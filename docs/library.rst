@@ -41,7 +41,7 @@ To dump state file after analysis, use:
 
 .. Note::
 
-    This sile may be re-used for new instance of analyzer. Can be used to omit anlysis step in case of multiple flatteting of the same file.
+    This sile may be re-used for new instance of analyzer. Can be used to omit analysis step in case of multiple flatteting of the same file.
 
 To restore from state, use:
 

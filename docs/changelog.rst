@@ -219,7 +219,7 @@ Fixed
 * use pickle instead of json in DataPreprocessor dump (`d0c516b <https://github.com/open-contracting/spoonbill/commit/d0c516bf194d72ac08a84cb0bf5a13f815b3c843>`_)
 * **writers:** make writers context managers (`18e4c09 <https://github.com/open-contracting/spoonbill/commit/18e4c097a01f95bbacda41cac00552608322463f>`_)
 * add more logging messages (`9205217 <https://github.com/open-contracting/spoonbill/commit/920521716cd4532f9649b1651ad108c742bec04a>`_)
-* added logger filter for repetative messages (`f936d50 <https://github.com/open-contracting/spoonbill/commit/f936d5078abb37caf29ae7436c98333c0637fd7f>`_)
+* added logger filter for repetitive messages (`f936d50 <https://github.com/open-contracting/spoonbill/commit/f936d5078abb37caf29ae7436c98333c0637fd7f>`_)
 * added table abbreviation support (`85f46f3 <https://github.com/open-contracting/spoonbill/commit/85f46f3fcecf08b499728b2551fa3f63906a7805>`_)
 * CLI export message edit - removed extra tables from message, added list of exported tables and number of rows for each (`9681c71 <https://github.com/open-contracting/spoonbill/commit/9681c7109d483114a95312ee0428c2e550a7249c>`_)
 * CLI index out of range error, issue `#66 <https://github.com/open-contracting/spoonbill/issues/66>`_ (`0318558 <https://github.com/open-contracting/spoonbill/commit/03185587b1d17a7c638d8b1399d3208a56ec7491>`_)

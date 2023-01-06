@@ -145,10 +145,10 @@ Currently, ``spoonbill`` supports combining following object types:
    :columns: 1
 
    -  documents
-   -  ammendments
+   -  amendments
    -  milestones
 
-This behavior can be overitten, by invoking ``combine`` command. To combine only ``document`` arrays, and ommit ``milestones, ammendments``, use:
+This behavior can be overitten, by invoking ``combine`` command. To combine only ``document`` arrays, and omit ``milestones, amendments``, use:
 
 .. code-block:: bash
 
