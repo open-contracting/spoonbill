@@ -25,7 +25,7 @@ class CommaSeparated(click.ParamType):
 
     name = "comma"
 
-    def convert(self, value, param, ctx):  # noqa
+    def convert(self, value, param, ctx):
         if not value:
             return []
         return value.split(",")

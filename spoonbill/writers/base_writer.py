@@ -38,8 +38,8 @@ class BaseWriter:
         headers = {c: c for c in table.available_rows(split=split)}
         if (
             table.parent != ""
-            and table.parent.name in self.options.selection  # noqa: W503
-            and self.options.selection[table.parent.name].pretty_headers  # noqa:W503
+            and table.parent.name in self.options.selection
+            and self.options.selection[table.parent.name].pretty_headers
         ):
             self.options.selection[table.name].pretty_headers = True
         if options.pretty_headers:
