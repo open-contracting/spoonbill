@@ -291,7 +291,7 @@ def test_flatten_only_no_default_columns(spec_analyzed, releases):
     for _count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             for row in rows:
-                assert not set(row.keys()).difference(set(["/tender/id"]))
+                assert not set(row.keys()).difference({"/tender/id"})
 
 
 def test_flatten_buyer(spec_analyzed, releases):

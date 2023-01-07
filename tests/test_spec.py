@@ -119,11 +119,11 @@ def test_set_array(root_table):
     items = root_table.arrays["/tender/items"]
     assert items == 0
 
-    root_table.set_array("/tender/items", [i for i in range(10)])
+    root_table.set_array("/tender/items", list(range(10)))
     items = root_table.arrays["/tender/items"]
     assert items == 10
 
-    root_table.set_array("/tender/items", [i for i in range(5)])
+    root_table.set_array("/tender/items", list(range(5)))
     items = root_table.arrays["/tender/items"]
     assert items == 10
 

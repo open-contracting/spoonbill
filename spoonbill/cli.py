@@ -17,7 +17,7 @@ click_logging.basic_config(LOGGER)
 
 ANALYZED_LABEL = _("  Processed {} objects")
 FLATTENED_LABEL = _("  Flattened {} objects")
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 class CommaSeparated(click.ParamType):
@@ -28,7 +28,7 @@ class CommaSeparated(click.ParamType):
     def convert(self, value, param, ctx):  # noqa
         if not value:
             return []
-        return [v for v in value.split(",")]
+        return value.split(",")
 
 
 def read_option_file(option, option_file):

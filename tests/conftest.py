@@ -54,8 +54,7 @@ def spec(schema):
 @pytest.fixture
 def spec_analyzed(schema, releases):
     dp = DataPreprocessor(schema, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES, with_preview=True)
-    [_ for _ in dp.process_items(releases)]
-    return dp
+    return list(dp.process_items(releases))
 
 
 @pytest.fixture

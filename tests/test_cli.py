@@ -294,8 +294,7 @@ def test_sheet_order():
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
         workbook = openpyxl.load_workbook(path)
-        sheets = [name for name in workbook.sheetnames]
-        assert sheets == [
+        assert workbook.sheetnames == [
             "parties",
             "parties_ids",
             "planning",
@@ -318,8 +317,7 @@ def test_sheet_order_state_file():
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
         workbook = openpyxl.load_workbook(path)
-        sheets = [name for name in workbook.sheetnames]
-        assert sheets == [
+        assert workbook.sheetnames == [
             "parties",
             "planning",
             "tenders",

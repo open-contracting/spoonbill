@@ -103,7 +103,7 @@ def test_get_table(spec, releases):
 
 # TODO: analyze combined tables
 def test_analyze(spec, releases):
-    [count for count in spec.process_items(releases)]
+    list(spec.process_items(releases))
     tenders = spec.tables["tenders"]
     parties = spec.tables["parties"]
     awards = spec.tables["awards"]
@@ -290,7 +290,7 @@ def test_analyze_array_extentions_no_split(spec, releases):
     attr = {"name": "Presentacion", "id": "1"}
     items = releases[0]["tender"]["items"]
     items[0]["attributes"] = [attr]
-    [_ for _ in spec.process_items(releases)]
+    list(spec.process_items(releases))
 
     cols = spec.tables["tenders"].combined_columns
     assert "/tender/items/0/attributes/0/id" in cols
@@ -313,7 +313,7 @@ def test_analyze_array_extentions_split(spec, releases):
     items = releases[0]["tender"]["items"]
     items[0]["attributes"] = [attr] * 10
     releases[0]["tender"]["items"] = items
-    [_ for _ in spec.process_items(releases)]
+    list(spec.process_items(releases))
 
     cols = spec.tables["tenders"]
 
@@ -364,10 +364,10 @@ def test_analyze_array_extentions_split(spec, releases):
 
 def test_analyze_test_dataset(spec, test_dataset_releases):
     try:
-        [_ for _ in spec.process_items(test_dataset_releases)]
+        list(spec.process_items(test_dataset_releases))
     except AttributeError as e:
         fail(f"{e.__class__.__name__}: {str(e)}")
 
 
 def test_analyze_with_combined_tables(spec, releases_with_combined_tables):
-    [_ for _ in spec.process_items(releases_with_combined_tables)]
+    list(spec.process_items(releases_with_combined_tables))

@@ -305,7 +305,7 @@ def get_reader(path):
 
 
 def get_order(properties):
-    order = [name for name in chain(properties, COMBINED_TABLES)]
+    order = list(chain(properties, COMBINED_TABLES))
     if "tender" in order:
         order[order.index("tender")] = "tenders"
     return order
@@ -404,7 +404,7 @@ def add_paths_to_schema(schema):
         updated_items[table] = path_item[table]
     proxy["properties"] = updated_items
     # Generating array with title paths for each title in schema
-    title_paths = [path for path in title_path(proxy["properties"])]
+    title_paths = list(title_path(proxy["properties"]))
 
     for path_list in title_paths:
         location = "properties." + ".".join(path_list[-1][:-1])
