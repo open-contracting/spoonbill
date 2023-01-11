@@ -13,8 +13,10 @@ jobs:
           python-version: 3.8
           cache: pip
           cache-dependency-path: setup.cfg
-      - run: curl -s -S --retry 3 $BASEDIR/tests/install.sh | bash -
-      - run: curl -s -S --retry 3 $BASEDIR/tests/script.sh | bash -
+      - shell: bash
+        run: curl -s -S --retry 3 $BASEDIR/tests/install.sh | bash -
+      - shell: bash
+        run: curl -s -S --retry 3 $BASEDIR/tests/script.sh | bash -
       - run: pip install black
       - run: black --check .
       - run: pip install .[test]
