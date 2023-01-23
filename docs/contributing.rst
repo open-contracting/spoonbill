@@ -1,8 +1,8 @@
 Contributing
 ============
 
-Installation
-------------
+Setup
+-----
 
 Clone the repository:
 
@@ -31,8 +31,8 @@ Install the pre-commit script:
    pip install pre-commit
    pre-commit install
 
-Tests
------
+Testing
+-------
 
 Compile the message catalogs:
 
