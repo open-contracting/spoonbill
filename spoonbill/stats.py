@@ -295,7 +295,6 @@ class DataPreprocessor:
         :param with_preview: Whether to generate previews for each table
         """
         for count, release in enumerate(releases):
-
             to_analyze = deque([("", "", "", {}, release)])
             rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
             while to_analyze:

@@ -18,7 +18,6 @@ def read_xlsx_headers(path, sheet):
 
 
 def get_writers(workdir, tables, options, schema=None):
-
     with CSVWriter(workdir, tables, options, schema=schema) as csv, XlsxWriter(
         workdir, tables, options, schema=schema
     ) as xlsx:

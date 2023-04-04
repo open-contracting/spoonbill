@@ -54,7 +54,6 @@ class FileAnalyzer:
         self.order = None
 
     def analyze_file(self, filenames, with_preview=True):
-
         """Analyze provided file
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
