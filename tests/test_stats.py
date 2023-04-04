@@ -165,7 +165,6 @@ def test_dump_restore(log, spec, releases, tmpdir):
         "names_counter",
         "with_preview",
     ):
-
         assert key in spec2.__dict__
     with patch("builtins.open", mock_open(read_data="invalid")):
         spec2 = DataPreprocessor.restore(tmpdir / "result.json")
