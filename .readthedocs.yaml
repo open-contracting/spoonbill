@@ -6,6 +6,6 @@ build:
 python:
   install:
     - path: .
-      requirements: docs/requirements.txt
+    - requirements: docs/requirements.txt
 sphinx:
   fail_on_warning: true
