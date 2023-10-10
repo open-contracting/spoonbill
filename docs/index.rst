@@ -14,7 +14,7 @@ From the command line:
 
    pip install spoonbill
 
-Spoonbill requires Python 3.7 or greater.
+Spoonbill requires a `supported version <https://endoflife.date/python>`__ of Python 3.
 
 .. _how-it-works:
 
