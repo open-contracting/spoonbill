@@ -130,8 +130,7 @@ class Table:
         self.combined_columns = {col_id: col for col_id, col in self.combined_columns.items() if not filter(col)}
 
     def __iter__(self):
-        for col in self.columns:
-            yield col
+        yield from self.columns
 
     def __getitem__(self, path):
         return self.columns.get(path)

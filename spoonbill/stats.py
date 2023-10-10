@@ -414,7 +414,7 @@ class DataPreprocessor:
         try:
             with open(path, "wb") as fd:
                 pickle.dump(self, fd)
-        except (OSError, IOError) as e:
+        except OSError as e:
             LOGGER.error(_("Failed to dump DataPreprocessor to file. Error: {}").format(e))
 
     @classmethod
@@ -438,5 +438,5 @@ class DataPreprocessor:
         """
         table = self.current_table
         if pointer not in table.types and pointer not in table.path:
-            if any((common_prefix(pointer, path) for path in table.path)):
+            if any(common_prefix(pointer, path) for path in table.path):
                 self.current_table.types[pointer] = self.guess_type(item)

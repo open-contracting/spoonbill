@@ -238,7 +238,7 @@ class Flattener:
                         to_flatten.append((abs_pointer, pointer, key, record, item, repeat))
                     elif isinstance(item, list):
                         if item_type == JOINABLE:
-                            value = JOINABLE_SEPARATOR.join((str(i) for i in item))
+                            value = JOINABLE_SEPARATOR.join(str(i) for i in item)
                             rows.data[table.name][-1][pointer] = value
                         else:
                             if self.options.count and table.splitted:

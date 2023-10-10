@@ -16,8 +16,7 @@ class MappingBase(MutableMapping):
         del self.data[key]
 
     def __iter__(self):
-        for k in self.data:
-            yield k
+        yield from self.data
 
     def __len__(self):
         return len(self.data)

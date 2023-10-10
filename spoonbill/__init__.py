@@ -209,8 +209,7 @@ class FileFlattener:
                 self.flattener.options,
                 schema=self.schema,
             ) as writer:
-                for count in self._flatten(filename, [writer]):
-                    yield count
+                yield from self._flatten(filename, [writer])
         if self.xlsx and not self.csv:
             with XlsxWriter(
                 self.workdir,
@@ -219,8 +218,7 @@ class FileFlattener:
                 filename=self.xlsx,
                 schema=self.schema,
             ) as writer:
-                for count in self._flatten(filename, [writer]):
-                    yield count
+                yield from self._flatten(filename, [writer])
 
         if self.xlsx and self.csv:
             with XlsxWriter(
@@ -235,8 +233,7 @@ class FileFlattener:
                 self.flattener.options,
                 schema=self.schema,
             ) as csv:
-                for count in self._flatten(filename, [xlsx, csv]):
-                    yield count
+                yield from self._flatten(filename, [xlsx, csv])
 
 
 __all__ = ["FileFlattener", "FileAnalyzer"]

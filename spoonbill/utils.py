@@ -82,8 +82,7 @@ def iter_file(fd, root, multiple_values=False):
     6
     """
     reader = ijson.items(fd, prefix=("" if multiple_values else f"{root}.item"), multiple_values=multiple_values)
-    for item in reader:
-        yield item
+    yield from reader
 
 
 def extract_type(item):
@@ -164,7 +163,7 @@ def get_matching_tables(tables, path):
             if common_prefix(candidate, path) == candidate:
                 candidates.append(table)
 
-    return sorted(candidates, key=lambda c: max((len(p) for p in c.path)), reverse=True)
+    return sorted(candidates, key=lambda c: max(len(p) for p in c.path), reverse=True)
 
 
 def generate_table_name(parent_table, parent_key, key):

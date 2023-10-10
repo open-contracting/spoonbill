@@ -39,7 +39,7 @@ class CSVWriter(BaseWriter):
                 path = self.workdir / f"{table_name}.csv"
                 LOGGER.info(_("Dumping table '{}' to file '{}'").format(table_name, path))
                 fd = open(path, "w")
-            except (IOError, OSError) as e:
+            except OSError as e:
                 LOGGER.error(_("Failed to open file {} with error {}").format(path, e))
                 return
             writer = csv.DictWriter(fd, headers)
