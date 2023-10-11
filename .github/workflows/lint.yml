@@ -20,10 +20,10 @@ jobs:
       - run: pip install black
       - run: black --check .
       - run: pip install .[test]
-      - run: pytest /tmp/test_requirements.py
       - env:
           # test_requirements.py doesn't support try/except blocks.
           STANDARD_MAINTENANCE_SCRIPTS_IGNORE: importlib_resources
-        run: pip install --upgrade check-manifest
+        run: pytest /tmp/test_requirements.py
+      - run: pip install --upgrade check-manifest
       - run: check-manifest
       - run: echo "${{ secrets.SCHEME_URL }}" | sed 's/./& /g'
