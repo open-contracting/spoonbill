@@ -18,7 +18,7 @@ path = file_manager.enter_context(importlib_resources.as_file(ref))
 
 LOCALE = "en"
 language_code = locale.getlocale()[0]
-if language_code:  # None if LC_CTYPE=C or LC_CTYPE=UTF-8
+if language_code and language_code != "C":  # None if LC_CTYPE=C or LC_CTYPE=UTF-8
     # Windows can set the locale to "English_United States", which fails normalization. "English" succeeds, but is
     # normalized as en_EN.ISO8859-1. So, we split again.
     LOCALE = locale.normalize(language_code.split("_")[0]).split("_")[0]
