@@ -32,7 +32,7 @@ msgstr ""
 
 #: spoonbill/cli.py:18
 msgid "  Processed {} objects"
-msgstr ""
+msgstr "  {} objetos procesados"
 
 #: spoonbill/cli.py:19
 msgid "  Flattened {} objects"

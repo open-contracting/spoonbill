@@ -11,3 +11,8 @@ def test_translate_absent_locale():
 
     assert str(records[0].message) == "No translation file found for domain spoonbill in language uk_UA"
     assert len(records) == 1
+
+
+def test_translate():
+    translation = translate(ANALYZED_LABEL, "es")
+    assert translation == "  {} objetos procesados"

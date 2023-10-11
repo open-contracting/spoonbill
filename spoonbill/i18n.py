@@ -1,16 +1,24 @@
+import atexit
+import contextlib
 import gettext
 import locale
 import warnings
 from functools import lru_cache
 
-import pkg_resources
+try:
+    import importlib_resources
+except ImportError:
+    import importlib.resources as importlib_resources
 
-DOMAIN = "spoonbill"
-LOCALEDIR = pkg_resources.resource_filename(DOMAIN, "locale/")
+# https://importlib-resources.readthedocs.io/en/latest/migration.html#pkg-resources-resource-filename
+file_manager = contextlib.ExitStack()
+atexit.register(file_manager.close)
+ref = importlib_resources.files("spoonbill") / "locale"
+path = file_manager.enter_context(importlib_resources.as_file(ref))
+
 LOCALE = "en"
-
-language_code, encoding = locale.getlocale()
-if language_code:
+language_code = locale.getlocale()[0]
+if language_code:  # None if LC_CTYPE=C or LC_CTYPE=UTF-8
     # Windows can set the locale to "English_United States", which fails normalization. "English" succeeds, but is
     # normalized as en_EN.ISO8859-1. So, we split again.
     LOCALE = locale.normalize(language_code.split("_")[0]).split("_")[0]
@@ -24,7 +32,7 @@ def translate(msg_id, lang=LOCALE):
 @lru_cache(maxsize=None)
 def translator(lang):
     try:
-        return gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=None)
+        return gettext.translation("spoonbill", path, languages=[lang], fallback=None)
     except FileNotFoundError as e:
         warnings.warn(f"{e.strerror} {e.filename} in language {lang}")
         return gettext.NullTranslations()
