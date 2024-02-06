@@ -1,6 +1,5 @@
 import json
 import pathlib
-from decimal import Decimal
 
 import pytest
 
@@ -22,7 +21,7 @@ releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
 @pytest.fixture
 def schema():
     with open(schema_path, encoding="utf-8") as fd:
-        return json.load(fd, parse_float=Decimal)
+        return json.load(fd)
 
 
 @pytest.fixture
