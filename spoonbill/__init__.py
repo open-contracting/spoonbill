@@ -136,9 +136,9 @@ class FileAnalyzer:
         sorted_tables = dict(
             sorted(
                 within_schema_tables.items(),
-                key=lambda sheet: self.order.index(sheet[0].split("_")[0])
-                if sheet[0].split("_")[0] in self.order
-                else -1,
+                key=lambda sheet: (
+                    self.order.index(sheet[0].split("_")[0]) if sheet[0].split("_")[0] in self.order else -1
+                ),
             )
         )
         self.spec.tables = {**sorted_tables, **out_schema_tables}
