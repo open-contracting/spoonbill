@@ -11,10 +11,11 @@ def read_csv_headers(path):
 
 
 def read_xlsx_headers(path, sheet):
-    wb = openpyxl.load_workbook(filename=path)
-    sheet = wb[sheet]
-    columns = sheet.columns
-    return [c.value for cell in columns for c in cell]
+    with open(path, "rb") as f:
+        wb = openpyxl.load_workbook(f)
+        sheet = wb[sheet]
+        columns = sheet.columns
+        return [c.value for cell in columns for c in cell]
 
 
 def get_writers(workdir, tables, options, schema=None):

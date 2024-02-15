@@ -438,21 +438,22 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
     # Reading XLSX files
     counter = {}
     path = workdir / "result.xlsx"
-    xlsx_reader = openpyxl.load_workbook(path)
+    with open(path, "rb") as f:
+        xlsx_reader = openpyxl.load_workbook(f)
 
-    for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
-            if name not in counter:
-                counter[name] = 2
-            sheet = xlsx_reader[name]
-            headers = {cell.column_letter: cell.value for cell in sheet[1]}
-            for row in rows:
-                line = {headers[cell.column_letter]: cell.value for cell in sheet[counter[name]]}
-                row = row.as_dict()
-                assert not set(row.keys()).difference(set(line.keys()))
-                for k, v in row.items():
-                    assert str(v) == str(line[k])
-                counter[name] += 1
+        for _count, flat in flattener.flatten(releases):
+            for name, rows in flat.items():
+                if name not in counter:
+                    counter[name] = 2
+                sheet = xlsx_reader[name]
+                headers = {cell.column_letter: cell.value for cell in sheet[1]}
+                for row in rows:
+                    line = {headers[cell.column_letter]: cell.value for cell in sheet[counter[name]]}
+                    row = row.as_dict()
+                    assert not set(row.keys()).difference(set(line.keys()))
+                    for k, v in row.items():
+                        assert str(v) == str(line[k])
+                    counter[name] += 1
 
 
 def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
@@ -467,12 +468,13 @@ def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
                     writer.writerow(name, row)
 
     path = workdir / "result.xlsx"
-    xlsx_reader = openpyxl.load_workbook(path)
-    column = []
-    for row in xlsx_reader["tenders"].rows:
-        column.append(row[0].value)
-    assert column[0] == "/tender/id"
-    assert xlsx_reader["tenders"].max_column == 1
+    with open(path, "rb") as f:
+        xlsx_reader = openpyxl.load_workbook(f)
+        column = []
+        for row in xlsx_reader["tenders"].rows:
+            column.append(row[0].value)
+        assert column[0] == "/tender/id"
+        assert xlsx_reader["tenders"].max_column == 1
 
 
 def test_flatten_multiple_files(spec, tmpdir, releases, schema):
@@ -489,19 +491,21 @@ def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     sheet = "tenders"
     for _ in flattener.flatten_file(releases_path):
         pass
-    wb = openpyxl.load_workbook(xlsx)
-    ws = wb[sheet]
-    line_number = ws.max_row - 1
-    assert ws.max_row - 1 == 4
+    with open(xlsx, "rb") as f:
+        wb = openpyxl.load_workbook(f)
+        ws = wb[sheet]
+        line_number = ws.max_row - 1
+        assert ws.max_row - 1 == 4
 
     flattener = FileFlattener(
         workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
     )
     for _ in flattener.flatten_file([releases_path, releases_path]):
         pass
-    wb = openpyxl.load_workbook(xlsx)
-    ws = wb[sheet]
-    assert ws.max_row - 1 == line_number * 2
+    with open(xlsx, "rb") as f:
+        wb = openpyxl.load_workbook(f)
+        ws = wb[sheet]
+        assert ws.max_row - 1 == line_number * 2
 
 
 def test_extension_export(spec, tmpdir, releases_extension, schema):
@@ -517,17 +521,18 @@ def test_extension_export(spec, tmpdir, releases_extension, schema):
     extension_header = "/documents/test_extension"
     for _ in flattener.flatten_file(releases_extension_path):
         pass
-    wb = openpyxl.load_workbook(xlsx)
-    ws = wb[sheet]
-    for column_cell in ws.iter_cols(1, ws.max_column):
-        if column_cell[0].value == extension_header:
-            extension_column = ws[column_cell[0].coordinate[:-1]]
-    for cell in extension_column:
-        if cell.value == extension_header:
-            continue
-        assert cell.value == "test"
-    for column_cell in wb["tenders"].iter_cols(1, ws.max_column):
-        assert column_cell[0].value != extension_header
+    with open(xlsx, "rb") as f:
+        wb = openpyxl.load_workbook(f)
+        ws = wb[sheet]
+        for column_cell in ws.iter_cols(1, ws.max_column):
+            if column_cell[0].value == extension_header:
+                extension_column = ws[column_cell[0].coordinate[:-1]]
+        for cell in extension_column:
+            if cell.value == extension_header:
+                continue
+            assert cell.value == "test"
+        for column_cell in wb["tenders"].iter_cols(1, ws.max_column):
+            assert column_cell[0].value != extension_header
 
 
 def test_schema_header_paths(schema):

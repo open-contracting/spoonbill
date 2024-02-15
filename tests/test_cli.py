@@ -293,18 +293,19 @@ def test_sheet_order():
         assert result.exit_code == 0
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
-        workbook = openpyxl.load_workbook(path)
-        assert workbook.sheetnames == [
-            "parties",
-            "parties_ids",
-            "planning",
-            "tenders",
-            "awards",
-            "contracts",
-            "documents",
-            "milestones",
-            "amendments",
-        ]
+        with open(path, "rb") as f:
+            workbook = openpyxl.load_workbook(f)
+            assert workbook.sheetnames == [
+                "parties",
+                "parties_ids",
+                "planning",
+                "tenders",
+                "awards",
+                "contracts",
+                "documents",
+                "milestones",
+                "amendments",
+            ]
 
 
 def test_sheet_order_state_file():
@@ -316,17 +317,18 @@ def test_sheet_order_state_file():
         assert result.exit_code == 0
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
-        workbook = openpyxl.load_workbook(path)
-        assert workbook.sheetnames == [
-            "parties",
-            "planning",
-            "tenders",
-            "awards",
-            "contracts",
-            "documents",
-            "milestones",
-            "amendments",
-        ]
+        with open(path, "rb") as f:
+            workbook = openpyxl.load_workbook(f)
+            assert workbook.sheetnames == [
+                "parties",
+                "planning",
+                "tenders",
+                "awards",
+                "contracts",
+                "documents",
+                "milestones",
+                "amendments",
+            ]
 
 
 @mock.patch.dict(os.environ, {"LANG": "uk_UA"})
@@ -347,12 +349,13 @@ def test_pretty_headers_en():
         assert result.exit_code == 0
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
-        xlsx_reader = openpyxl.load_workbook(path)
-        sheet = xlsx_reader["parties"]
-        header_values = [cell.value for cell in sheet[1]]
-        header_columns = [cell.column_letter for cell in sheet[1]]
-        headers = dict(zip(header_columns, header_values))
-        assert headers["E"].startswith("Buyer")
+        with open(path, "rb") as f:
+            xlsx_reader = openpyxl.load_workbook(f)
+            sheet = xlsx_reader["parties"]
+            header_values = [cell.value for cell in sheet[1]]
+            header_columns = [cell.column_letter for cell in sheet[1]]
+            headers = dict(zip(header_columns, header_values))
+            assert headers["E"].startswith("Buyer")
 
 
 def test_pretty_headers_es():
@@ -363,9 +366,10 @@ def test_pretty_headers_es():
         assert result.exit_code == 0
         path = pathlib.Path("result.xlsx")
         assert path.resolve().exists()
-        xlsx_reader = openpyxl.load_workbook(path)
-        sheet = xlsx_reader["parties"]
-        header_values = [cell.value for cell in sheet[1]]
-        header_columns = [cell.column_letter for cell in sheet[1]]
-        headers = dict(zip(header_columns, header_values))
-        assert headers["E"].startswith("Comprador")
+        with open(path, "rb") as f:
+            xlsx_reader = openpyxl.load_workbook(f)
+            sheet = xlsx_reader["parties"]
+            header_values = [cell.value for cell in sheet[1]]
+            header_columns = [cell.column_letter for cell in sheet[1]]
+            headers = dict(zip(header_columns, header_values))
+            assert headers["E"].startswith("Comprador")
