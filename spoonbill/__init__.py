@@ -101,9 +101,11 @@ class FileAnalyzer:
         if "release" in input_format:
             pkg_type = "releases"
             getter = attrgetter("release_package_schema")
-        else:
+        elif "record" in input_format:
             pkg_type = "records"
             getter = attrgetter("record_package_schema")
+        else:
+            raise NotImplementedError(f"{input_format} format is not implemented")
         url = DEFAULT_SCHEMA_URL[pkg_type].get(self.language[:2], DEFAULT_SCHEMA_URL[pkg_type]["en"])
         if not schema:
             LOGGER.info(_("No schema provided, using version {}").format(CURRENT_SCHEMA_TAG))
