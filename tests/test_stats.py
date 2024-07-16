@@ -365,7 +365,7 @@ def test_analyze_test_dataset(spec, test_dataset_releases):
     try:
         list(spec.process_items(test_dataset_releases))
     except AttributeError as e:
-        fail(f"{e.__class__.__name__}: {str(e)}")
+        fail(f"{type(e).__name__}: {str(e)}")
 
 
 def test_analyze_with_combined_tables(spec, releases_with_combined_tables):
