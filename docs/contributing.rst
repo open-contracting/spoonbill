@@ -65,7 +65,7 @@ Update catalogs:
 
 .. code-block:: bash
 
-   pybabel update -i spoonbill/locale/messages.pot -d spoonbill/locale -D spoonbill
+   pybabel update -N -i spoonbill/locale/messages.pot -d spoonbill/locale -D spoonbill
 
 Compile catalogs:
 
