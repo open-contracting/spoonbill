@@ -12,6 +12,7 @@ recursive-include tests *.jsonl
 recursive-include tests *.py
 recursive-include tests *.state
 recursive-include tests *.txt
+exclude .python-version
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yaml
 exclude .tx/config
