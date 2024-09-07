@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Changed
+~~~~~~~
+
+-  Drop support for Python 3.8.
+
 1.0.13 (2024-09-04)
 -------------------
 
@@ -8,6 +16,11 @@ Added
 ~~~~~
 
 -  Add support for Python 3.12.
+
+Changed
+~~~~~~~
+
+-  Drop support for Python 3.7.
 
 1.0.12 (2023-09-19)
 -------------------
@@ -28,7 +41,7 @@ Added
 Changed
 ~~~~~~~
 
--  Drop support for Python 3.6 (end-of-life 2021-12-23).
+-  Drop support for Python 3.6.
 
 1.0.10 (2022-04-07)
 -------------------
