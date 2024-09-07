@@ -2,12 +2,63 @@
 requires = ["setuptools>=61.2"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 119
+[project]
+name = "spoonbill"
+version = "1.0.13"
+authors = [{name = "Open Contracting Partnership", email = "data@open-contracting.org"}]
+description = "Converts data that conforms to the Open Contracting Data Standard from JSON to Excel / CSV"
+readme = "README.rst"
+license = {text = "BSD"}
+urls = {Homepage = "https://github.com/open-contracting/spoonbill"}
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+    "click",
+    "click_logging",
+    "flatten-dict",
+    "ijson>=2.5",
+    "jsonref",
+    "ocdsextensionregistry",
+    "ocdskit>=1.0.1",
+    "requests",
+    "scalpl",
+    "xlsxwriter",
+    'dataclasses;python_version<"3.7"',
+    'importlib_resources;python_version<"3.12"',
+]
 
-[tool.isort]
-profile = 'black'
-line_length = 119
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "jmespath",
+    "jsonpointer",
+    "openpyxl",
+    "pytest",
+]
+
+[project.scripts]
+spoonbill = "spoonbill.cli:cli"
+
+[tool.setuptools.packages.find]
+exclude = [
+    "tests",
+    "tests.*",
+]
+
+[tool.ruff]
+line-length = 119
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "C4", "F", "I", "W"]
 
 [tool.pytest.ini_options]
 addopts = '--doctest-modules'

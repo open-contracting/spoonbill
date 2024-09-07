@@ -223,18 +223,21 @@ class FileFlattener:
                 yield from self._flatten(filename, [writer])
 
         if self.xlsx and self.csv:
-            with XlsxWriter(
-                self.workdir,
-                self.flattener.tables,
-                self.flattener.options,
-                filename=self.xlsx,
-                schema=self.schema,
-            ) as xlsx, CSVWriter(
-                workdir,
-                self.flattener.tables,
-                self.flattener.options,
-                schema=self.schema,
-            ) as csv:
+            with (
+                XlsxWriter(
+                    self.workdir,
+                    self.flattener.tables,
+                    self.flattener.options,
+                    filename=self.xlsx,
+                    schema=self.schema,
+                ) as xlsx,
+                CSVWriter(
+                    workdir,
+                    self.flattener.tables,
+                    self.flattener.options,
+                    schema=self.schema,
+                ) as csv,
+            ):
                 yield from self._flatten(filename, [xlsx, csv])
 
 
