@@ -1,9 +1,9 @@
 import atexit
 import contextlib
+import functools
 import gettext
 import locale
 import warnings
-from functools import lru_cache
 
 try:
     import importlib_resources
@@ -29,7 +29,7 @@ def translate(msg_id, lang=LOCALE):
     return translator(lang).gettext(msg_id)
 
 
-@lru_cache(maxsize=None)
+@functools.cache
 def translator(lang):
     try:
         return gettext.translation("spoonbill", path, languages=[lang], fallback=None)

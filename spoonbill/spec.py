@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, is_dataclass, replace
-from typing import List, Mapping, Sequence
 
 from spoonbill.common import DEFAULT_FIELDS, DEFAULT_FIELDS_COMBINED
 from spoonbill.i18n import _
@@ -61,7 +61,7 @@ class Table:
     """
 
     name: str
-    path: List[str]
+    path: list[str]
     total_rows: int = 0
     # `parent` is a Table object, but dataclasses don't play well with recursion.
     parent: object = field(default_factory=dict)
@@ -74,8 +74,8 @@ class Table:
     additional_columns: Mapping[str, Column] = field(default_factory=dict)
     arrays: Mapping[str, int] = field(default_factory=dict)
     titles: Mapping[str, str] = field(default_factory=dict)
-    child_tables: List[str] = field(default_factory=list)
-    types: Mapping[str, List[str]] = field(default_factory=dict)
+    child_tables: list[str] = field(default_factory=list)
+    types: Mapping[str, list[str]] = field(default_factory=dict)
     array_columns: Mapping[str, Column] = field(default_factory=dict)
     array_positions: Mapping[str, str] = field(default_factory=dict)
 
@@ -111,23 +111,23 @@ class Table:
         cols = self.columns if split else self.combined_columns
         return [header for header, col in cols.items() if cond(col)]
 
-    def missing_rows(self, split=True):
+    def missing_rows(self, *, split=True):
         """
         Return the columns that are available in the schema, but not present in the analyzed data.
         """
 
         return self._counter(split, lambda c: c.hits == 0)
 
-    def available_rows(self, split=True):
+    def available_rows(self, *, split=True):
         """
         Return the columns that are available in the analyzed data.
         """
 
         return self._counter(split, lambda c: c.hits > 0)
 
-    def filter_columns(self, filter):
-        self.columns = {col_id: col for col_id, col in self.columns.items() if not filter(col)}
-        self.combined_columns = {col_id: col for col_id, col in self.combined_columns.items() if not filter(col)}
+    def filter_columns(self, func):
+        self.columns = {col_id: col for col_id, col in self.columns.items() if not func(col)}
+        self.combined_columns = {col_id: col for col_id, col in self.combined_columns.items() if not func(col)}
 
     def __iter__(self):
         yield from self.columns
@@ -135,10 +135,10 @@ class Table:
     def __getitem__(self, path):
         return self.columns.get(path)
 
-    def add_array_column(self, col, path, abs_path, max):
+    def add_array_column(self, col, path, abs_path, maximum):
         array = self.is_array(path)
         col_path = get_path_for_array_col(abs_path, array)
-        if self.arrays[array] > max:
+        if self.arrays[array] > maximum:
             return
 
         if col_path not in self.combined_columns:
@@ -147,9 +147,9 @@ class Table:
             self.array_positions[array] = col_path
             self.combined_columns = insert_after_key(self.combined_columns, {col_path: col}, last_key)
         if not self.is_root:
-            self.parent.add_array_column(col, path, abs_path, max=max)
+            self.parent.add_array_column(col, path, abs_path, maximum)
 
-    def add_column(self, path, item_type, title, *, propagated=False, additional=False, abs_path=None, header=[]):
+    def add_column(self, path, item_type, title, *, propagated=False, additional=False, abs_path=None, header=""):
         """
         Add a new column to the table.
 
@@ -170,7 +170,7 @@ class Table:
                 # e.g. /tender/items/166/relatedLot
                 combined_path = abs_path
                 col = replace(col, path=combined_path)
-            LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))
+            LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))  # noqa: G002 # false positive
             self.additional_columns[combined_path] = col
 
         if not propagated:
@@ -205,7 +205,7 @@ class Table:
         :param abs_path: The column's full JSON path
         :param path: The column's JSON path without array indexes
         """
-        header = get_pointer(self, abs_path, path, True)
+        header = get_pointer(self, abs_path, path, split=True)
         if header in self.combined_columns:
             self.combined_columns[header].hits += 1
         if not self.is_root:
@@ -243,12 +243,11 @@ class Table:
             self.inc_column(col_name, col_name)
 
     def set_preview_path(self, abs_path, path, value, max_items):
-        header = get_pointer(self, abs_path, path, True)
+        header = get_pointer(self, abs_path, path, split=True)
         array = self.is_array(path)
         self.preview_rows_combined[-1][header] = value
-        if header in self.combined_columns:
-            if not array or (array and self.arrays[array] < max_items):
-                self.preview_rows[-1][header] = value
+        if header in self.combined_columns and (not array or (array and self.arrays[array] < max_items)):
+            self.preview_rows[-1][header] = value
         if not self.is_root:
             self.parent.set_preview_path(abs_path, path, value, max_items)
 

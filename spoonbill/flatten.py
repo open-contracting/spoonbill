@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict, deque
+from collections.abc import Mapping
 from dataclasses import dataclass, field, is_dataclass, replace
-from typing import List, Mapping
 
 from spoonbill.common import DEFAULT_FIELDS, JOINABLE, JOINABLE_SEPARATOR, SEPARATOR
 from spoonbill.i18n import LOCALE, _
@@ -28,9 +28,9 @@ class TableFlattenConfig:
     split: bool
     pretty_headers: bool = False
     headers: Mapping[str, str] = field(default_factory=dict)
-    repeat: List[str] = field(default_factory=list)
-    unnest: List[str] = field(default_factory=list)
-    only: List[str] = field(default_factory=list)
+    repeat: list[str] = field(default_factory=list)
+    unnest: list[str] = field(default_factory=list)
+    only: list[str] = field(default_factory=list)
     name: str = ""
 
 
@@ -44,7 +44,7 @@ class FlattenOptions:
     """
 
     selection: Mapping[str, TableFlattenConfig]
-    exclude: List[str] = field(default_factory=list)
+    exclude: list[str] = field(default_factory=list)
     count: bool = False
 
     def __post_init__(self):
@@ -113,13 +113,12 @@ class Flattener:
                 self.init_table_lookup(self.tables, target)
             self.init_child_tables(tables, c_table, options)
 
-    def init_map(self, map, paths, table, only=None, target=None):
+    def init_map(self, mapping, paths, table, only=None, target=None):
         if not target:
             target = table
         for path in paths:
-            if path not in DEFAULT_FIELDS:
-                if not only or (only and path in only):
-                    map[path] = target
+            if path not in DEFAULT_FIELDS and (not only or (only and path in only)):
+                mapping[path] = target
 
     def _map_path(self, table, target=None):
         self.init_map(self._path_map, table.path, table, target=target)

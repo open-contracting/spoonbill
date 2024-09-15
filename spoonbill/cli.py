@@ -322,7 +322,9 @@ def cli(
         show_percent=True,
         show_pos=True,
     ) as bar:
-        for count in bar:
-            bar.label = FLATTENED_LABEL.format(click.style(str(count + 1), fg="cyan"))
+        for counter in bar:
+            bar.label = FLATTENED_LABEL.format(click.style(str(counter + 1), fg="cyan"))
 
-    click.secho(_("Done flattening. Flattened objects: {}").format(click.style(str(count + 1), fg="red")), fg="green")
+    click.secho(
+        _("Done flattening. Flattened objects: {}").format(click.style(str(counter + 1), fg="red")), fg="green"
+    )

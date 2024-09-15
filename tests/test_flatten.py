@@ -28,11 +28,7 @@ ID_ITEMS = {
 
 
 def test_flatten(spec_analyzed, releases):
-    options = FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
-        }
-    )
+    options = FlattenOptions(selection={"tenders": {"split": True}, "parties": {"split": False}})
     flattener = Flattener(options, spec_analyzed.tables)
     count = {"tenders": 0, "parties": 0}
     for _count, flat in flattener.flatten(releases):
@@ -56,10 +52,10 @@ def test_flatten_row_id_parent_id_relation(spec, releases):
     )
     for _ in spec.process_items(releases):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    options = FlattenOptions(selection={"tenders": {"split": True}})
     flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
 
@@ -72,16 +68,14 @@ def test_flatten_row_id_parent_id_relation(spec, releases):
 def test_flattener_not_generate_count_columns(spec, releases):
     for _ in spec.process_items(releases):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": False}}, "count": True})
+    options = FlattenOptions(selection={"tenders": {"split": False}}, count=True)
     flattener = Flattener(options, spec.tables)
     tenders = flattener.tables["tenders"]
     assert "/tender/itemsCount" not in tenders
     for index in range(tenders.arrays["/tender/items/additionalClassifications"]):
         assert f"/tender/items/{index}/additionalClassificationsCount" not in tenders
 
-    options = FlattenOptions(
-        **{"selection": {"tenders": {"split": True}, "tenders_items": {"split": False}}, "count": True}
-    )
+    options = FlattenOptions(selection={"tenders": {"split": True}, "tenders_items": {"split": False}}, count=True)
     flattener = Flattener(options, spec.tables)
     tenders = flattener.tables["tenders"]
     tenders_items = flattener.tables["tenders_items"]
@@ -98,7 +92,7 @@ def test_flatten_with_counters(spec, releases):
     )
     for _ in spec.process_items(releases):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "count": True})
+    options = FlattenOptions(selection={"tenders": {"split": True}}, count=True)
     flattener = Flattener(options, spec.tables)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
@@ -120,11 +114,7 @@ def test_flatten_with_counters(spec, releases):
 
 
 def test_flatten_with_repeat(spec_analyzed, releases):
-    options = FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True, "repeat": ["/tender/id"]}},
-        }
-    )
+    options = FlattenOptions(selection={"tenders": {"split": True, "repeat": ["/tender/id"]}})
     flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
@@ -140,11 +130,7 @@ def test_flatten_with_repeat(spec_analyzed, releases):
 
 def test_flatten_with_unnest(spec_analyzed, releases):
     field = "/tender/items/0/id"
-    options = FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True, "unnest": [field]}},
-        }
-    )
+    options = FlattenOptions(selection={"tenders": {"split": True, "unnest": [field]}})
     flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in flattener.flatten(releases):
         for name, rows in flat.items():
@@ -162,19 +148,19 @@ def test_flatten_with_exclude(spec, releases):
     releases[0]["tender"]["items"] = releases[0]["tender"]["items"] * 6
     for _ in spec.process_items(releases):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}, "exclude": ["tenders_items"]})
+    options = FlattenOptions(selection={"tenders": {"split": True}}, exclude=["tenders_items"])
     flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert "tenders" in all_rows
     assert "tenders_items" not in all_rows
 
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    options = FlattenOptions(selection={"tenders": {"split": True}})
     flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert "tenders" in all_rows
@@ -183,11 +169,11 @@ def test_flatten_with_exclude(spec, releases):
 
 def test_flatten_with_only(spec_analyzed, releases):
     options = FlattenOptions(
-        **{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}, "parties": {"split": False}}}
+        selection={"tenders": {"split": True, "only": ["/tender/id"]}, "parties": {"split": False}}
     )
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert all_rows["tenders"]
@@ -195,10 +181,10 @@ def test_flatten_with_only(spec_analyzed, releases):
     for row in all_rows["tenders"]:
         assert not set(row).difference(["/tender/id", "rowID", "ocid", "parentID", "id"])
 
-    options = FlattenOptions(**{"selection": {"tenders": {"split": False, "only": ["/tender/id"]}}})
+    options = FlattenOptions(selection={"tenders": {"split": False, "only": ["/tender/id"]}})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
 
@@ -208,10 +194,10 @@ def test_flatten_with_only(spec_analyzed, releases):
 
 
 def test_flatten_should_not_split(spec_analyzed, releases):
-    options = FlattenOptions(**{"selection": {"tenders": {"split": False}}})
+    options = FlattenOptions(selection={"tenders": {"split": False}})
     flattener = Flattener(options, spec_analyzed.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
     assert "tender_items" not in all_rows
@@ -231,8 +217,8 @@ def test_flatten_should_not_split(spec_analyzed, releases):
 @pytest.mark.parametrize(
     "options",
     [
-        FlattenOptions(**{"selection": {"tenders": {"split": True}, "tenders_items": {"split": False}}}),
-        FlattenOptions(**{"selection": {"tenders": {"split": True}}}),
+        FlattenOptions(selection={"tenders": {"split": True}, "tenders_items": {"split": False}}),
+        FlattenOptions(selection={"tenders": {"split": True}}),
     ],
 )
 def test_flatten_splitted_with_child(spec, releases, options):
@@ -241,7 +227,7 @@ def test_flatten_splitted_with_child(spec, releases, options):
         pass
     flattener = Flattener(options, spec.tables)
     all_rows = defaultdict(list)
-    for count, flat in flattener.flatten(releases):
+    for _, flat in flattener.flatten(releases):
         for name, rows in flat.items():
             all_rows[name].extend(rows)
 
@@ -264,10 +250,8 @@ def test_flatten_splitted_with_child(spec, releases, options):
 
 def test_flatten_string_arrays(spec_analyzed, releases):
     options = FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True}, "parties": {"split": True}},
-            "exclude": ["tenders_items", "parties_ids", "tenders_tenderers"],
-        }
+        selection={"tenders": {"split": True}, "parties": {"split": True}},
+        exclude=["tenders_items", "parties_ids", "tenders_tenderers"],
     )
     flattener = Flattener(options, spec_analyzed.tables)
     fields = ["submissionMethod", "roles"]
@@ -286,20 +270,20 @@ def test_flatten_string_arrays(spec_analyzed, releases):
 
 
 def test_flatten_only_no_default_columns(spec_analyzed, releases):
-    options = FlattenOptions(**{"selection": {"tenders": {"split": False, "only": ["/tender/id"]}}})
+    options = FlattenOptions(selection={"tenders": {"split": False, "only": ["/tender/id"]}})
     flattener = Flattener(options, spec_analyzed.tables)
     for _count, flat in flattener.flatten(releases):
-        for name, rows in flat.items():
+        for rows in flat.values():
             for row in rows:
                 assert not set(row.keys()).difference({"/tender/id"})
 
 
 def test_flatten_buyer(spec_analyzed, releases):
-    options = FlattenOptions(**{"selection": {"parties": {"split": True}}, "exclude": ["parties_ids"]})
+    options = FlattenOptions(selection={"parties": {"split": True}}, exclude=["parties_ids"])
     flattener = Flattener(options, spec_analyzed.tables)
     for count, flat in flattener.flatten(releases):
         buyer = search(f"[{count}].buyer", releases)
-        for name, rows in flat.items():
+        for rows in flat.values():
             for row in rows:
                 if buyer:
                     assert "/buyer/id" in row

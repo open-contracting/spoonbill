@@ -40,8 +40,8 @@ class CSVWriter(BaseWriter):
                 LOGGER.info(_("Dumping table '{}' to file '{}'").format(table_name, path))
                 fd = open(path, "w")
             except OSError as e:
-                LOGGER.error(_("Failed to open file {} with error {}").format(path, e))
-                return
+                LOGGER.error(_("Failed to open file {} with error {}").format(path, e))  # noqa: TRY400 # UX
+                return None
             writer = csv.DictWriter(fd, headers)
             self.fds.append(fd)
             self.writers[name] = writer
@@ -51,7 +51,7 @@ class CSVWriter(BaseWriter):
             try:
                 writer.writerow(headers)
             except ValueError as err:
-                LOGGER.error(_("Failed to headers with error {}").format(err))
+                LOGGER.error(_("Failed to headers with error {}").format(err))  # noqa: TRY400 # UX
         return self
 
     def __exit__(self, *args):
@@ -70,7 +70,11 @@ class CSVWriter(BaseWriter):
         try:
             self.writers[table].writerow(row)
         except ValueError as err:
-            LOGGER.error(_("Operation produced invalid path. This a software bug, please send issue to developers"))
-            LOGGER.error(_("Failed to write row {} with error {}").format(row.get("rowID"), err))
+            LOGGER.error(  # noqa: TRY400 # UX
+                _("Operation produced invalid path. This a software bug, please send issue to developers")
+            )
+            LOGGER.error(  # noqa: TRY400 # UX
+                _("Failed to write row {} with error {}").format(row.get("rowID"), err)
+            )
         except KeyError:
-            LOGGER.error(_("Invalid table {}").format(table))
+            LOGGER.error(_("Invalid table {}").format(table))  # noqa: TRY400 # UX

@@ -1,9 +1,11 @@
+from __future__ import annotations
+
+import functools
 import logging
 import pickle
 from collections import defaultdict, deque
-from functools import lru_cache
 from pathlib import Path
-from typing import List, Mapping
+from typing import TYPE_CHECKING
 
 import jsonref
 from flatten_dict import flatten
@@ -23,6 +25,9 @@ from spoonbill.utils import (
     resolve_file_uri,
     validate_type,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 LOGGER = logging.getLogger("spoonbill")
 LOGGER.addFilter(RepeatFilter())
@@ -46,12 +51,13 @@ class DataPreprocessor:
     def __init__(
         self,
         schema: Mapping,
-        root_tables: Mapping[str, List],
-        combined_tables: Mapping[str, List] = None,
-        tables: Mapping[str, Table] = None,
+        root_tables: Mapping[str, list],
+        combined_tables: Mapping[str, list] | None = None,
+        tables: Mapping[str, Table] | None = None,
         table_threshold=TABLE_THRESHOLD,
         total_items=0,
         language=LOCALE,
+        *,
         multiple_values=False,
         pkg_type=None,
         with_preview=True,
@@ -88,7 +94,7 @@ class DataPreprocessor:
             return JOINABLE
         return [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
 
-    def init_tables(self, tables, is_combined=False):
+    def init_tables(self, tables, *, is_combined=False):
         """
         Initialize the root tables with default fields.
         """
@@ -102,12 +108,6 @@ class DataPreprocessor:
     def load_schema(
         self,
     ):
-        """"""
-        # if isinstance(self.schema, (str, Path)):
-        #     self.schema = resolve_file_uri(self.schema)
-        # if not isinstance(self.schema, jsonref.JsonRef):
-        #     self.schema = jsonref.JsonRef.replace_refs(self.schema)
-
         if isinstance(self.schema, (str, Path)):
             self.schema = resolve_file_uri(self.schema)
         self.init_tables(self.root_tables)
@@ -126,59 +126,54 @@ class DataPreprocessor:
         Extract information from the schema.
         """
         self.load_schema()
-        # self.prepare_tables()
         proxy = add_paths_to_schema(self.schema)
         to_analyze = deque([("", "", {}, proxy)])
 
-        # TODO: check if recursion is better for field ordering
         while to_analyze:
             path, parent_key, parent, prop = to_analyze.pop()
             if prop.get("deprecated"):
                 continue
-            # TODO: handle oneOf anyOf allOf
             properties = prop.get("properties", {})
-            if properties:
-                for key, item in properties.items():
-                    if key in ("$title", "$path"):
-                        continue
-                    if item.get("deprecated"):
-                        continue
-                    if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
-                        continue
-
-                    typeset = extract_type(item)
-                    pointer = self.join_path(path, key)
-                    self.current_table = self.get_table(pointer)
-
-                    if not self.current_table:
-                        continue
-
-                    self.current_table.types[pointer] = typeset
-
-                    if "object" in typeset:
-                        to_analyze.append((pointer, key, properties, item))
-                    elif "array" in typeset:
-                        items = item["items"]
-                        items_type = extract_type(items)
-                        if set(items_type) & {"array", "object"}:
-                            if pointer not in self.current_table.path:
-                                # found child array, need to create child table
-                                key = self.name_check(parent_key, key)
-                                self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
-                            to_analyze.append((pointer, key, properties, items))
-                        else:
-                            # This means we in array of strings, so this becomes a single joinable column
-                            typeset = ARRAY.format(items_type)
-                            self.current_table.types[pointer] = JOINABLE
-                            self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
-                    else:
-                        if self.current_table.is_combined:
-                            pointer = SEPARATOR + self.join_path(parent_key, key)
-                        self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
-
-            else:
-                # TODO: not sure what to do here
+            if not properties:
                 continue
+
+            for key, item in properties.items():
+                if key in ("$title", "$path"):
+                    continue
+                if item.get("deprecated"):
+                    continue
+                if hasattr(item, "__reference__") and item.__reference__.get("deprecated"):
+                    continue
+
+                typeset = extract_type(item)
+                pointer = self.join_path(path, key)
+                self.current_table = self.get_table(pointer)
+
+                if not self.current_table:
+                    continue
+
+                self.current_table.types[pointer] = typeset
+
+                if "object" in typeset:
+                    to_analyze.append((pointer, key, properties, item))
+                elif "array" in typeset:
+                    items = item["items"]
+                    items_type = extract_type(items)
+                    if set(items_type) & {"array", "object"}:
+                        if pointer not in self.current_table.path:
+                            # found child array, need to create child table
+                            key = self.name_check(parent_key, key)
+                            self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
+                        to_analyze.append((pointer, key, properties, items))
+                    else:
+                        # This means we in array of strings, so this becomes a single joinable column
+                        typeset = ARRAY.format(items_type)
+                        self.current_table.types[pointer] = JOINABLE
+                        self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
+                else:
+                    if self.current_table.is_combined:
+                        pointer = SEPARATOR + self.join_path(parent_key, key)
+                    self.current_table.add_column(pointer, typeset, pointer, header=item["$title"])
 
     def add_column(self, pointer, typeset):
         self.current_table.add_column(pointer, typeset, pointer)
@@ -189,7 +184,7 @@ class DataPreprocessor:
         self.get_table.cache_clear()
 
     def add_additional_table(self, pointer, abs_pointer, parent_key, key, item):
-        LOGGER.debug(_("Detected additional table: %s") % pointer)
+        LOGGER.debug(_("Detected additional table: %s") % pointer)  # noqa: G002 # false positive
         self.current_table.types[pointer] = ["array"]
         self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
         # add columns beforehand because it might be required
@@ -207,7 +202,7 @@ class DataPreprocessor:
                         header=ppointer,
                     )
 
-    @lru_cache(maxsize=None)
+    @functools.cache  # noqa: B019
     def get_table(self, path):
         """
         Get the table that best matches the given path.
@@ -217,7 +212,7 @@ class DataPreprocessor:
         """
         candidates = get_matching_tables(self.tables, path)
         if not candidates:
-            return
+            return None
         return candidates[0]
 
     def add_preview_row(self, rows, item_id, parent_key):
@@ -253,14 +248,13 @@ class DataPreprocessor:
         return (pointer, pointer)
 
     def is_type_matched(self, pointer, item, item_type):
-        # TODO: this validation should probably be smarter with arrays
         if item_type and item_type != JOINABLE and not validate_type(item_type, item):
             LOGGER.error("Mismatched type on %s expected %s", pointer, item_type)
             return False
         return True
 
     def add_joinable_column(self, abs_pointer, pointer):
-        LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))
+        LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))  # noqa: G002 # false positive
         self.current_table.types[pointer] = JOINABLE
         self.current_table.add_column(
             pointer, JOINABLE, pointer, additional=True, abs_path=abs_pointer, header=pointer
@@ -284,7 +278,7 @@ class DataPreprocessor:
         for table in self.tables.values():
             table.filter_columns(drop)
 
-    def process_items(self, releases, with_preview=True):
+    def process_items(self, releases, *, with_preview=True):
         """
         Analyze releases.
 
@@ -357,7 +351,7 @@ class DataPreprocessor:
                             else:
                                 parent_table = self.current_table.parent
                                 if pointer not in parent_table.arrays:
-                                    LOGGER.debug(_("Detected additional table: %s") % pointer)
+                                    LOGGER.debug(_("Detected additional table: %s") % pointer)  # noqa: G002 # false positive
                                     self.current_table.types[pointer] = ["array"]
                                     parent_table = self.current_table
                                     self.add_additional_table(pointer, abs_pointer, parent_key, key, item)
@@ -386,7 +380,7 @@ class DataPreprocessor:
                             if col:
                                 if abs_pointer not in self.current_table:
                                     parent = self.current_table.parent
-                                    parent.add_array_column(col, pointer, abs_pointer, max=self.table_threshold)
+                                    parent.add_array_column(col, pointer, abs_pointer, self.table_threshold)
                             else:
                                 self.current_table.add_column(
                                     pointer,
@@ -396,11 +390,13 @@ class DataPreprocessor:
                                     abs_path=abs_pointer,
                                 )
                             self.current_table.inc_column(abs_pointer, pointer)
-                            if item and self.with_preview and count < PREVIEW_ROWS:
-                                if not pointer.startswith("/buyer"):
-                                    self.current_table.set_preview_path(
-                                        abs_pointer, pointer, item, self.table_threshold
-                                    )
+                            if (
+                                item
+                                and self.with_preview
+                                and count < PREVIEW_ROWS
+                                and not pointer.startswith("/buyer")
+                            ):
+                                self.current_table.set_preview_path(abs_pointer, pointer, item, self.table_threshold)
             yield count
         self.clean_up_missing_arrays()
         self.total_items = count
@@ -415,10 +411,12 @@ class DataPreprocessor:
             with open(path, "wb") as fd:
                 pickle.dump(self, fd)
         except OSError as e:
-            LOGGER.error(_("Failed to dump DataPreprocessor to file. Error: {}").format(e))
+            LOGGER.error(  # noqa: TRY400 # UX
+                _("Failed to dump DataPreprocessor to file. Error: {}").format(e)
+            )
 
     @classmethod
-    def restore(_cls, path):
+    def restore(cls, path):
         """
         Restore a data preprocessor's state from a file.
 
@@ -426,9 +424,9 @@ class DataPreprocessor:
         """
         try:
             with open(path, "rb") as fd:
-                return pickle.load(fd)
+                return pickle.load(fd)  # noqa: S301 # our data
         except (TypeError, pickle.UnpicklingError):
-            LOGGER.error(_("Invalid pickle file. Can't restore."))
+            LOGGER.error(_("Invalid pickle file. Can't restore."))  # noqa: TRY400 # UX
 
     def extend_table_types(self, pointer, item):
         """
@@ -437,6 +435,9 @@ class DataPreprocessor:
         :param item: Item being analyzed
         """
         table = self.current_table
-        if pointer not in table.types and pointer not in table.path:
-            if any(common_prefix(pointer, path) for path in table.path):
-                self.current_table.types[pointer] = self.guess_type(item)
+        if (
+            pointer not in table.types
+            and pointer not in table.path
+            and any(common_prefix(pointer, path) for path in table.path)
+        ):
+            self.current_table.types[pointer] = self.guess_type(item)

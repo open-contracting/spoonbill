@@ -32,7 +32,6 @@ class BaseWriter:
         :return: Mapping between the machine-readable headers and the output headers
         """
         split = options.split and (table.rolled_up or table.splitted)
-        # split = options.split and table.splitted
         if table.parent != "" and table.child_tables:
             split = True
         headers = {c: c for c in table.available_rows(split=split)}
@@ -47,15 +46,14 @@ class BaseWriter:
                 headers[c] = table.titles.get(c, c)
                 for k, v in headers.items():
                     headers[k] = self.schema_headers.get_header(k, v)
-            for col in headers.keys():
+            for col in headers:
                 for char in col:
                     if char.isnumeric() and char != "0":
                         title_col = col.replace(char, "0")
                         headers[col] = headers[title_col]
 
         if options.headers:
-            for c, h in options.headers.items():
-                headers[c] = h
+            headers.update(options.headers)
         return headers
 
     def _name_check(self, table_name):

@@ -87,7 +87,7 @@ def test_table_typo():
             result = runner.invoke(cli, [option, "missing", "data.json"])
             assert result.exit_code == 2
             assert "Invalid value" in result.output
-            assert "Wrong selection, table 'missing' does not exist"
+            assert "Wrong selection, table 'missing' does not exist" in result.output
 
 
 def test_with_schema():

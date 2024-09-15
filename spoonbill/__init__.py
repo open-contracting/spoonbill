@@ -53,7 +53,7 @@ class FileAnalyzer:
         self.pkg_type = pkg_type
         self.order = None
 
-    def analyze_file(self, filenames, with_preview=True):
+    def analyze_file(self, filenames, *, with_preview=True):
         """Analyze provided file
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
@@ -115,7 +115,6 @@ class FileAnalyzer:
         if not title:
             raise ValueError(_("Incomplete schema, please make sure your data is correct"))
         if "package" in title:
-            # TODO: is is a good way to get release/record schema
             schema = jsonref.JsonRef.replace_refs(schema)
             schema = schema["properties"][pkg_type]["items"]
 
@@ -167,13 +166,13 @@ class FileFlattener:
         csv=None,
         xlsx="result.xlsx",
         language=LOCALE,
+        *,
         multiple_values=False,
         schema=None,
     ):
         self.tables = tables if tables else analyzer.spec.tables
         self.flattener = Flattener(options, self.tables, language=language)
         self.workdir = Path(workdir)
-        # TODO: detect package, where?
         self.writers = []
         self.csv = csv
         self.xlsx = xlsx

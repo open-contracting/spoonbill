@@ -39,8 +39,8 @@ ABBREVIATION_TABLE_NAME = {
 GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
 
 
-@functools.lru_cache(maxsize=None)
-def common_prefix(path, subpath, separator="/"):
+@functools.cache
+def common_prefix(a, b, separator="/"):
     """Given two paths, returns the longest common sub-path.
 
     >>> common_prefix('/contracts', '/contracts/items')
@@ -52,21 +52,20 @@ def common_prefix(path, subpath, separator="/"):
     >>> common_prefix('/tender/items/0/additionalClassifications/0/id', '/tender/items/0')
     '/tender/items/0'
     """
-    paths = [path.split(separator), subpath.split(separator)]
-    if len(paths[0]) <= len(paths[1]):
-        s1, s2 = paths
-    else:
-        s2, s1 = paths
-    for i, path in enumerate(s1):
-        if path != s2[i]:
-            common = s1[:i]
+    a, b = a.split(separator), b.split(separator)
+    # Make `a` the shortest tuple.
+    if len(a) > len(b):
+        a, b = b, a
+    for i, path in enumerate(a):
+        if path != b[i]:
+            common = a[:i]
             break
     else:
-        common = s1
+        common = a
     return separator.join(common)
 
 
-def iter_file(fd, root, multiple_values=False):
+def iter_file(fd, root, *, multiple_values=False):
     """Iterate over `root` array in file provided by `filename` using ijson
 
     :param fd: File descriptor
@@ -121,10 +120,7 @@ def validate_type(type_, item):
     >>> validate_type(['object'], {})
     True
     """
-    if isinstance(item, Number):
-        name = "number"
-    else:
-        name = type(item).__name__
+    name = "number" if isinstance(item, Number) else type(item).__name__
     expected = PYTHON_TO_JSON_TYPE.get(name)
     if expected:
         return expected in type_
@@ -157,11 +153,9 @@ def get_matching_tables(tables, path):
     :param path: Path like string
     :return: List of matched by path tables
     """
-    candidates = []
-    for table in tables.values():
-        for candidate in table.path:
-            if common_prefix(candidate, path) == candidate:
-                candidates.append(table)
+    candidates = [
+        table for table in tables.values() for candidate in table.path if common_prefix(candidate, path) == candidate
+    ]
 
     return sorted(candidates, key=lambda c: max(len(p) for p in c.path), reverse=True)
 
@@ -186,10 +180,7 @@ def generate_table_name(parent_table, parent_key, key):
     if key in ABBREVIATION_KEY:
         key = ABBREVIATION_KEY[key]
 
-    if parent_key in parent_table:
-        table_name = f"{parent_table}_{key}"
-    else:
-        table_name = f"{parent_table}_{parent_key}_{key}"
+    table_name = f"{parent_table}_{key}" if parent_key in parent_table else f"{parent_table}_{parent_key}_{key}"
 
     if table_name in ABBREVIATION_TABLE_NAME:
         table_name = ABBREVIATION_TABLE_NAME[table_name]
@@ -208,8 +199,7 @@ def insert_after_key(columns, insert, last_key):
     for key, val in columns.items():
         data[key] = val
         if key == last_key:
-            for k, v in insert.items():
-                data[k] = v
+            data.update(insert)
     return data
 
 
@@ -218,17 +208,20 @@ def resolve_file_uri(file_path):
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
-    if str(file_path).startswith("http://") or str(file_path).startswith("https://"):
-        return requests.get(file_path).json()
+    if str(file_path).startswith(("http://", "https://")):
+        response = requests.get(file_path, timeout=10)
+        response.raise_for_status()
+        return response.json()
     if isinstance(file_path, (str, Path)):
         with open(file_path, encoding="utf-8") as fd:
             return json.load(fd, object_pairs_hook=OrderedDict)
+    return None
 
 
 def read_lines(path):
     """Read file as lines"""
-    with open(path, encoding="utf-8") as fd:
-        return [line.strip() for line in fd.readlines()]
+    with open(path, encoding="utf-8") as f:
+        return [line.strip() for line in f]
 
 
 def get_pointer(table, abs_path, path, split, *, index=None):
@@ -247,7 +240,7 @@ def get_pointer(table, abs_path, path, split, *, index=None):
         paths = abs_path.split(SEPARATOR)
         prefix = ""
 
-        for index, pth in enumerate(paths, 1):
+        for i, pth in enumerate(paths, 1):  # noqa: B007: used after
             if pth.isdigit():
                 continue
             if not pth:
@@ -255,7 +248,7 @@ def get_pointer(table, abs_path, path, split, *, index=None):
             prefix = SEPARATOR.join((prefix, pth))
             if prefix == array:
                 break
-        pointer = SEPARATOR.join(paths[index:])
+        pointer = SEPARATOR.join(paths[i:])
         if pointer:
             return SEPARATOR.join((prefix, pointer))
         return prefix
@@ -299,8 +292,7 @@ def get_reader(path):
         first_bytes = f.read(2)
     if (first_bytes[0:1], first_bytes[1:2]) == GZIP_MAGIC_NUMBER:
         return gzip.open
-    else:
-        return open
+    return open
 
 
 def get_order(properties):
@@ -328,8 +320,7 @@ def nonschema_title_formatter(title):
     title = title.replace("  ", " ").replace("/", ": ")
     if title.startswith(": "):
         title = title[2:]
-    title = title.title()
-    return title
+    return title.title()
 
 
 class SchemaHeaderExtractor:
@@ -344,7 +335,7 @@ class SchemaHeaderExtractor:
         if not isinstance(self.schema, jsonref.JsonRef) and not isinstance(self.schema, OrderedDict):
             self.schema = jsonref.JsonRef.replace_refs(self.schema)
 
-    def _get_header(self, id, paths):
+    def _get_header(self, header, paths):
         final_title = []
         for path in paths:
             _object = Cut(self.schema)["properties." + ".".join(path[:-1])]
@@ -355,19 +346,18 @@ class SchemaHeaderExtractor:
             if isinstance(title, dict):
                 continue
             final_title.append(title)
-        if id.startswith("/documents"):
+        if header.startswith("/documents"):
             final_title = final_title[3:]
         if "Organization reference" in final_title:
             final_title.remove("Organization reference")
         return ": ".join(final_title)
 
-    def get_header(self, id, paths):
+    def get_header(self, header, paths):
         if paths and isinstance(paths, list):
-            return self._get_header(id, paths)
-        elif paths == []:
-            return nonschema_title_formatter(id)
-        else:
-            return nonschema_title_formatter(paths)
+            return self._get_header(header, paths)
+        if paths == []:
+            return nonschema_title_formatter(header)
+        return nonschema_title_formatter(paths)
 
 
 def generate_paths(source):
@@ -380,7 +370,7 @@ def generate_paths(source):
     if isinstance(source, dict):
         for k, v in source.items():
             paths.append([k])
-            paths += [[k] + x for x in generate_paths(v)]
+            paths += [[k, *x] for x in generate_paths(v)]
     return paths
 
 
@@ -393,7 +383,7 @@ def add_paths_to_schema(schema):
     """
     proxy = Cut(copy.deepcopy(schema))
     updated_items = {}
-    for table in proxy["properties"].keys():
+    for table in proxy["properties"]:
         path_item = Cut({table: copy.deepcopy(proxy["properties"][table])})
         # Generating path to each title in schema
         for path in generate_paths({table: proxy["properties"][table]}):
@@ -412,24 +402,23 @@ def add_paths_to_schema(schema):
     return proxy
 
 
-def title_path(schema, path=[]):
+def title_path(schema, path=()):
     """
     Get path for each previous title and form full list of titles for each object
     :param schema: Object
     :param path: List of paths for full title
     :return:
     """
-    for k, v in schema.items():
-        newpath = path
+    for value in schema.values():
+        newpath = list(path)
         if "$path" in schema:
-            newpath = path + [schema.get("$path", [])]
-        if isinstance(v, dict):
-            for result in title_path(v, newpath):
+            newpath.append(schema["$path"])
+        if isinstance(value, dict):
+            for result in title_path(value, newpath):
                 if result:
                     yield result
-        else:
-            if newpath:
-                yield newpath
+        elif newpath:
+            yield newpath
 
 
 def get_nestiness(abs_path):

@@ -1,10 +1,10 @@
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping
+from typing import Any
 
 
 class MappingBase(MutableMapping):
-    data: List[Mapping[str, Any]]
+    data: list[Mapping[str, Any]]
 
     def __getitem__(self, key):
         return self.data[key]
@@ -12,7 +12,7 @@ class MappingBase(MutableMapping):
     def __setitem__(self, key, value):
         self.data[key] = value
 
-    def __delitem__(self, key, value):
+    def __delitem__(self, key):
         del self.data[key]
 
     def __iter__(self):
@@ -33,7 +33,7 @@ class Row(MappingBase):
 
     row_id: str
     table_name: str
-    data: List[Mapping[str, Any]]
+    data: list[Mapping[str, Any]]
     parent: object
 
 
@@ -45,7 +45,7 @@ class Rows(MappingBase):
 
     ocid: str
     buyer: Mapping[str, str]
-    data: Mapping[str, List[Row]] = field(default_factory=list)
+    data: Mapping[str, list[Row]] = field(default_factory=list)
     row: Row = ""
 
     def new_row(self, table, item_id):

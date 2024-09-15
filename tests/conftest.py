@@ -38,11 +38,7 @@ def releases_extension():
 
 @pytest.fixture
 def flatten_options():
-    return FlattenOptions(
-        **{
-            "selection": {"tenders": {"split": True}, "parties": {"split": False}},
-        }
-    )
+    return FlattenOptions(selection={"tenders": {"split": True}, "parties": {"split": False}})
 
 
 @pytest.fixture

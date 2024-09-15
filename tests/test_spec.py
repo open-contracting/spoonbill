@@ -143,7 +143,7 @@ def test_add_child_table(root_table):
     assert child.name == "tenders_tenderers"
     assert child.name in root_table.child_tables
     assert child.total_rows == 0
-    child.parent == root_table.name
+    assert child.parent == root_table
 
 
 def test_get_pointer(root_table):

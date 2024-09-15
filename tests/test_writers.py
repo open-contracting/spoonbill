@@ -49,16 +49,14 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
     for _ in spec.process_items(releases):
         pass
     options = FlattenOptions(
-        **{
-            "selection": {
-                "tenders": {"split": True, "pretty_headers": True},
-                "parties": {"split": False, "pretty_headers": True},
-                "tenders_items": {
-                    "split": True,
-                    "headers": {"/tender/items/id": "item id"},
-                    "pretty_headers": True,
-                },
-            }
+        selection={
+            "tenders": {"split": True, "pretty_headers": True},
+            "parties": {"split": False, "pretty_headers": True},
+            "tenders_items": {
+                "split": True,
+                "headers": {"/tender/items/id": "item id"},
+                "pretty_headers": True,
+            },
         }
     )
     tables = {
@@ -127,7 +125,6 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
             "Parties: Organization: Address: Street Address",
             "Buyer: Organization Id",
             "Buyer: Organization Name",
-            "Parties: Test",
         ],
         "tenders_items": [
             "Ocid",
@@ -150,7 +147,7 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
     get_writers(workdir, tables, options, schema)
     xlsx = workdir / "result.xlsx"
 
-    for name, opts in options.selection.items():
+    for name in options.selection:
         path = workdir / f"{name}.csv"
         xlsx_headers = read_xlsx_headers(xlsx, name)
         csv_headers = read_csv_headers(path)
@@ -159,24 +156,22 @@ def test_writers_pretty_headers(spec, tmpdir, releases, schema):
         assert not set(headers).difference(set(csv_headers))
 
     options = FlattenOptions(
-        **{
-            "selection": {
-                "tenders": {
-                    "split": True,
-                    "headers": {"/tender/id": "TENDER"},
-                    "pretty_headers": True,
-                },
-                "tenders_items": {
-                    "split": True,
-                    "headers": {"/tender/items/id": "item id"},
-                    "pretty_headers": True,
-                },
-                "parties": {
-                    "split": False,
-                    "headers": {"/parties/id": "PARTY"},
-                    "pretty_headers": True,
-                },
-            }
+        selection={
+            "tenders": {
+                "split": True,
+                "headers": {"/tender/id": "TENDER"},
+                "pretty_headers": True,
+            },
+            "tenders_items": {
+                "split": True,
+                "headers": {"/tender/items/id": "item id"},
+                "pretty_headers": True,
+            },
+            "parties": {
+                "split": False,
+                "headers": {"/parties/id": "PARTY"},
+                "pretty_headers": True,
+            },
         }
     )
 
@@ -214,21 +209,19 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
     for _ in spec.process_items(releases):
         pass
     options = FlattenOptions(
-        **{
-            "selection": {
-                "tenders": {"split": True, "pretty_headers": True},
-                "parties": {"split": True, "pretty_headers": True},
-                "tenders_items": {
-                    "split": False,
-                    "pretty_headers": True,
-                },
-                "parties_ids": {
-                    "split": False,
-                    "pretty_headers": True,
-                },
+        selection={
+            "tenders": {"split": True, "pretty_headers": True},
+            "parties": {"split": True, "pretty_headers": True},
+            "tenders_items": {
+                "split": False,
+                "pretty_headers": True,
             },
-            "count": True,
-        }
+            "parties_ids": {
+                "split": False,
+                "pretty_headers": True,
+            },
+        },
+        count=True,
     )
 
     workdir = Path(tmpdir)
@@ -241,7 +234,6 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
         pass
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
-    # TODO: xlsx headers
     headers = read_csv_headers(path)
     assert "Tender: Items Count" in headers
     assert "Tender: Tenderers Count" in headers
@@ -254,16 +246,14 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
 
 def test_writers_table_name_override(spec, tmpdir, schema):
     options = FlattenOptions(
-        **{
-            "selection": {
-                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
-                "tenders": {"split": True, "pretty_headers": True, "name": "my_tenders"},
-                "tenders_items": {"split": False, "pretty_headers": True, "name": "pretty_items"},
-            }
+        selection={
+            "parties": {"split": False, "pretty_headers": True, "name": "testname"},
+            "tenders": {"split": True, "pretty_headers": True, "name": "my_tenders"},
+            "tenders_items": {"split": False, "pretty_headers": True, "name": "pretty_items"},
         }
     )
     tables = prepare_tables(spec, options)
-    for name, table in tables.items():
+    for table in tables.values():
         for col in table:
             table.inc_column(col, col)
 
@@ -279,17 +269,15 @@ def test_writers_table_name_override(spec, tmpdir, schema):
 
 def test_abbreviations(spec, tmpdir):
     options = FlattenOptions(
-        **{
-            "selection": {
-                "tenders_items_class": {"split": False},
-                "parties_ids": {"split": False},
-                "transactions": {"split": False},
-            }
+        selection={
+            "tenders_items_class": {"split": False},
+            "parties_ids": {"split": False},
+            "transactions": {"split": False},
         }
     )
     new_names = ["tenders_items_class", "parties_ids", "transactions"]
     tables = prepare_tables(spec, options)
-    for name, table in tables.items():
+    for table in tables.values():
         for col in table:
             table.inc_column(col, col)
 
@@ -306,16 +294,14 @@ def test_abbreviations(spec, tmpdir):
 def test_name_duplicate(spec, tmpdir, schema):
     duplicate_name = "test"
     options = FlattenOptions(
-        **{
-            "selection": {
-                "parties": {"split": False, "pretty_headers": True, "name": duplicate_name},
-                "tenders": {"split": True, "pretty_headers": True, "name": duplicate_name},
-                "tenders_items": {"split": False, "pretty_headers": True, "name": duplicate_name},
-            }
+        selection={
+            "parties": {"split": False, "pretty_headers": True, "name": duplicate_name},
+            "tenders": {"split": True, "pretty_headers": True, "name": duplicate_name},
+            "tenders_items": {"split": False, "pretty_headers": True, "name": duplicate_name},
         }
     )
     tables = prepare_tables(spec, options)
-    for name, table in tables.items():
+    for table in tables.values():
         for col in table:
             table.inc_column(col, col)
     workdir = Path(tmpdir)
@@ -330,15 +316,9 @@ def test_name_duplicate(spec, tmpdir, schema):
 
 @patch("spoonbill.LOGGER.error")
 def test_writers_invalid_table(log, spec, tmpdir, schema):
-    options = FlattenOptions(
-        **{
-            "selection": {
-                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
-            }
-        }
-    )
+    options = FlattenOptions(selection={"parties": {"split": False, "pretty_headers": True, "name": "testname"}})
     tables = prepare_tables(spec, options)
-    for name, table in tables.items():
+    for table in tables.values():
         for col in table:
             table.inc_column(col, col)
 
@@ -351,15 +331,9 @@ def test_writers_invalid_table(log, spec, tmpdir, schema):
 
 @patch("spoonbill.LOGGER.error")
 def test_writers_invalid_row(log, spec, tmpdir, schema):
-    options = FlattenOptions(
-        **{
-            "selection": {
-                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
-            }
-        }
-    )
+    options = FlattenOptions(selection={"parties": {"split": False, "pretty_headers": True, "name": "testname"}})
     tables = prepare_tables(spec, options)
-    for name, table in tables.items():
+    for table in tables.values():
         for col in table:
             table.inc_column(col, col)
 
@@ -378,15 +352,9 @@ def test_writers_invalid_row(log, spec, tmpdir, schema):
 
 
 @patch("spoonbill.LOGGER.error")
-@patch("spoonbill.writers.csv.open", **{"side_effect": OSError("test")})
+@patch("spoonbill.writers.csv.open", side_effect=OSError("test"))
 def test_writers_open_fail(open_, log, spec, tmpdir):
-    options = FlattenOptions(
-        **{
-            "selection": {
-                "parties": {"split": False, "pretty_headers": True, "name": "testname"},
-            }
-        }
-    )
+    options = FlattenOptions(selection={"parties": {"split": False, "pretty_headers": True, "name": "testname"}})
     workdir = Path(tmpdir)
     tables = prepare_tables(spec, options)
     get_writers(workdir, tables, options)
@@ -450,14 +418,14 @@ def test_xlsx_writer(spec_analyzed, releases, flatten_options, tmpdir, schema):
                 for row in rows:
                     line = {headers[cell.column_letter]: cell.value for cell in sheet[counter[name]]}
                     row = row.as_dict()
-                    assert not set(row.keys()).difference(set(line.keys()))
+                    assert not set(row).difference(set(line))
                     for k, v in row.items():
                         assert str(v) == str(line[k])
                     counter[name] += 1
 
 
 def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
-    flatten_options = FlattenOptions(**{"selection": {"tenders": {"split": True, "only": ["/tender/id"]}}})
+    flatten_options = FlattenOptions(selection={"tenders": {"split": True, "only": ["/tender/id"]}})
     flattener = Flattener(flatten_options, spec_analyzed.tables)
     tables = prepare_tables(spec_analyzed, flatten_options)
     workdir = Path(tmpdir)
@@ -470,9 +438,7 @@ def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
     path = workdir / "result.xlsx"
     with open(path, "rb") as f:
         xlsx_reader = openpyxl.load_workbook(f)
-        column = []
-        for row in xlsx_reader["tenders"].rows:
-            column.append(row[0].value)
+        column = [row[0].value for row in xlsx_reader["tenders"].rows]
         assert column[0] == "/tender/id"
         assert xlsx_reader["tenders"].max_column == 1
 
@@ -480,7 +446,7 @@ def test_xlsx_only_no_default_columns(spec_analyzed, releases, tmpdir, schema):
 def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     for _ in spec.process_items(releases):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": True}}})
+    options = FlattenOptions(selection={"tenders": {"split": True}})
 
     workdir = Path(tmpdir)
     analyzer = FileAnalyzer(workdir)
@@ -511,7 +477,7 @@ def test_flatten_multiple_files(spec, tmpdir, releases, schema):
 def test_extension_export(spec, tmpdir, releases_extension, schema):
     for _ in spec.process_items(releases_extension):
         pass
-    options = FlattenOptions(**{"selection": {"tenders": {"split": False}, "documents": {"split": False}}})
+    options = FlattenOptions(selection={"tenders": {"split": False}, "documents": {"split": False}})
 
     workdir = Path(tmpdir)
     analyzer = FileAnalyzer(workdir)

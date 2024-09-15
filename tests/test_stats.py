@@ -1,9 +1,9 @@
 from operator import attrgetter
 from unittest.mock import call, mock_open, patch
 
+import pytest
 from jmespath import search
 from jsonpointer import resolve_pointer
-from pytest import fail
 
 from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table
@@ -101,7 +101,6 @@ def test_get_table(spec, releases):
     assert table.name == "parties"
 
 
-# TODO: analyze combined tables
 def test_analyze(spec, releases):
     list(spec.process_items(releases))
     tenders = spec.tables["tenders"]
@@ -118,11 +117,10 @@ def test_analyze(spec, releases):
     tender_items = sorted(search("[].tender.items", releases), reverse=True, key=len)
     max_len = len(tender_items[0])
     assert tenders.arrays["/tender/items"] == max_len
-    for index, item in enumerate(tender_items[0]):
+    for index, _ in enumerate(tender_items[0]):
         path = f"/tender/items/{index}/id"
         items = search(f"[].tender.items[{index}].id", releases)
         assert len(items) == tenders.combined_columns[path].hits
-        # assert len(items) == tenders.columns[path].hits
     items_ids = [i["id"] for item in tender_items for i in item]
     assert len(items_ids) == spec.tables["tenders_items"].total_rows
 
@@ -177,7 +175,6 @@ def test_dump_restore(log, spec, releases, tmpdir):
 
 def test_recalculate_headers(root_table, releases):
     items = releases[0]["tender"]["items"]
-    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, False)
     insert_after_key(root_table.combined_columns, "/tender", "items")
     for key in (
         "/tender/items/0/id",
@@ -189,7 +186,6 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.combined_columns
         assert key not in root_table.columns
     items = items * 2
-    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, False)
     insert_after_key(root_table.combined_columns, "/tender", "items")
 
     for key in (
@@ -223,7 +219,6 @@ def test_recalculate_headers(root_table, releases):
         assert key not in root_table.columns
 
     items = releases[0]["tender"]["items"] * 5
-    # insert_after_key(root_table, "/tender/items", "/tender", "items", items, True)
     insert_after_key(root_table.combined_columns, "/tender", "items")
     for key in ("/tender/items/0/id", "/tender/items/0/additionalClassifications/0/id"):
         assert key in root_table.combined_columns
@@ -240,11 +235,7 @@ def test_analyze_preview_rows(spec_analyzed, releases):
         for count, row in enumerate(getter(tenders)):
             tenderers = [r for r in getter(tenders_tende) if r["parentID"] == row["rowID"]]
             items = [r for r in getter(tenders_items) if r["parentID"] == row["rowID"]]
-            items_class = []
-            for it in items:
-                for r in getter(tenders_items_class):
-                    if r["parentID"] == it["rowID"]:
-                        items_class.append(r)
+            items_class = [r for it in items for r in getter(tenders_items_class) if r["parentID"] == it["rowID"]]
             for key, item in row.items():
                 if "/" in key:
                     # Check headers are present in tables
@@ -260,29 +251,26 @@ def test_analyze_preview_rows(spec_analyzed, releases):
                             for k, v in tenderer.items():
                                 if "/" in k:
                                     path = k.replace("/tender/tenderers", f"/tender/tenderers/{index}")
-                                    value = resolve_pointer(releases[count], path)
-                                    assert value == v
+                                    assert v == resolve_pointer(releases[count], path)
 
                     if "/tender/items/" in key:
                         for index, it in enumerate(reversed(items)):
                             assert it["parentTable"] == "tenders"
-                            for k, v in it.items():
-                                if "/" in k:
-                                    path = k.replace("/tender/items", f"/tender/items/{index}")
-                                    value = resolve_pointer(releases[count], path)
-                                    assert value == v
-                                    if "additionalClassifications" in k:
+                            for key2, value2 in it.items():
+                                if "/" in key2:
+                                    path = key2.replace("/tender/items", f"/tender/items/{index}")
+                                    assert value2 == resolve_pointer(releases[count], path)
+                                    if "additionalClassifications" in key2:
                                         for i, cls in enumerate(reversed(items_class)):
                                             assert cls["parentTable"] == "tenders_items"
-                                            for k, v in cls.items():
-                                                if "/" in k:
-                                                    path = k.replace("/tender/items", f"/tender/items/{index}")
+                                            for key3, value3 in cls.items():
+                                                if "/" in key3:
+                                                    path = key3.replace("/tender/items", f"/tender/items/{index}")
                                                     path = path.replace(
                                                         "/additionalClassifications/",
                                                         f"/additionalClassifications/{i}/",
                                                     )
-                                                    value = resolve_pointer(releases[count], path)
-                                                    assert v == value
+                                                    assert value3 == resolve_pointer(releases[count], path)
 
 
 def test_analyze_array_extentions_no_split(spec, releases):
@@ -365,7 +353,7 @@ def test_analyze_test_dataset(spec, test_dataset_releases):
     try:
         list(spec.process_items(test_dataset_releases))
     except AttributeError as e:
-        fail(f"{type(e).__name__}: {str(e)}")
+        pytest.fail(f"{type(e).__name__}: {e}")
 
 
 def test_analyze_with_combined_tables(spec, releases_with_combined_tables):

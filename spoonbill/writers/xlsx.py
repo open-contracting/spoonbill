@@ -46,7 +46,7 @@ class XlsxWriter(BaseWriter):
                 try:
                     sheet.write(0, col_index, headers[col_name])
                 except XlsxWriterException as err:
-                    LOGGER.error(
+                    LOGGER.error(  # noqa: TRY400 # UX
                         _("Failed to write header {} to xlsx sheet {} with error {}").format(col_name, name, err)
                     )
             self.row_counters[name] = 1
@@ -77,14 +77,18 @@ class XlsxWriter(BaseWriter):
             try:
                 col_index = columns[column]
             except KeyError:
-                LOGGER.error(
+                LOGGER.error(  # noqa: TRY400 # UX
                     _("Operation produced invalid path. This a software bug, please send issue to developers")
                 )
-                LOGGER.error(_("Failed to write column {} to xlsx sheet {}").format(column, table))
+                LOGGER.error(  # noqa: TRY400 # UX
+                    _("Failed to write column {} to xlsx sheet {}").format(column, table)
+                )
                 return
             try:
                 sheet.write(self.row_counters[table], col_index, value)
             except XlsxWriterException as err:
-                LOGGER.error(_("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err))
+                LOGGER.error(  # noqa: TRY400 # UX
+                    _("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err)
+                )
 
         self.row_counters[table] += 1

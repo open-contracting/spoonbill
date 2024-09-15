@@ -11,7 +11,8 @@ ROOT_TABLES = {
     "planning": ["/planning"],
     "parties": ["/parties", "/buyer"],
 }
-# TODO: extract types from schema? items and additionalClassifications as table?
+# TODO(quinta): extract types from schema? items and additionalClassifications as table?
+# https://github.com/open-contracting/spoonbill/issues/85
 COMBINED_TABLES = {
     "documents": [
         "/planning/documents",
@@ -42,7 +43,6 @@ DEFAULT_FIELDS = ["ocid", "id", "rowID", "parentID"]
 DEFAULT_FIELDS_COMBINED = ["ocid", "id", "rowID", "parentID", "parentTable"]
 
 ARRAY = "array of {}"
-# TODO: is joinable good name?
 JOINABLE = "joinable"
 JOINABLE_SEPARATOR = ";"
 TABLE_THRESHOLD = 5
