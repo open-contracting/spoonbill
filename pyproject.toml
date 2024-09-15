@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spoonbill"
-version = "1.0.13"
+version = "1.1.0"
 authors = [{name = "Open Contracting Partnership", email = "data@open-contracting.org"}]
 description = "Converts data that conforms to the Open Contracting Data Standard from JSON to Excel / CSV"
 readme = "README.rst"

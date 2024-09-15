@@ -1,14 +1,13 @@
 Changelog
 =========
 
-1.0.14 (Unreleased)
--------------------
+1.1.0 (2024-09-15)
+------------------
 
 Changed
 ~~~~~~~
 
--  Drop support for Python 3.8.
--  Some arguments must be keyword arguments:
+-  Some arguments must be keyword arguments in:
 
    -  ``spoonbill.FileAnalyzer.analyze_file``
    -  ``spoonbill.FileFlattener.__init__``
@@ -18,6 +17,8 @@ Changed
    -  ``spoonbill.stats.DataPreprocessor.init_tables``
    -  ``spoonbill.stats.DataPreprocessor.process_items``
    -  ``spoonbill.utils.iter_file``
+
+-  Drop support for Python 3.8.
 
 1.0.13 (2024-09-04)
 -------------------
