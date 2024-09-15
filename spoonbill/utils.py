@@ -240,7 +240,7 @@ def get_pointer(table, abs_path, path, split, *, index=None):
         paths = abs_path.split(SEPARATOR)
         prefix = ""
 
-        for i, pth in enumerate(paths, 1):  # noqa: B007: used after
+        for i, pth in enumerate(paths, 1):  # noqa: B007 # used after
             if pth.isdigit():
                 continue
             if not pth:
