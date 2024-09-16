@@ -162,7 +162,7 @@ class Table:
                 # e.g. /tender/items/166/relatedLot
                 combined_path = abs_path
                 col = replace(col, path=combined_path)
-            LOGGER.debug(_("Detected additional column: %s in %s table") % (path, self.name))  # noqa: G002 # false positive
+            LOGGER.debug(_("Detected additional column: %s in %s table"), path, self.name)
             self.additional_columns[combined_path] = col
 
         if not propagated:

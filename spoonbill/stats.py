@@ -178,7 +178,7 @@ class DataPreprocessor:
         self.get_table.cache_clear()
 
     def add_additional_table(self, pointer, abs_pointer, parent_key, key, item):
-        LOGGER.debug(_("Detected additional table: %s") % pointer)  # noqa: G002 # false positive
+        LOGGER.debug(_("Detected additional table: %s"), pointer)
         self.current_table.types[pointer] = ["array"]
         self._add_table(add_child_table(self.current_table, pointer, parent_key, key), pointer)
         # add columns beforehand because it might be required
@@ -248,7 +248,7 @@ class DataPreprocessor:
         return True
 
     def add_joinable_column(self, abs_pointer, pointer):
-        LOGGER.debug(_("Detected additional column: %s in %s table") % (abs_pointer, self.current_table.name))  # noqa: G002 # false positive
+        LOGGER.debug(_("Detected additional column: %s in %s table"), abs_pointer, self.current_table.name)
         self.current_table.types[pointer] = JOINABLE
         self.current_table.add_column(
             pointer, JOINABLE, pointer, additional=True, abs_path=abs_pointer, header=pointer
@@ -345,7 +345,7 @@ class DataPreprocessor:
                             else:
                                 parent_table = self.current_table.parent
                                 if pointer not in parent_table.arrays:
-                                    LOGGER.debug(_("Detected additional table: %s") % pointer)  # noqa: G002 # false positive
+                                    LOGGER.debug(_("Detected additional table: %s"), pointer)
                                     self.current_table.types[pointer] = ["array"]
                                     parent_table = self.current_table
                                     self.add_additional_table(pointer, abs_pointer, parent_key, key, item)
