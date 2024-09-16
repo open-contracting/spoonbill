@@ -92,9 +92,7 @@ class Table:
             if obj:
                 init = {}
                 for name, col in obj.items():
-                    if not is_dataclass(col):
-                        col = Column(**col)
-                    init[name] = col
+                    init[name] = col if is_dataclass(col) else Column(**col)
                 setattr(self, attr, init)
             cols = DEFAULT_FIELDS_COMBINED
             if self.is_root and not self.is_combined:
@@ -112,17 +110,11 @@ class Table:
         return [header for header, col in cols.items() if cond(col)]
 
     def missing_rows(self, *, split=True):
-        """
-        Return the columns that are available in the schema, but not present in the analyzed data.
-        """
-
+        """Return the columns that are available in the schema, but not present in the analyzed data."""
         return self._counter(split, lambda c: c.hits == 0)
 
     def available_rows(self, *, split=True):
-        """
-        Return the columns that are available in the analyzed data.
-        """
-
+        """Return the columns that are available in the analyzed data."""
         return self._counter(split, lambda c: c.hits > 0)
 
     def filter_columns(self, func):
@@ -189,10 +181,7 @@ class Table:
             self.types[path] = item_type
 
     def is_array(self, path):
-        """
-        Check whether the given path is in any table's arrays.
-        """
-
+        """Check whether the given path is in any table's arrays."""
         for array in sorted(self.arrays, reverse=True):
             if common_prefix(array, path) == array:
                 return array
@@ -234,10 +223,7 @@ class Table:
         return False
 
     def inc(self):
-        """
-        Increment the number of rows in the table.
-        """
-
+        """Increment the number of rows in the table."""
         self.total_rows += 1
         for col_name in DEFAULT_FIELDS_COMBINED:
             self.inc_column(col_name, col_name)

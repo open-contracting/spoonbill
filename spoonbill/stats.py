@@ -35,9 +35,7 @@ LOGGER.addFilter(RepeatFilter())
 
 class DataPreprocessor:
     """
-    Data analyzer
-
-    Processes the given schema and, based on this, extracts information from the iterable dataset.
+    Process the given schema and, based on this, extract information from the iterable dataset.
 
     :param schema: The dataset's schema
     :param root_tables: The paths which should become root tables
@@ -95,9 +93,7 @@ class DataPreprocessor:
         return [PYTHON_TO_JSON_TYPE.get(type(item).__name__)]
 
     def init_tables(self, tables, *, is_combined=False):
-        """
-        Initialize the root tables with default fields.
-        """
+        """Initialize the root tables with default fields."""
         for name, path in tables.items():
             table = Table(name, path, is_root=True, is_combined=is_combined, parent="")
             self.tables[name] = table
@@ -122,9 +118,7 @@ class DataPreprocessor:
             self.init_tables(self.combined_tables, is_combined=True)
 
     def parse_schema(self):
-        """
-        Extract information from the schema.
-        """
+        """Extract information from the schema."""
         self.load_schema()
         proxy = add_paths_to_schema(self.schema)
         to_analyze = deque([("", "", {}, proxy)])
@@ -178,7 +172,7 @@ class DataPreprocessor:
     def add_column(self, pointer, typeset):
         self.current_table.add_column(pointer, typeset, pointer)
 
-    def _add_table(self, table, pointer):
+    def _add_table(self, table, pointer):  # noqa: ARG002
         self.tables[table.name] = table
         self.current_table = table
         self.get_table.cache_clear()
@@ -215,7 +209,7 @@ class DataPreprocessor:
             return None
         return candidates[0]
 
-    def add_preview_row(self, rows, item_id, parent_key):
+    def add_preview_row(self, rows, item_id, parent_key):  # noqa: ARG002
         """
         Append a mostly-empty row to the previews.
 
@@ -260,7 +254,7 @@ class DataPreprocessor:
             pointer, JOINABLE, pointer, additional=True, abs_path=abs_pointer, header=pointer
         )
 
-    def handle_array_expanded(self, pointer, item, abs_path, key):
+    def handle_array_expanded(self, pointer, item, abs_path, key):  # noqa: ARG002
         splitted = len(item) >= self.table_threshold
         if splitted:
             self.current_table.split(pointer)
@@ -278,7 +272,7 @@ class DataPreprocessor:
         for table in self.tables.values():
             table.filter_columns(drop)
 
-    def process_items(self, releases, *, with_preview=True):
+    def process_items(self, releases, *, with_preview=True):  # noqa: ARG002
         """
         Analyze releases.
 
@@ -430,7 +424,8 @@ class DataPreprocessor:
 
     def extend_table_types(self, pointer, item):
         """
-        Check if path belong to table and expand its types
+        Check if path belong to table and expand its types.
+
         :param pointer: Path to an item
         :param item: Item being analyzed
         """

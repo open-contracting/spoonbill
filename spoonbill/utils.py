@@ -41,7 +41,8 @@ GZIP_MAGIC_NUMBER = (b"\x1f", b"\x8b")
 
 @functools.cache
 def common_prefix(a, b, separator="/"):
-    """Given two paths, returns the longest common sub-path.
+    """
+    Given two paths, return the longest common sub-path.
 
     >>> common_prefix('/contracts', '/contracts/items')
     '/contracts'
@@ -66,7 +67,8 @@ def common_prefix(a, b, separator="/"):
 
 
 def iter_file(fd, root, *, multiple_values=False):
-    """Iterate over `root` array in file provided by `filename` using ijson
+    """
+    Iterate over ``root`` array in file provided by ``filename`` using ijson.
 
     :param fd: File descriptor
     :param str root: Array field name inside file
@@ -85,7 +87,9 @@ def iter_file(fd, root, *, multiple_values=False):
 
 
 def extract_type(item):
-    """Extract item possible types from jsonschema definition.
+    """
+    Extract item possible types from jsonschema definition.
+
     >>> extract_type({'type': 'string'})
     ['string']
     >>> extract_type(None)
@@ -104,7 +108,9 @@ def extract_type(item):
 
 
 def validate_type(type_, item):
-    """Validate if python object corresponds to provided type
+    """
+    Validate if python object corresponds to provided type.
+
     >>> validate_type(['string'], 'test_string')
     True
     >>> validate_type(['number'], 11.1)
@@ -128,14 +134,14 @@ def validate_type(type_, item):
 
 
 def get_root(table):
-    """Extract top level toot table of `table`"""
+    """Extract top level toot table of `table`."""
     while table.parent:
         table = table.parent
     return table
 
 
 def combine_path(root, path, index="0", separator="/"):
-    """Generates index based header for combined column"""
+    """Generate index based header for combined column."""
     combined_path = path
     for array in sorted(root.arrays, reverse=True):
         if common_prefix(path, array) == array:
@@ -145,9 +151,10 @@ def combine_path(root, path, index="0", separator="/"):
 
 
 def get_matching_tables(tables, path):
-    """Get list of matching tables for provided path
+    """
+    Get list of matching tables for provided path.
 
-    Return list is sorted by longest matching path part
+    Return list is sorted by longest matching path part.
 
     :param tables: List of `Table' objects
     :param path: Path like string
@@ -161,7 +168,8 @@ def get_matching_tables(tables, path):
 
 
 def generate_table_name(parent_table, parent_key, key):
-    """Generates name for non root table, to be used as sheet name
+    """
+    Generate name for non root table, to be used as sheet name.
 
     :param str parent_table: Parent table name
     :param str parent_key: Parent object field name
@@ -176,7 +184,6 @@ def generate_table_name(parent_table, parent_key, key):
     >>> generate_table_name('parties', 'parties', 'roles')
     'parties_roles'
     """
-
     if key in ABBREVIATION_KEY:
         key = ABBREVIATION_KEY[key]
 
@@ -204,7 +211,9 @@ def insert_after_key(columns, insert, last_key):
 
 
 def resolve_file_uri(file_path):
-    """Read json file from provided uri
+    """
+    Read JSON file from provided URI.
+
     :param file_path: URI to file, could be url or path
     :return: Read file as dictionary
     """
@@ -219,16 +228,17 @@ def resolve_file_uri(file_path):
 
 
 def read_lines(path):
-    """Read file as lines"""
+    """Read file as lines."""
     with open(path, encoding="utf-8") as f:
         return [line.strip() for line in f]
 
 
-def get_pointer(table, abs_path, path, split, *, index=None):
-    """Combine path and abs_path in order to fit table columns
+def get_pointer(table, abs_path, path, split, *, index=None):  # noqa: ARG001
+    """
+    Combine path and abs_path in order to fit table columns.
 
-    For example /tender/items/0/id should be /tender/items/0/id for tenders table
-    but /tender/items/id for tenders_items table
+    For example, /tender/items/0/id should be /tender/items/0/id for tenders table
+    but /tender/items/id for tenders_items table.
     """
     array = table.is_array(path)
     if index and (array or table.is_combined):
@@ -256,9 +266,7 @@ def get_pointer(table, abs_path, path, split, *, index=None):
 
 
 class RepeatFilter(logging.Filter):
-    """
-    Logger filter to avoid repeating of same messages during file processing
-    """
+    """Logger filter to avoid repeating of same messages during file processing."""
 
     def filter(self, record):
         current_log = (record.module, record.levelno, record.msg)
@@ -269,7 +277,8 @@ class RepeatFilter(logging.Filter):
 
 
 def make_count_column(array):
-    """Make column name for arrays elements count
+    """
+    Make column name for arrays elements count.
 
     >>> make_count_column('/tender/items')
     '/tender/itemsCount'
@@ -278,13 +287,13 @@ def make_count_column(array):
     >>> make_count_column('/tender/items/')
     '/tender/itemsCount'
     """
-
     return array.rstrip("/") + "Count"
 
 
 def get_reader(path):
     """
-    Get reader function for a respective file format
+    Get reader function for a respective file format.
+
     :param path: path to a file
     :return: reader function
     """
@@ -304,7 +313,8 @@ def get_order(properties):
 
 def nonschema_title_formatter(title):
     """
-    Formatting a path, that is absent in schema, to human-readable form
+    Format a path, that is absent in schema, to human-readable form.
+
     :param title: str
     :return: formatted title
 
@@ -325,7 +335,7 @@ def nonschema_title_formatter(title):
 
 class SchemaHeaderExtractor:
     """
-    Human-readable headers extracted from schema
+    Human-readable headers extracted from schema.
 
     :param schema: The dataset's schema
     """
@@ -362,7 +372,8 @@ class SchemaHeaderExtractor:
 
 def generate_paths(source):
     """
-    Generate full paths for nested dictionary or alike object
+    Generate full paths for nested dictionary or alike object.
+
     :param source: Input object
     :return: List of paths
     """
@@ -376,7 +387,8 @@ def generate_paths(source):
 
 def add_paths_to_schema(schema):
     """
-    Extracts full path for each title in schema; creates paths list of full title for each
+    Extract full path for each title in schema. Create paths list of full title for each.
+
     :param unres_schema: Unresolved schema
     :param schema: Schema object that will be updated
     :return: Schema with full title paths
@@ -404,7 +416,8 @@ def add_paths_to_schema(schema):
 
 def title_path(schema, path=()):
     """
-    Get path for each previous title and form full list of titles for each object
+    Get path for each previous title and form full list of titles for each object.
+
     :param schema: Object
     :param path: List of paths for full title
     :return:

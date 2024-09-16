@@ -17,7 +17,9 @@ LOGGER = logging.getLogger("spoonbill")
 
 
 class FileAnalyzer:
-    """Main utility for analyzing files
+    """
+    Main utility for analyzing files.
+
     :param workdir: Working directory
     :param schema: Json schema file to use with data
     :param root_tables: Path configuration which should become root tables
@@ -53,8 +55,10 @@ class FileAnalyzer:
         self.pkg_type = pkg_type
         self.order = None
 
-    def analyze_file(self, filenames, *, with_preview=True):
-        """Analyze provided file
+    def analyze_file(self, filenames, *, with_preview=True):  # noqa: ARG002
+        """
+        Analyze provided file.
+
         :param filename: Input filename
         :param with_preview: Generate preview during analysis
         """
@@ -89,7 +93,9 @@ class FileAnalyzer:
         self.sort_tables()
 
     def dump_to_file(self, filename):
-        """Save analyzed information to file
+        """
+        Save analyzed information to file.
+
         :param filename: Output filename in working directory
         """
         path = self.workdir / filename
@@ -122,10 +128,7 @@ class FileAnalyzer:
         self.pkg_type = pkg_type
 
     def sort_tables(self):
-        """
-        Sort tables according to order of arrays in schema
-        :return:
-        """
+        """Sort tables according to order of arrays in schema."""
         self.order = get_order(self.spec.schema["properties"].keys())
         out_schema_tables = {
             name: table for name, table in self.spec.tables.items() if name.split("_")[0] not in self.order
@@ -146,7 +149,9 @@ class FileAnalyzer:
 
 
 class FileFlattener:
-    """Main utility for flattening files
+    """
+    Main utility for flattening files.
+
     :param workdir: Working directory
     :param options: Flattening configuration
     :param analyzer: Analyzed data object
@@ -196,7 +201,9 @@ class FileFlattener:
                     yield count
 
     def flatten_file(self, filename):
-        """Flatten file
+        """
+        Flatten file.
+
         :param filename: Input filename in working directory
         """
         workdir = self.workdir

@@ -27,9 +27,7 @@ class MappingBase(MutableMapping):
 
 @dataclass
 class Row(MappingBase):
-    """
-    Row data container
-    """
+    """Row data container."""
 
     row_id: str
     table_name: str
@@ -39,9 +37,7 @@ class Row(MappingBase):
 
 @dataclass
 class Rows(MappingBase):
-    """
-    Flattened rows for each object
-    """
+    """Flattened rows for each object."""
 
     ocid: str
     buyer: Mapping[str, str]

@@ -1,4 +1,4 @@
-"""cli.py - Command line interface related routines"""
+"""Command line interface-related routines."""
 
 import logging
 import pathlib
@@ -22,7 +22,7 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 class CommaSeparated(click.ParamType):
-    """Click option type to convert comma separated string into list"""
+    """Click option type to convert comma-separated string into list."""
 
     name = "comma"
 
@@ -188,7 +188,7 @@ def cli(
     human,
     language,
 ):
-    """Spoonbill cli entry point"""
+    """Spoonbill CLI entry point."""
     if csv:
         csv = pathlib.Path(csv).resolve()
         if not csv.exists():

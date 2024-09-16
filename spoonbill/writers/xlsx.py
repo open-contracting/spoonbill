@@ -25,7 +25,6 @@ class XlsxWriter(BaseWriter):
         :param tables: The table objects
         :param options: Flattening options
         """
-
         super().__init__(workdir, tables, options, schema=schema)
         self.col_index = collections.defaultdict(dict)
         self.path = workdir / filename
@@ -33,10 +32,7 @@ class XlsxWriter(BaseWriter):
         self.row_counters = {}
 
     def __enter__(self):
-        """
-        Write the headers to the output file.
-        """
-
+        """Write the headers to the output file."""
         for name, table in self.tables.items():
             table_name, headers = self.init_sheet(name, table)
             sheet = self.workbook.add_worksheet(table_name)
@@ -53,17 +49,12 @@ class XlsxWriter(BaseWriter):
         return self
 
     def __exit__(self, *args):
-        """
-        Close the workbook.
-        """
+        """Close the workbook."""
         LOGGER.info(_("Dumped all sheets to file to file '{}'").format(self.path))
         self.workbook.close()
 
     def writerow(self, table, row):
-        """
-        Write a row to the output file.
-        """
-
+        """Write a row to the output file."""
         table_name = self.names.get(table, table)
         sheet = self.workbook.get_worksheet_by_name(table_name)
         columns = self.col_index[table]
@@ -72,8 +63,6 @@ class XlsxWriter(BaseWriter):
             return
 
         for column, value in row.items():
-            if isinstance(value, bool):
-                value = str(value)
             try:
                 col_index = columns[column]
             except KeyError:
@@ -85,7 +74,7 @@ class XlsxWriter(BaseWriter):
                 )
                 return
             try:
-                sheet.write(self.row_counters[table], col_index, value)
+                sheet.write(self.row_counters[table], col_index, str(value) if isinstance(value, bool) else value)
             except XlsxWriterException as err:
                 LOGGER.error(  # noqa: TRY400 # UX
                     _("Failed to write column {} to xlsx sheet {} with error {}").format(column, table, err)

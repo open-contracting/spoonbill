@@ -4,9 +4,7 @@ from spoonbill.utils import SchemaHeaderExtractor
 
 
 class BaseWriter:
-    """
-    Base writer class
-    """
+    """Base writer class."""
 
     def __init__(self, workdir, tables, options, schema):
         """

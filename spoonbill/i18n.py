@@ -25,7 +25,7 @@ if language_code and language_code != "C":  # None if LC_CTYPE=C or LC_CTYPE=UTF
 
 
 def translate(msg_id, lang=LOCALE):
-    """Simple wrapper of python's gettext with ability to override desired language"""
+    """Wrap Python's gettext with ability to override desired language."""
     return translator(lang).gettext(msg_id)
 
 
@@ -34,7 +34,7 @@ def translator(lang):
     try:
         return gettext.translation("spoonbill", path, languages=[lang], fallback=None)
     except FileNotFoundError as e:
-        warnings.warn(f"{e.strerror} {e.filename} in language {lang}")
+        warnings.warn(f"{e.strerror} {e.filename} in language {lang}", stacklevel=2)
         return gettext.NullTranslations()
 
 
