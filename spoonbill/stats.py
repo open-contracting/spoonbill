@@ -132,7 +132,7 @@ class DataPreprocessor:
                 continue
 
             for key, item in properties.items():
-                if key in ("$title", "$path"):
+                if key in {"$title", "$path"}:
                     continue
                 if item.get("deprecated"):
                     continue
