@@ -405,9 +405,7 @@ def add_paths_to_schema(schema):
         updated_items[table] = path_item[table]
     proxy["properties"] = updated_items
     # Generating array with title paths for each title in schema
-    title_paths = list(title_path(proxy["properties"]))
-
-    for path_list in title_paths:
+    for path_list in list(title_path(proxy["properties"])):
         location = "properties." + ".".join(path_list[-1][:-1])
         proxy[location]["$title"] = path_list
 

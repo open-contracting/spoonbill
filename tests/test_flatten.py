@@ -242,8 +242,7 @@ def test_flatten_splitted_with_child(spec, releases, options):
             assert "/tender/items/1/id" not in tender
             assert "/tender/items/1/description" not in tender
 
-    items = all_rows["tenders_items"]
-    for item in items:
+    for item in all_rows["tenders_items"]:
         assert "/tender/items/id" in item
         assert "/tender/items/description" in item
 

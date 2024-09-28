@@ -225,8 +225,7 @@ class DataPreprocessor:
                 p_rows.append(row)
 
     def inc_table_rows(self, item, rows, parent_key, record):
-        c = item if isinstance(item, list) else [item]
-        for _nop in c:
+        for _noop in range(len(item) if isinstance(item, list) else 1):
             self.current_table.inc()
             self.add_preview_row(rows, record.get("id", ""), parent_key)
 

@@ -323,8 +323,7 @@ def test_writers_invalid_table(log, spec, tmpdir, schema):
             table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options, schema)
-    for writer in writers:
+    for writer in get_writers(workdir, tables, options, schema):
         writer.writerow("test", {})
     log.assert_has_calls([call("Invalid table test"), call("Invalid table test")])
 
@@ -338,8 +337,7 @@ def test_writers_invalid_row(log, spec, tmpdir, schema):
             table.inc_column(col, col)
 
     workdir = Path(tmpdir)
-    writers = get_writers(workdir, tables, options, schema)
-    for writer in writers:
+    for writer in get_writers(workdir, tables, options, schema):
         writer.writerow("parties", {"/test/test": "test"})
     log.assert_has_calls(
         [
