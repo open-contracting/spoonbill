@@ -10,9 +10,8 @@ from spoonbill.flatten import Flattener, FlattenOptions
 from spoonbill.utils import SchemaHeaderExtractor, add_paths_to_schema, generate_paths
 from spoonbill.writers.csv import CSVWriter
 from spoonbill.writers.xlsx import XlsxWriter
-
-from .conftest import releases_extension_path, releases_path
-from .utils import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
+from tests import get_writers, prepare_tables, read_csv_headers, read_xlsx_headers
+from tests.data import RELEASES_EXTENSION_PATH, RELEASES_PATH
 
 ID_FIELDS = {"tenders": "/tender/id", "parties": "/parties/id"}
 
@@ -230,7 +229,7 @@ def test_writers_flatten_count(spec, tmpdir, releases, schema):
         workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
     )
     xlsx = workdir / "result.xlsx"
-    for _ in flattener.flatten_file(releases_path):
+    for _ in flattener.flatten_file(RELEASES_PATH):
         pass
     sheet = "tenders"
     path = workdir / f"{sheet}.csv"
@@ -453,7 +452,7 @@ def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     )
     xlsx = workdir / "result.xlsx"
     sheet = "tenders"
-    for _ in flattener.flatten_file(releases_path):
+    for _ in flattener.flatten_file(RELEASES_PATH):
         pass
     with open(xlsx, "rb") as f:
         wb = openpyxl.load_workbook(f)
@@ -464,7 +463,7 @@ def test_flatten_multiple_files(spec, tmpdir, releases, schema):
     flattener = FileFlattener(
         workdir=workdir, options=options, tables=spec.tables, csv=True, analyzer=analyzer, schema=schema
     )
-    for _ in flattener.flatten_file([releases_path, releases_path]):
+    for _ in flattener.flatten_file([RELEASES_PATH, RELEASES_PATH]):
         pass
     with open(xlsx, "rb") as f:
         wb = openpyxl.load_workbook(f)
@@ -483,7 +482,7 @@ def test_extension_export(spec, tmpdir, releases_extension, schema):
     xlsx = workdir / "result.xlsx"
     sheet = "documents"
     extension_header = "/documents/test_extension"
-    for _ in flattener.flatten_file(releases_extension_path):
+    for _ in flattener.flatten_file(RELEASES_EXTENSION_PATH):
         pass
     with open(xlsx, "rb") as f:
         wb = openpyxl.load_workbook(f)

@@ -245,6 +245,3 @@ class FileFlattener:
                 ) as csv,
             ):
                 yield from self._flatten(filename, [xlsx, csv])
-
-
-__all__ = ["FileFlattener", "FileAnalyzer"]

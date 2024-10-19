@@ -9,8 +9,10 @@ from spoonbill.common import JOINABLE_SEPARATOR
 from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
 from spoonbill.utils import insert_after_key
-from tests.conftest import TEST_COMBINED_TABLES, TEST_ROOT_TABLES, schema_path
 from tests.data import (
+    SCHEMA_PATH,
+    TEST_COMBINED_TABLES,
+    TEST_ROOT_TABLES,
     awards_arrays,
     awards_columns,
     awards_combined_columns,
@@ -77,7 +79,7 @@ def test_parse_schema(schema, spec):
 
 
 def test_resolve_schema_uri():
-    dp = DataPreprocessor(schema_path, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
+    dp = DataPreprocessor(SCHEMA_PATH, TEST_ROOT_TABLES, combined_tables=TEST_COMBINED_TABLES)
     assert isinstance(dp.schema, dict)
 
 

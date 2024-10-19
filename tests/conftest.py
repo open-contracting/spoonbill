@@ -1,38 +1,35 @@
 import json
-import pathlib
 
 import pytest
 
 from spoonbill.flatten import FlattenOptions
 from spoonbill.spec import Column, Table
 from spoonbill.stats import DataPreprocessor
-
-from .data import TEST_COMBINED_TABLES, TEST_ROOT_TABLES
-
-here = pathlib.Path(__file__).parent
-schema_path = here / "data" / "ocds-simplified-schema.json"
-releases_path = here / "data" / "ocds-sample-data.json"
-test_dataset_path = here / "data" / "test_data.json"
-dataset_path_with_combined_tables = here / "data" / "releases_with_combined_tables.json"
-analyzed_path = here / "data" / "analyzed"
-releases_extension_path = here / "data" / "ocds-sample-data-extension.json"
+from tests.data import (
+    BASE_DIR,
+    RELEASES_EXTENSION_PATH,
+    RELEASES_PATH,
+    SCHEMA_PATH,
+    TEST_COMBINED_TABLES,
+    TEST_ROOT_TABLES,
+)
 
 
 @pytest.fixture
 def schema():
-    with open(schema_path, encoding="utf-8") as fd:
+    with SCHEMA_PATH.open("rb") as fd:
         return json.load(fd)
 
 
 @pytest.fixture
 def releases():
-    with open(releases_path, encoding="utf-8") as fd:
+    with RELEASES_PATH.open("rb") as fd:
         return json.load(fd)["releases"]
 
 
 @pytest.fixture
 def releases_extension():
-    with open(releases_extension_path, encoding="utf-8") as fd:
+    with RELEASES_EXTENSION_PATH.open("rb") as fd:
         return json.load(fd)["releases"]
 
 
@@ -117,11 +114,11 @@ def root_table():
 
 @pytest.fixture
 def test_dataset_releases():
-    with open(test_dataset_path, encoding="utf-8") as fd:
+    with (BASE_DIR / "data" / "test_data.json").open("rb") as fd:
         return json.load(fd)["releases"]
 
 
 @pytest.fixture
 def releases_with_combined_tables():
-    with open(dataset_path_with_combined_tables, encoding="utf-8") as fd:
+    with (BASE_DIR / "data" / "releases_with_combined_tables.json").open("rb") as fd:
         return json.load(fd)

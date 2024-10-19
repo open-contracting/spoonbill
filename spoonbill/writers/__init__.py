@@ -1,4 +1,4 @@
-from .csv import CSVWriter
-from .xlsx import XlsxWriter
+from spoonbill.writers.csv import CSVWriter
+from spoonbill.writers.xlsx import XlsxWriter
 
-__all__ = ["CSVWriter", "XlsxWriter"]
+__all__ = ("CSVWriter", "XlsxWriter")

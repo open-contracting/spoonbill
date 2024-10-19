@@ -1,6 +1,12 @@
+import pathlib
 from copy import deepcopy
 
 from spoonbill.common import ROOT_TABLES
+
+BASE_DIR = pathlib.Path(__file__).parent
+SCHEMA_PATH = BASE_DIR / "data" / "ocds-simplified-schema.json"
+RELEASES_PATH = BASE_DIR / "data" / "ocds-sample-data.json"
+RELEASES_EXTENSION_PATH = BASE_DIR / "data" / "ocds-sample-data-extension.json"
 
 TEST_ROOT_TABLES = deepcopy(ROOT_TABLES)
 TEST_COMBINED_TABLES = {
