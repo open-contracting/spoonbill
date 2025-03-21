@@ -328,8 +328,7 @@ def nonschema_title_formatter(title):
     title = title.replace("_", " ").replace("-", " ")
     title = re.sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", title)
     title = title.replace("  ", " ").replace("/", ": ")
-    if title.startswith(": "):
-        title = title[2:]
+    title = title.removeprefix(": ")
     return title.title()
 
 
