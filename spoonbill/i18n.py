@@ -36,7 +36,7 @@ def translator(lang):
     try:
         return gettext.translation("spoonbill", path, languages=[lang], fallback=None)
     except FileNotFoundError as e:
-        warnings.warn(UnsupportedLanguageWarning(f"{e.strerror} {e.filename} in language {lang}"), stacklevel=2)
+        warnings.warn(f"{e.strerror} {e.filename} in language {lang}", UnsupportedLanguageWarning, stacklevel=2)
         return gettext.NullTranslations()
 
 
