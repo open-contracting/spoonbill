@@ -5,6 +5,8 @@ import gettext
 import locale
 import warnings
 
+from spoonbill.exceptions import UnsupportedLanguageWarning
+
 try:
     import importlib_resources
 except ImportError:
@@ -34,7 +36,7 @@ def translator(lang):
     try:
         return gettext.translation("spoonbill", path, languages=[lang], fallback=None)
     except FileNotFoundError as e:
-        warnings.warn(f"{e.strerror} {e.filename} in language {lang}", stacklevel=2)
+        warnings.warn(UnsupportedLanguageWarning(f"{e.strerror} {e.filename} in language {lang}"), stacklevel=2)
         return gettext.NullTranslations()
 
 
