@@ -354,7 +354,7 @@ def test_pretty_headers_en():
             sheet = xlsx_reader["parties"]
             header_values = [cell.value for cell in sheet[1]]
             header_columns = [cell.column_letter for cell in sheet[1]]
-            headers = dict(zip(header_columns, header_values))
+            headers = dict(zip(header_columns, header_values, strict=True))
             assert headers["E"].startswith("Buyer")
 
 
@@ -371,5 +371,5 @@ def test_pretty_headers_es():
             sheet = xlsx_reader["parties"]
             header_values = [cell.value for cell in sheet[1]]
             header_columns = [cell.column_letter for cell in sheet[1]]
-            headers = dict(zip(header_columns, header_values))
+            headers = dict(zip(header_columns, header_values, strict=True))
             assert headers["E"].startswith("Comprador")
