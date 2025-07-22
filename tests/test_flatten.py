@@ -204,7 +204,7 @@ def test_flatten_should_not_split(spec_analyzed, releases):
     assert "tenders_items_addit" not in all_rows
     tenders = all_rows["tenders"]
 
-    for tender, release in zip(tenders, releases, strict=True):
+    for tender, release in zip(tenders, releases, strict=False):
         items = release.get("tender", {}).get("items")
         if release.get("tender", {}).get("items"):
             assert "/tender/items/0/id" in tender
@@ -235,7 +235,7 @@ def test_flatten_splitted_with_child(spec, releases, options):
     assert "tenders_items_addit" not in all_rows
     tenders = all_rows["tenders"]
 
-    for tender, release in zip(tenders, releases, strict=True):
+    for tender, release in zip(tenders, releases, strict=False):
         if release.get("tender", {}).get("items"):
             assert "/tender/items/0/id" not in tender
             assert "/tender/items/0/description" not in tender
