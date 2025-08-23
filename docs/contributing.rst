@@ -60,14 +60,11 @@ Extract messages:
 .. code-block:: bash
 
    pybabel extract -o spoonbill/locale/messages.pot .
-
-Update catalogs:
-
-.. code-block:: bash
-
    pybabel update -N -i spoonbill/locale/messages.pot -d spoonbill/locale -D spoonbill
 
-Compile catalogs:
+Edit PO files to translate strings.
+
+Finally, compile catalogs:
 
 .. code-block:: bash
 
