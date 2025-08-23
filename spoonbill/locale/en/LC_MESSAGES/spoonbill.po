@@ -7,100 +7,105 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-04-07 01:18-0400\n"
+"POT-Creation-Date: 2025-08-22 21:16-0400\n"
 "PO-Revision-Date: 2021-05-17 17:16+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
 "Language-Team: en <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.17.0\n"
 
-#: spoonbill/__init__.py:70
+#: spoonbill/__init__.py:73
+#, python-brace-format
 msgid "Input file is {}"
 msgstr "Input file is {}"
 
-#: spoonbill/__init__.py:110
+#: spoonbill/__init__.py:117
+#, python-brace-format
 msgid "No schema provided, using version {}"
 msgstr "No schema provided, using version {}"
 
-#: spoonbill/__init__.py:115
+#: spoonbill/__init__.py:122
 msgid "Incomplete schema, please make sure your data is correct"
 msgstr "Incomplete schema, please make sure your data is correct"
 
-#: spoonbill/cli.py:18
+#: spoonbill/cli.py:19
+#, python-brace-format
 msgid "  Processed {} objects"
 msgstr ""
 
-#: spoonbill/cli.py:19
+#: spoonbill/cli.py:20
+#, python-brace-format
 msgid "  Flattened {} objects"
 msgstr "  Flattened {} objects"
 
-#: spoonbill/cli.py:43
+#: spoonbill/cli.py:44
+#, python-brace-format
 msgid "Wrong selection, table '{}' does not exist"
 msgstr "Wrong selection, table '{}' does not exist"
 
-#: spoonbill/cli.py:48
+#: spoonbill/cli.py:49
 msgid "CLI tool to flatten OCDS files"
 msgstr "CLI tool to flatten OCDS files"
 
-#: spoonbill/cli.py:51
+#: spoonbill/cli.py:53
 msgid ""
 "A JSON schema file URI. The URI can be a file path or an HTTP link. "
 "Spoonbill uses the schema to analyze the provided JSON file. Defaults to "
 "the OCDS 1.1.5 release schema (requires internet connection)"
 msgstr ""
 
-#: spoonbill/cli.py:60
+#: spoonbill/cli.py:62
 msgid ""
 "A comma-separated list of initial tables to write. The available tables "
 "to select are: parties, planning, tenders, awards, contracts"
 msgstr ""
 
-#: spoonbill/cli.py:67
+#: spoonbill/cli.py:68
 msgid "The maximum number of elements in an array before it is split into a table"
 msgstr "The maximum number of elements in an array before it is split into a table"
 
-#: spoonbill/cli.py:74
+#: spoonbill/cli.py:75
 msgid ""
 "A file path URI to a previously generated state file. If not provided, a "
 "new state file is generated"
 msgstr ""
 
-#: spoonbill/cli.py:79
+#: spoonbill/cli.py:81
 msgid ""
 "A file path to store the resulting xlsx file. Default to result.xlsx. Set"
 " to '' to disable the xlsx file generation"
 msgstr ""
 
-#: spoonbill/cli.py:88
+#: spoonbill/cli.py:89
 msgid ""
 "An existing directory path. If set also generates CSV files in the given "
 "directory. Disabled by default"
 msgstr ""
 
-#: spoonbill/cli.py:94
+#: spoonbill/cli.py:96
 msgid ""
 "A comma-separated list of tables. Combines same OCDS object types from "
 "different locations (tender, awards, etc) into a single table. The "
 "available tables are: documents, milestones, and amendments"
 msgstr ""
 
-#: spoonbill/cli.py:102
+#: spoonbill/cli.py:103
 msgid ""
 "A comma-separated list of tables to exclude from export. Disabled by "
 "default"
 msgstr ""
 
-#: spoonbill/cli.py:108
+#: spoonbill/cli.py:110
 msgid ""
 "A comma-separated list of column names to copy from child tables into "
 "their parent table. Disabled by default"
 msgstr ""
 
-#: spoonbill/cli.py:116
+#: spoonbill/cli.py:117
 msgid ""
 "A file path directory. Same as --unnest, but read column names from a "
 "file with one column per line"
@@ -108,26 +113,26 @@ msgstr ""
 "A file path directory. Same as --unnest, but read column names from a "
 "file with one column per line"
 
-#: spoonbill/cli.py:122
+#: spoonbill/cli.py:124
 msgid ""
 "A comma-separated list of a subset of columns to output instead of all, "
 "in JSON path format, e.g. /parties/name. Defaults to all the available "
 "columns"
 msgstr ""
 
-#: spoonbill/cli.py:131
+#: spoonbill/cli.py:132
 msgid ""
 "A file path directory. Same as --only, but read the columns names from a "
 "file with one column per line"
 msgstr ""
 
-#: spoonbill/cli.py:137
+#: spoonbill/cli.py:139
 msgid ""
 "A comma-separated list of columns to repeat from a parent table into its "
 "child tables, in JSON path format,e.g. /parties/name. Disabled by default"
 msgstr ""
 
-#: spoonbill/cli.py:146
+#: spoonbill/cli.py:147
 msgid ""
 "A file path directory. Same as --repeat, but read the columns names from "
 "a file with one column per line"
@@ -135,7 +140,7 @@ msgstr ""
 "A file path directory. Same as --repeat, but read the columns names from "
 "a file with one column per line"
 
-#: spoonbill/cli.py:152
+#: spoonbill/cli.py:153
 msgid ""
 "For each array field, add a count column to its parent table. Disabled by"
 " default"
@@ -143,168 +148,195 @@ msgstr ""
 "For each array field, add a count column to its parent table. Disabled by"
 " default"
 
-#: spoonbill/cli.py:158
+#: spoonbill/cli.py:159
 msgid ""
 "Change the tables headings to human-readable format, using the schema's "
 "title properties"
 msgstr ""
 
-#: spoonbill/cli.py:163
+#: spoonbill/cli.py:164
 msgid "Use with --human, the language to use for the human-readable headings"
 msgstr ""
 
-#: spoonbill/cli.py:194 spoonbill/cli.py:198
+#: spoonbill/cli.py:195 spoonbill/cli.py:199
+#, python-brace-format
 msgid "Desired location {} does not exists"
 msgstr "Desired location {} does not exists"
 
-#: spoonbill/cli.py:209
+#: spoonbill/cli.py:210
 msgid "Restoring from provided state file"
 msgstr "Restoring from provided state file"
 
-#: spoonbill/cli.py:212
+#: spoonbill/cli.py:213
 msgid "State file not supplied, going to analyze input file first"
 msgstr "State file not supplied, going to analyze input file first"
 
-#: spoonbill/cli.py:221
+#: spoonbill/cli.py:222
 msgid "Analyze options:"
 msgstr ""
 
-#: spoonbill/cli.py:223
+#: spoonbill/cli.py:224
+#, python-brace-format
 msgid " - {:30} => {}"
 msgstr ""
 
-#: spoonbill/cli.py:224
+#: spoonbill/cli.py:225
+#, python-brace-format
 msgid "Processing file: {}"
 msgstr "Processing file: {}"
 
-#: spoonbill/cli.py:235
+#: spoonbill/cli.py:236
+#, python-brace-format
 msgid "Done processing. Analyzed objects: {}"
 msgstr "Done processing. Analyzed objects: {}"
 
-#: spoonbill/cli.py:242
+#: spoonbill/cli.py:243
+#, python-brace-format
 msgid "Dumping analyzed data to '{}'"
 msgstr "Dumping analyzed data to '{}'"
 
-#: spoonbill/cli.py:245
+#: spoonbill/cli.py:246
+#, python-brace-format
 msgid "Flattening file: {}"
 msgstr "Flattening file: {}"
 
-#: spoonbill/cli.py:248
+#: spoonbill/cli.py:249
 msgid "Conflicting options: unnest and unnest-file"
 msgstr ""
 
-#: spoonbill/cli.py:250
+#: spoonbill/cli.py:251
 msgid "Conflicting options: repeat and repeat-file"
 msgstr ""
 
-#: spoonbill/cli.py:252
+#: spoonbill/cli.py:253
 msgid "Conflicting options: only and only-file"
 msgstr ""
 
-#: spoonbill/cli.py:254
+#: spoonbill/cli.py:255
+#, python-brace-format
 msgid "Ignoring tables (excluded by user): {}"
 msgstr ""
 
-#: spoonbill/cli.py:264
+#: spoonbill/cli.py:265
+#, python-brace-format
 msgid "Ignoring empty table {}"
 msgstr ""
 
-#: spoonbill/cli.py:274
+#: spoonbill/cli.py:275
+#, python-brace-format
 msgid "Unnesting columns {} for table {}"
 msgstr ""
 
-#: spoonbill/cli.py:282
+#: spoonbill/cli.py:283
+#, python-brace-format
 msgid "Using only columns {} for table {}"
 msgstr ""
 
-#: spoonbill/cli.py:290
+#: spoonbill/cli.py:291
+#, python-brace-format
 msgid "Repeating columns {} in all child table of {}"
 msgstr ""
 
-#: spoonbill/cli.py:309
+#: spoonbill/cli.py:310
+#, python-brace-format
 msgid "Going to export tables: {}"
 msgstr ""
 
-#: spoonbill/cli.py:311
+#: spoonbill/cli.py:312
 msgid "Processed tables:"
 msgstr ""
 
-#: spoonbill/cli.py:313
+#: spoonbill/cli.py:314
+#, python-brace-format
 msgid " - {:30} => {} rows"
 msgstr ""
 
-#: spoonbill/cli.py:313
+#: spoonbill/cli.py:314
+#, python-brace-format
 msgid " ---- {:27} => {} rows"
 msgstr ""
 
-#: spoonbill/cli.py:316
+#: spoonbill/cli.py:317
 msgid "Flattening input file"
 msgstr ""
 
-#: spoonbill/cli.py:327
+#: spoonbill/cli.py:329
+#, python-brace-format
 msgid "Done flattening. Flattened objects: {}"
 msgstr ""
 
-#: spoonbill/flatten.py:167
+#: spoonbill/flatten.py:168
+#, python-brace-format
 msgid "Ignoring repeat column {} because it is not in table {}"
 msgstr ""
 
-#: spoonbill/spec.py:175 spoonbill/stats.py:267
+#: spoonbill/spec.py:165 spoonbill/stats.py:250
 #, python-format
 msgid "Detected additional column: %s in %s table"
 msgstr ""
 
-#: spoonbill/stats.py:196 spoonbill/stats.py:364
+#: spoonbill/stats.py:181 spoonbill/stats.py:347
 #, python-format
 msgid "Detected additional table: %s"
 msgstr ""
 
-#: spoonbill/stats.py:422
+#: spoonbill/stats.py:408
+#, python-brace-format
 msgid "Failed to dump DataPreprocessor to file. Error: {}"
 msgstr ""
 
-#: spoonbill/stats.py:435
+#: spoonbill/stats.py:422
 msgid "Invalid pickle file. Can't restore."
 msgstr ""
 
-#: spoonbill/writers/csv.py:40
+#: spoonbill/writers/csv.py:36
+#, python-brace-format
 msgid "Dumping table '{}' to file '{}'"
 msgstr ""
 
-#: spoonbill/writers/csv.py:43
+#: spoonbill/writers/csv.py:39
+#, python-brace-format
 msgid "Failed to open file {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:54
+#: spoonbill/writers/csv.py:50
+#, python-brace-format
 msgid "Failed to headers with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:73 spoonbill/writers/xlsx.py:81
+#: spoonbill/writers/csv.py:64 spoonbill/writers/xlsx.py:70
 msgid ""
 "Operation produced invalid path. This a software bug, please send issue "
 "to developers"
 msgstr ""
 
-#: spoonbill/writers/csv.py:74
+#: spoonbill/writers/csv.py:67
+#, python-brace-format
 msgid "Failed to write row {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/csv.py:76 spoonbill/writers/xlsx.py:71
+#: spoonbill/writers/csv.py:70 spoonbill/writers/xlsx.py:62
+#, python-brace-format
 msgid "Invalid table {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:50
+#: spoonbill/writers/xlsx.py:46
+#, python-brace-format
 msgid "Failed to write header {} to xlsx sheet {} with error {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:59
+#: spoonbill/writers/xlsx.py:53
+#, python-brace-format
 msgid "Dumped all sheets to file to file '{}'"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:83
+#: spoonbill/writers/xlsx.py:73
+#, python-brace-format
 msgid "Failed to write column {} to xlsx sheet {}"
 msgstr ""
 
-#: spoonbill/writers/xlsx.py:88
+#: spoonbill/writers/xlsx.py:80
+#, python-brace-format
 msgid "Failed to write column {} to xlsx sheet {} with error {}"
 msgstr ""
+
