@@ -15,4 +15,3 @@ recursive-include tests *.txt
 exclude .python-version
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yaml
-exclude .tx/config
