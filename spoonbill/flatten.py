@@ -206,7 +206,7 @@ class Flattener:
             rows = Rows(ocid=release["ocid"], buyer=release.get("buyer", {}), data=defaultdict(list))
 
             while to_flatten:
-                abs_path, path, parent_key, parent, record, repeat = to_flatten.pop()
+                abs_path, path, parent_key, _parent, record, repeat = to_flatten.pop()
 
                 table = self._path_map.get(path)
                 if path == "/buyer":

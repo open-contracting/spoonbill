@@ -124,7 +124,7 @@ class DataPreprocessor:
         to_analyze = deque([("", "", {}, proxy)])
 
         while to_analyze:
-            path, parent_key, parent, prop = to_analyze.pop()
+            path, parent_key, _parent, prop = to_analyze.pop()
             if prop.get("deprecated"):
                 continue
             properties = prop.get("properties", {})
