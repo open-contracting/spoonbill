@@ -175,14 +175,14 @@ class FileFlattener:
         multiple_values=False,
         schema=None,
     ):
-        self.tables = tables if tables else analyzer.spec.tables
+        self.tables = tables or analyzer.spec.tables
         self.flattener = Flattener(options, self.tables, language=language)
         self.workdir = Path(workdir)
         self.writers = []
         self.csv = csv
         self.xlsx = xlsx
-        self.multiple_values = multiple_values if multiple_values else analyzer.multiple_values if analyzer else False
-        self.pkg_type = pkg_type if pkg_type else analyzer.pkg_type if analyzer else "releases"
+        self.multiple_values = multiple_values or (analyzer.multiple_values if analyzer else False)
+        self.pkg_type = pkg_type or (analyzer.pkg_type if analyzer else "releases")
         self.schema = schema or analyzer.spec.schema
 
     def _flatten(self, filenames, writers):
