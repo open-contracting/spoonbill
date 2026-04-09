@@ -82,3 +82,6 @@ ignore-variadic-names = true
 
 [tool.pytest.ini_options]
 addopts = '--doctest-modules'
+
+[tool.uv.pip]
+exclude-newer = "1 week"
