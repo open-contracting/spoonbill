@@ -4,10 +4,14 @@ Changelog
 Unreleased
 ----------
 
-Changed
+Added
+~~~~~
+
+-  Add support for Python 3.13, 3.14.
+
+Removed
 ~~~~~~~
 
--  Add support for Python 3.13.
 -  Drop support for Python 3.9.
 
 1.1.0 (2024-09-15)
@@ -27,6 +31,9 @@ Changed
    -  ``spoonbill.stats.DataPreprocessor.process_items``
    -  ``spoonbill.utils.iter_file``
 
+Removed
+~~~~~~~
+
 -  Drop support for Python 3.8.
 
 1.0.13 (2024-09-04)
@@ -37,7 +44,7 @@ Added
 
 -  Add support for Python 3.12.
 
-Changed
+Removed
 ~~~~~~~
 
 -  Drop support for Python 3.7.
@@ -58,7 +65,7 @@ Added
 
 -  Add support for Python 3.11.
 
-Changed
+Removed
 ~~~~~~~
 
 -  Drop support for Python 3.6.
