@@ -9,3 +9,5 @@ jobs:
       python-version: '3.10'
       # test_requirements.py doesn't support try/except blocks.
       standard-maintenance-scripts-ignore: importlib_resources
+      # Used in tests.
+      ocds-schema-exceptions: ocds-simplified-schema.json
