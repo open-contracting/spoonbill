@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v6.3.0
         with:
-          python-version: '3.11'
+          python-version: '3.x'
       - run: pip install --upgrade babel build
       - run: pybabel compile -f -d spoonbill/locale -D spoonbill
       - run: python -m build --sdist --wheel
