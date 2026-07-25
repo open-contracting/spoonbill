@@ -32,7 +32,6 @@ dependencies = [
     "requests",
     "scalpl",
     "xlsxwriter",
-    'dataclasses;python_version<"3.7"',
     'importlib_resources;python_version<"3.12"',
 ]
 

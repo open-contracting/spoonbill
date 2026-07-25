@@ -6,7 +6,7 @@ jobs:
     permissions:
       contents: read
     with:
-      # test_requirements.py doesn't support try/except blocks.
+      # test_requirements.py ignores try/except blocks.
       standard-maintenance-scripts-ignore: importlib_resources
       # Used in tests.
       ocds-schema-exceptions: ocds-simplified-schema.json
